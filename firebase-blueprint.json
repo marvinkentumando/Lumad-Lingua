@@ -1,0 +1,103 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user progress, stats, and collected artifacts.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string", "description": "The user's unique ID from Firebase Auth." },
+        "displayName": { "type": "string", "description": "The user's display name." },
+        "email": { "type": "string", "format": "email", "description": "The user's email address." },
+        "role": { "type": "string", "enum": ["learner", "contributor", "validator", "admin"], "description": "The user's role in the system." },
+        "xp": { "type": "integer", "description": "Total experience points earned." },
+        "streak": { "type": "integer", "description": "Current daily learning streak." },
+        "accuracy": { "type": "number", "description": "Overall learning accuracy percentage." },
+        "level": { "type": "integer", "description": "Current learning level." },
+        "artifacts": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of unlocked artifact IDs."
+        },
+        "onboarded": { "type": "boolean", "description": "Whether the user has completed onboarding." },
+        "completedLessons": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "List of completed lesson IDs."
+        },
+        "lastActive": { "type": "string", "format": "date-time", "description": "The last time the user was active." }
+      },
+      "required": ["uid", "role", "xp", "streak", "level", "onboarded", "completedLessons"]
+    },
+    "Word": {
+      "title": "Word Entry",
+      "description": "A dictionary entry, which can be a word or a phrase.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the word." },
+        "term": { "type": "string", "description": "The word or phrase in the native language." },
+        "phonetic": { "type": "string", "description": "Phonetic pronunciation." },
+        "meaning": { "type": "string", "description": "Translation or meaning in English." },
+        "example": { "type": "string", "description": "An example sentence using the word." },
+        "audioUrl": { "type": "string", "format": "uri", "description": "URL to the audio recording." },
+        "contributorId": { "type": "string", "description": "UID of the user who contributed this word." },
+        "community": { "type": "string", "description": "The community or dialect this word belongs to." },
+        "status": { "type": "string", "enum": ["pending", "validated", "rejected"], "description": "The validation status of the word." },
+        "validatorId": { "type": "string", "description": "UID of the validator who reviewed this word." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the word was submitted." }
+      },
+      "required": ["term", "meaning", "contributorId", "status", "createdAt"]
+    },
+    "SRSReview": {
+      "title": "SRS Review Data",
+      "description": "Spaced Repetition System data for a specific word for a specific user.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string", "description": "The user's UID." },
+        "wordId": { "type": "string", "description": "The word's ID." },
+        "nextReview": { "type": "string", "format": "date-time", "description": "When the word should be reviewed next." },
+        "interval": { "type": "integer", "description": "The current review interval in days." },
+        "easeFactor": { "type": "number", "description": "The difficulty factor for the word (SuperMemo-2 style)." },
+        "consecutiveCorrect": { "type": "integer", "description": "Number of times the user got this word right in a row." }
+      },
+      "required": ["userId", "wordId", "nextReview", "interval", "easeFactor"]
+    },
+    "Challenge": {
+      "title": "Community Challenge",
+      "description": "A collaborative weaving challenge for the community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the challenge." },
+        "title": { "type": "string", "description": "Title of the challenge." },
+        "description": { "type": "string", "description": "Description of the challenge." },
+        "goalXp": { "type": "integer", "description": "Total XP goal for the community." },
+        "currentXp": { "type": "integer", "description": "Current XP contributed by the community." },
+        "endsAt": { "type": "string", "format": "date-time", "description": "When the challenge ends." },
+        "participants": { "type": "array", "items": { "type": "string" }, "description": "List of participant UIDs." }
+      },
+      "required": ["title", "goalXp", "currentXp", "endsAt"]
+    },
+    "Weaver": {
+      "title": "Master Weaver",
+      "description": "Profile of a master weaver from the community.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the weaver." },
+        "name": { "type": "string", "description": "Name of the weaver." },
+        "community": { "type": "string", "description": "The community the weaver belongs to (e.g., Mansaka, Mandaya)." },
+        "bio": { "type": "string", "description": "Biography or story of the weaver." },
+        "imageUrl": { "type": "string", "format": "uri", "description": "URL to the weaver's photo." },
+        "expertise": { "type": "array", "items": { "type": "string" }, "description": "Areas of expertise or specific weaving styles." },
+        "location": { "type": "string", "description": "Location or village of the weaver." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the weaver profile was created." }
+      },
+      "required": ["name", "community", "bio"]
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "UserProfile", "description": "User profile data." },
+    "/words/{wordId}": { "schema": "Word", "description": "Dictionary entries." },
+    "/users/{userId}/reviews/{reviewId}": { "schema": "SRSReview", "description": "User-specific SRS data." },
+    "/challenges/{challengeId}": { "schema": "Challenge", "description": "Community challenges." },
+    "/weavers/{weaverId}": { "schema": "Weaver", "description": "Master weavers profiles." }
+  }
+}

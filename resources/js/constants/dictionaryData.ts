@@ -1,0 +1,58 @@
+export const DICTIONARY_WORDS = [
+  { 
+    term: 'Kalumanan', 
+    pos: 'noun', 
+    tag: 'Heritage', 
+    category: 'Culture',
+    filipino: 'Pamana', 
+    english: 'Heritage / Ancestry',
+    definition: 'The collective memory, traditions, and physical artifacts passed down through generations within the Lumad communities.',
+    example: '"Ang kalumanan ay dapat ingatan."',
+    exampleTranslation: 'Our heritage must be protected.',
+    location: 'Davao del Norte',
+    validatedBy: 'Elder Weaver',
+    related: ['Kabilin', 'Kaugalingon', 'Lumad']
+  },
+  { 
+    term: 'Balay', 
+    pos: 'noun', 
+    tag: 'Architecture', 
+    category: 'Home',
+    filipino: 'Bahay', 
+    english: 'House / Home',
+    definition: 'A traditional dwelling place, often elevated and constructed with bamboo and nipa, serving as the center of family life.',
+    example: '"Magbalik ta sa balay."',
+    exampleTranslation: 'Let us return home.',
+    location: 'Compostela Valley',
+    validatedBy: 'Council of Elders',
+    related: ['Suba', 'Baha', 'Isda']
+  },
+  { 
+    term: 'Tubig', 
+    pos: 'noun', 
+    tag: 'Nature', 
+    category: 'Environment',
+    filipino: 'Tubig', 
+    english: 'Water',
+    definition: 'Considered sacred in Lumad cosmology, central to purification rituals and daily survival.',
+    example: '"Moinom ko og tubig."',
+    exampleTranslation: 'I will drink water.',
+    location: 'Caraga',
+    validatedBy: 'Community Validator',
+    related: ['Ulan', 'Dagat', 'Suba']
+  },
+  { 
+    term: 'Diwata', 
+    pos: 'noun', 
+    tag: 'Spiritual', 
+    category: 'Beliefs',
+    filipino: 'Diwata', 
+    english: 'Nature Spirit',
+    definition: 'A benevolent nature spirit believed to inhabit trees, mountains, and bodies of water, requiring respect and offerings.',
+    example: '"Nag-ampo sila sa diwata."',
+    exampleTranslation: 'They prayed to the nature spirit.',
+    location: 'Davao Oriental',
+    validatedBy: 'Shaman',
+    related: ['Anito', 'Espiritu', 'Ritwal']
+  }
+];
