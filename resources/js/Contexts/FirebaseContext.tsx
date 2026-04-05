@@ -17,6 +17,13 @@ interface UserProfile {
   onboarded: boolean;
   completedLessons: string[];
   lastActive: string;
+  lastLessonDate?: string;
+  masteredCount: number;
+  learningCount: number;
+  bookmarks: string[];
+  mistakes: string[];
+  xpHistory?: { day: string; xp: number }[];
+  accuracy?: { subject: string; score: number }[];
 }
 
 interface FirebaseContextType {
@@ -50,11 +57,34 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
               role = 'admin';
               setDoc(userDocRef, { role: 'admin' }, { merge: true }).catch(console.error);
             }
+
+            let streak = data.streak || 0;
+            const lastLessonDate = data.lastLessonDate;
+            
+            if (lastLessonDate) {
+              const today = new Date().toISOString().split('T')[0];
+              const lastDate = new Date(lastLessonDate.split('T')[0]);
+              const currentDate = new Date(today);
+              const diffTime = currentDate.getTime() - lastDate.getTime();
+              const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
+              // If more than 1 day has passed since last lesson, streak is lost
+              if (diffDays > 1 && streak > 0) {
+                streak = 0;
+                setDoc(userDocRef, { streak: 0 }, { merge: true }).catch(console.error);
+              }
+            }
+
             setProfile({
               ...data,
               role,
+              streak,
               completedLessons: data.completedLessons || [],
               artifacts: data.artifacts || [],
+              masteredCount: data.masteredCount || 0,
+              learningCount: data.learningCount || 0,
+              bookmarks: data.bookmarks || [],
+              mistakes: data.mistakes || [],
             } as UserProfile);
           } else {
             // Create initial profile if it doesn't exist
@@ -70,6 +100,11 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
               onboarded: false,
               completedLessons: [],
               lastActive: new Date().toISOString(),
+              lastLessonDate: '',
+              masteredCount: 0,
+              learningCount: 0,
+              bookmarks: [],
+              mistakes: [],
             };
             setDoc(userDocRef, initialProfile).catch(err => handleFirestoreError(err, OperationType.WRITE, `users/${currentUser.uid}`));
           }
@@ -109,7 +144,7 @@ export const FirebaseProvider: React.FC<{ children: ReactNode }> = ({ children }
     if (!user) return;
     const userDocRef = doc(db, 'users', user.uid);
     try {
-      await setDoc(userDocRef, { ...profile, ...updates, lastActive: new Date().toISOString() }, { merge: true });
+      await setDoc(userDocRef, { ...updates, lastActive: new Date().toISOString() }, { merge: true });
     } catch (error) {
       handleFirestoreError(error, OperationType.UPDATE, `users/${user.uid}`);
     }

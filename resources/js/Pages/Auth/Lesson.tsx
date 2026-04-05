@@ -2,15 +2,14 @@ import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { X, Heart, Star, BookOpen, GraduationCap, Volume2, Hash, Mic, Square, RefreshCw } from 'lucide-react';
 import { useFirebase } from '../../Contexts/FirebaseContext';
-import { VocabDrill } from './LessonActivities/VocabDrill';
-import { MatchActivity } from './LessonActivities/MatchActivity';
 import { calculateSRS } from '../../lib/srs';
 import { collection, doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../firebase';
-import { DndContext, closestCenter, KeyboardSensor, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { DndContext, closestCenter, KeyboardSensor, PointerSensor, TouchSensor, useSensor, useSensors } from '@dnd-kit/core';
 import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSortingStrategy, useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI, Modality } from "@google/genai";
+import { toast } from 'sonner';
 
 import { LESSON_DATA } from '../../constants/lessonData';
 
@@ -64,7 +63,7 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
         currentSRS = snap.data() as any;
       }
       
-      const nextSRS = calculateSRS(isCorrect ? 5 : 0, currentSRS.interval, currentSRS.easeFactor);
+      const nextSRS = calculateSRS(isCorrect ? 5 : 0, Number(currentSRS.interval) || 0, Number(currentSRS.easeFactor) || 2.5);
       await setDoc(reviewRef, {
         userId: user.uid,
         wordId,
@@ -108,6 +107,7 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
   const [pronunciationScore, setPronunciationScore] = useState<number | null>(null);
   const [pronunciationFeedback, setPronunciationFeedback] = useState<string | null>(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
   const audioChunksRef = useRef<Blob[]>([]);
 
@@ -129,10 +129,64 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
 
   const sensors = useSensors(
     useSensor(PointerSensor),
+    useSensor(TouchSensor),
     useSensor(KeyboardSensor, {
       coordinateGetter: sortableKeyboardCoordinates,
     })
   );
+
+  const handleSpeak = async (text: string) => {
+    if (isSpeaking) return;
+    setIsSpeaking(true);
+    
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: `Say clearly: ${text}` }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const binaryString = atob(base64Audio);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        const float32Data = new Float32Array(bytes.length / 2);
+        const dataView = new DataView(bytes.buffer);
+        for (let i = 0; i < float32Data.length; i++) {
+          float32Data[i] = dataView.getInt16(i * 2, true) / 32768.0;
+        }
+
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioBuffer = audioCtx.createBuffer(1, float32Data.length, 24000);
+        audioBuffer.getChannelData(0).set(float32Data);
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.onended = () => setIsSpeaking(false);
+        source.start();
+      } else {
+        throw new Error('No audio data received');
+      }
+    } catch (error) {
+      console.error('TTS Error:', error);
+      toast.error('Failed to play pronunciation');
+      setIsSpeaking(false);
+    }
+  };
 
   const startRecording = async () => {
     try {
@@ -158,7 +212,7 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
       setIsRecording(true);
     } catch (error) {
       console.error('Error accessing microphone:', error);
-      alert('Could not access microphone. Please check permissions.');
+      toast.error('Could not access microphone. Please check permissions.');
     }
   };
 
@@ -185,7 +239,7 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
         Return ONLY a JSON object in this exact format: {"score": 85, "feedback": "Good effort, but emphasize the second syllable more."}`;
 
         const response = await ai.models.generateContent({
-          model: "gemini-2.5-flash",
+          model: "gemini-3-flash-preview",
           contents: [
             { text: prompt },
             { inlineData: { data: base64Audio, mimeType: audioBlob.type } }
@@ -318,31 +372,33 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
     }
   };
 
-  const handleFinish = () => {
+  const handleFinish = async () => {
     if (isFinished) return;
     const finalXp = xpEarned + 20;
+    const accuracyScore = Math.round((totalCorrect / (totalCorrect + totalWrong)) * 100) || 0;
+
     if (profile) {
       const newXP = profile.xp + finalXp;
       const newLevel = Math.floor(newXP / 500) + 1;
-      const lastActiveDate = profile.lastActive ? new Date(profile.lastActive) : null;
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-
+      
+      const today = new Date().toISOString().split('T')[0];
       let newStreak = profile.streak;
-      if (lastActiveDate) {
-        const lastActiveDay = new Date(lastActiveDate);
-        lastActiveDay.setHours(0, 0, 0, 0);
-
-        const diffTime = today.getTime() - lastActiveDay.getTime();
-        const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      
+      if (!profile.lastLessonDate) {
+        newStreak = 1;
+      } else {
+        const lastDate = new Date(profile.lastLessonDate.split('T')[0]);
+        const currentDate = new Date(today);
+        const diffTime = currentDate.getTime() - lastDate.getTime();
+        const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
 
         if (diffDays === 1) {
           newStreak = profile.streak + 1;
         } else if (diffDays > 1) {
           newStreak = 1;
+        } else if (diffDays === 0) {
+          newStreak = profile.streak;
         }
-      } else {
-        newStreak = 1;
       }
       
       const updates: any = {
@@ -350,13 +406,64 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
         level: newLevel,
         streak: newStreak,
         lastActive: new Date().toISOString(),
+        lastLessonDate: today,
       };
 
       if (lessonId && !profile.completedLessons.includes(lessonId)) {
         updates.completedLessons = [...profile.completedLessons, lessonId];
       }
 
-      updateProfile(updates);
+      // Update xpHistory
+      const todayDay = new Date().toLocaleDateString('en-US', { weekday: 'short' });
+      const defaultXpHistory = [
+        { day: 'Mon', xp: 0 }, { day: 'Tue', xp: 0 }, { day: 'Wed', xp: 0 },
+        { day: 'Thu', xp: 0 }, { day: 'Fri', xp: 0 }, { day: 'Sat', xp: 0 }, { day: 'Sun', xp: 0 }
+      ];
+      let newXpHistory = profile.xpHistory?.length ? profile.xpHistory.map(entry => ({ ...entry })) : defaultXpHistory.map(entry => ({ ...entry }));
+      const todayIndex = newXpHistory.findIndex(entry => entry.day === todayDay);
+      if (todayIndex >= 0) {
+        newXpHistory[todayIndex].xp += finalXp;
+      } else {
+        newXpHistory.push({ day: todayDay, xp: finalXp });
+        if (newXpHistory.length > 7) newXpHistory.shift();
+      }
+      updates.xpHistory = newXpHistory;
+
+      // Update accuracy
+      const subject = lessonContent?.discussion.title || 'General';
+      const defaultAccuracy = [
+        { subject: 'Greetings', score: 0 }, { subject: 'Numbers', score: 0 },
+        { subject: 'Nature', score: 0 }, { subject: 'Family', score: 0 }, { subject: 'Rituals', score: 0 }
+      ];
+      let newAccuracy = profile.accuracy?.length ? profile.accuracy.map(entry => ({ ...entry })) : defaultAccuracy.map(entry => ({ ...entry }));
+      const subjectIndex = newAccuracy.findIndex(entry => entry.subject === subject);
+      if (subjectIndex >= 0) {
+        newAccuracy[subjectIndex].score = Math.round((newAccuracy[subjectIndex].score + accuracyScore) / 2);
+      } else {
+        newAccuracy.push({ subject, score: accuracyScore });
+      }
+      updates.accuracy = newAccuracy;
+
+      // Unlock Artifacts
+      const currentArtifacts = profile.artifacts || [];
+      const newArtifacts = [...currentArtifacts];
+      const totalLessons = updates.completedLessons?.length || profile.completedLessons.length;
+      
+      if (totalLessons >= 1 && !newArtifacts.includes('elder_voice')) newArtifacts.push('elder_voice');
+      if (totalLessons >= 5 && !newArtifacts.includes('domain_map')) newArtifacts.push('domain_map');
+      if (newLevel >= 3 && !newArtifacts.includes('sacred_thread')) newArtifacts.push('sacred_thread');
+      if (newStreak >= 3 && !newArtifacts.includes('spirit_needle')) newArtifacts.push('spirit_needle');
+      if (newLevel >= 10 && !newArtifacts.includes('golden_loom')) newArtifacts.push('golden_loom');
+      if (totalLessons >= 20 && !newArtifacts.includes('ancient_dye')) newArtifacts.push('ancient_dye');
+      
+      if (newArtifacts.length > currentArtifacts.length) {
+        updates.artifacts = newArtifacts;
+        const unlockedCount = newArtifacts.length - currentArtifacts.length;
+        toast.success(`Unlocked ${unlockedCount} new artifact${unlockedCount > 1 ? 's' : ''}!`);
+      }
+
+      await updateProfile(updates);
+      toast.success(`Lesson Complete! +${finalXp} XP`);
     }
     setTimeout(() => setIsFinished(true), 1000);
   };
@@ -433,6 +540,39 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
       setTimeout(nextStep, 1000);
     }
   }, [matchedPairs]);
+
+  if (lives === 0) {
+    return (
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        className="max-w-2xl mx-auto text-center space-y-8 py-12"
+      >
+        <div className="text-6xl mb-4">💔</div>
+        <h2 className="text-5xl font-headline font-bold text-terracotta">Out of Lives</h2>
+        <p className="text-cream/60 text-xl">Don't worry, every mistake is a step towards mastery. Take a short break and try again!</p>
+        <div className="flex gap-4 justify-center pt-8">
+          <button onClick={onExit} className="bg-white/10 text-cream px-10 py-4 rounded-2xl font-black text-lg hover:bg-white/20 transition-all">
+            Back to Path
+          </button>
+          <button 
+            onClick={() => {
+              setLives(3);
+              setCurrentStepIndex(-1);
+              setIsIntro(true);
+              setXpEarned(0);
+              setTotalCorrect(0);
+              setTotalWrong(0);
+              setStreak(0);
+            }} 
+            className="bg-primary text-forest px-10 py-4 rounded-2xl font-black text-lg gold-shadow hover:-translate-y-1 transition-all"
+          >
+            Try Again
+          </button>
+        </div>
+      </motion.div>
+    );
+  }
 
   if (isFinished) {
     const accuracy = Math.round((totalCorrect / (totalCorrect + totalWrong)) * 100) || 0;
@@ -579,24 +719,111 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
             )}
 
             {!isIntro && currentStep?.type === 'vocab_drill' && (
-              <VocabDrill 
-                content={currentStep.content}
-                vocabIndex={vocabIndex}
-                vocabFlipped={vocabFlipped}
-                setVocabFlipped={setVocabFlipped}
-                nextStep={nextStep}
-                setVocabIndex={setVocabIndex}
-              />
+              <motion.div 
+                key="vocab"
+                initial={{ opacity: 0, scale: 0.9 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.9 }}
+                className="w-full max-w-xl space-y-8"
+              >
+                <div className="text-center space-y-2">
+                  <span className="px-4 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-500/30">📝 Vocabulary Drill</span>
+                  <div className="text-cream/40 font-mono text-xs">Word {vocabIndex + 1} of {currentStep.content.length}</div>
+                </div>
+
+                <motion.div 
+                  onClick={() => setVocabFlipped(!vocabFlipped)}
+                  className="aspect-[4/3] bg-white/5 border border-white/10 rounded-[3rem] p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 transition-all gold-shadow relative overflow-hidden group touch-none"
+                >
+                  {!vocabFlipped ? (
+                    <>
+                      <img 
+                        src={`https://picsum.photos/seed/${currentStep.content[vocabIndex].word}/400/300`} 
+                        alt={currentStep.content[vocabIndex].word}
+                        className="w-32 h-32 rounded-2xl mb-6 object-cover border-2 border-primary/20"
+                        referrerPolicy="no-referrer"
+                      />
+                      <div className="text-6xl font-headline font-bold text-cream mb-4">{currentStep.content[vocabIndex].word}</div>
+                      <div className="mt-12 text-[10px] font-black uppercase tracking-widest text-primary/40">Tap to reveal meaning</div>
+                    </>
+                  ) : (
+                    <motion.div 
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="space-y-6"
+                    >
+                      <div className="text-3xl font-bold text-primary">{currentStep.content[vocabIndex].meaning}</div>
+                      <div className="text-lg text-cream/60 italic">{currentStep.content[vocabIndex].context}</div>
+                    </motion.div>
+                  )}
+                </motion.div>
+
+                {vocabFlipped && (
+                  <div className="flex gap-4">
+                    <button 
+                      onClick={() => {
+                        if (vocabIndex < currentStep.content.length - 1) {
+                          setVocabIndex(prev => prev + 1);
+                          setVocabFlipped(false);
+                        } else {
+                          nextStep();
+                        }
+                      }} 
+                      className="flex-1 bg-primary text-forest py-4 rounded-2xl font-black gold-shadow hover:-translate-y-1 transition-all"
+                    >
+                      {vocabIndex < currentStep.content.length - 1 ? 'Next Word →' : 'Continue →'}
+                    </button>
+                  </div>
+                )}
+              </motion.div>
             )}
 
             {!isIntro && currentStep?.type === 'match' && (
-              <MatchActivity 
-                content={currentStep.content}
-                matchedPairs={matchedPairs}
-                selectedLeft={selectedLeft}
-                selectedRight={selectedRight}
-                handleMatch={handleMatch}
-              />
+              <motion.div 
+                key="match"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="w-full max-w-4xl space-y-12"
+              >
+                <div className="text-center space-y-2">
+                  <span className="px-4 py-1 bg-orange-500/20 text-orange-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-orange-500/30">🔗 Word Matching</span>
+                  <div className="text-cream/40 font-mono text-xs">{matchedPairs} / {currentStep.content.length} pairs matched</div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-12">
+                  <div className="space-y-4">
+                    {currentStep.content.map((pair: any, i: number) => (
+                      <button 
+                        key={i}
+                        onClick={() => handleMatch('left', i, pair.left)}
+                        className={`w-full p-6 rounded-3xl border-2 transition-all text-left text-xl font-headline font-bold ${
+                          selectedLeft?.idx === i 
+                            ? 'bg-primary/10 border-primary text-primary' 
+                            : 'bg-white/5 border-white/10 text-cream/80 hover:bg-white/10'
+                        }`}
+                      >
+                        {pair.left}
+                      </button>
+                    ))}
+                  </div>
+                  <div className="space-y-4">
+                    {[...currentStep.content].sort((a, b) => a.right.localeCompare(b.right)).map((pair: any, i: number) => (
+                      <button 
+                        key={i}
+                        onClick={() => handleMatch('right', i, pair.left)}
+                        className={`w-full p-6 rounded-3xl border-2 transition-all text-left text-lg font-bold ${
+                          selectedRight?.idx === i 
+                            ? 'bg-primary/10 border-primary text-primary' 
+                            : 'bg-white/5 border-white/10 text-cream/80 hover:bg-white/10'
+                        }`}
+                      >
+                        {pair.right}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {!isIntro && currentStep?.type === 'listen' && (
@@ -614,10 +841,14 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
 
                 <div className="bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center space-y-8">
                   <button 
-                    onClick={() => setListenPlayed(true)}
-                    className={`w-24 h-24 rounded-full border-4 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all mx-auto ${listenPlayed ? 'animate-pulse' : ''}`}
+                    onClick={() => {
+                      setListenPlayed(true);
+                      handleSpeak(currentStep.content[listenIndex].word);
+                    }}
+                    disabled={isSpeaking}
+                    className={`w-24 h-24 rounded-full border-4 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all mx-auto ${listenPlayed ? 'animate-pulse' : ''} disabled:opacity-50`}
                   >
-                    <Volume2 className="w-10 h-10" />
+                    {isSpeaking ? <RefreshCw className="w-10 h-10 animate-spin" /> : <Volume2 className="w-10 h-10" />}
                   </button>
                   <div className="text-cream/60">Press play to hear the word</div>
                 </div>
@@ -905,8 +1136,12 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                   <div className="text-xl text-cream/40 italic">{currentStep.content[0].phonetic}</div>
                   
                   <div className="flex justify-center gap-6">
-                    <button className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all">
-                      <Volume2 className="w-8 h-8" />
+                    <button 
+                      onClick={() => handleSpeak(currentStep.content[0].word)}
+                      disabled={isSpeaking}
+                      className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all disabled:opacity-50"
+                    >
+                      {isSpeaking ? <RefreshCw className="w-8 h-8 animate-spin" /> : <Volume2 className="w-8 h-8" />}
                     </button>
                     <button 
                       onClick={isRecording ? stopRecording : startRecording}

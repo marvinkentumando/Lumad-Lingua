@@ -26,6 +26,10 @@ export function calculateSRS(quality: number, interval: number, easeFactor: numb
   }
 
   if (nextEaseFactor < 1.3) nextEaseFactor = 1.3;
+  
+  // Safety cap: max interval of 10 years (3650 days) to prevent Firestore range errors
+  if (nextInterval > 3650) nextInterval = 3650;
+  if (isNaN(nextInterval) || nextInterval < 0) nextInterval = 1;
 
   const nextReview = new Date();
   nextReview.setDate(nextReview.getDate() + nextInterval);

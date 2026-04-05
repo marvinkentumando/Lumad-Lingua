@@ -1,5 +1,5 @@
 {
   "name": "Lumad Lingua",
   "description": "Master ancestral dialects through the Ancestral Ascent. A language learning app with a focus on cultural heritage.",
-  "requestFramePermissions": []
+  "requestFramePermissions": ["microphone"]
 }

@@ -1,26 +1,65 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Sparkles, RotateCcw, Check, X, Volume2, Info, ChevronLeft, ChevronRight, Bookmark } from 'lucide-react';
+import { Sparkles, RotateCcw, Check, X, Volume2, Info, ChevronLeft, ChevronRight, Bookmark, Loader2 } from 'lucide-react';
+import { useFirebase } from '../../Contexts/FirebaseContext';
+import { DICTIONARY_WORDS } from '../../constants/dictionaryData';
+import { GoogleGenAI, Modality } from "@google/genai";
+import { toast } from 'sonner';
 
 const Flashcards: React.FC = () => {
+  const { profile, updateProfile } = useFirebase();
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
   const [direction, setDirection] = useState(0);
-  const [knownCount, setKnownCount] = useState(0);
-  const [unknownCount, setUnknownCount] = useState(0);
-  const [bookmarked, setBookmarked] = useState<Set<number>>(new Set());
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
-  const cards = [
-    { term: 'Kalumanan', phonetic: '/ ka·lu·ma·nan /', meaning: 'Heritage / Ancestry', example: 'Ang kalumanan ay dapat ingatan.', origin: 'Mansaka' },
-    { term: 'Balay', phonetic: '/ ba·lay /', meaning: 'House / Home', example: 'Magbalik ta sa balay.', origin: 'Mandaya' },
-    { term: 'Datu', phonetic: '/ da·tu /', meaning: 'Chief / Leader', example: 'Ang datu ay matalino.', origin: 'Mansaka' },
-    { term: 'Diwata', phonetic: '/ di·wa·ta /', meaning: 'Nature Spirit', example: 'Ang diwata ay nakatira sa bundok.', origin: 'Mandaya' },
-    { term: 'Dagmay', phonetic: '/ dag·may /', meaning: 'Traditional Cloth', example: 'Maganda ang dagmay.', origin: 'Mansaka' },
-  ];
+  // Dynamic Deck: Prioritize mistakes, then bookmarks, then dictionary words
+  const cards = useMemo(() => {
+    const dictionaryCards = DICTIONARY_WORDS.map(word => ({
+      id: word.term,
+      term: word.term,
+      phonetic: `[ ${word.pos} ]`,
+      meaning: word.english,
+      example: word.example.replace(/"/g, ''),
+      origin: word.tag || 'Lumad'
+    }));
 
-  const handleNext = (isKnown: boolean) => {
-    if (isKnown) setKnownCount(prev => prev + 1);
-    else setUnknownCount(prev => prev + 1);
+    if (!profile) return dictionaryCards;
+
+    const mistakes = profile.mistakes || [];
+    const bookmarks = profile.bookmarks || [];
+
+    // Create a set of IDs for easy lookup
+    const mistakeCards = dictionaryCards.filter(c => mistakes.includes(c.term));
+    const bookmarkCards = dictionaryCards.filter(c => bookmarks.includes(c.term) && !mistakes.includes(c.term));
+    const otherCards = dictionaryCards.filter(c => !mistakes.includes(c.term) && !bookmarks.includes(c.term));
+
+    // Combine: Mistakes first, then bookmarks, then others
+    return [...mistakeCards, ...bookmarkCards, ...otherCards];
+  }, [profile?.mistakes, profile?.bookmarks]);
+
+  const handleNext = async (isKnown: boolean) => {
+    if (!profile) return;
+
+    const currentTerm = cards[currentIndex].term;
+    const updates: any = {};
+    
+    if (isKnown) {
+      updates.masteredCount = (profile.masteredCount || 0) + 1;
+      updates.xp = (profile.xp || 0) + 10;
+      // Remove from mistakes if mastered
+      if (profile.mistakes?.includes(currentTerm)) {
+        updates.mistakes = profile.mistakes.filter(m => m !== currentTerm);
+      }
+    } else {
+      updates.learningCount = (profile.learningCount || 0) + 1;
+      // Add to mistakes if not already there
+      if (!profile.mistakes?.includes(currentTerm)) {
+        updates.mistakes = [...(profile.mistakes || []), currentTerm];
+      }
+    }
+    
+    await updateProfile(updates);
 
     setDirection(1);
     setIsFlipped(false);
@@ -37,14 +76,79 @@ const Flashcards: React.FC = () => {
     }, 200);
   };
 
-  const toggleBookmark = (idx: number) => {
-    const newBookmarks = new Set(bookmarked);
-    if (newBookmarks.has(idx)) newBookmarks.delete(idx);
-    else newBookmarks.add(idx);
-    setBookmarked(newBookmarks);
+  const toggleBookmark = async (term: string) => {
+    if (!profile) return;
+    
+    const currentBookmarks = profile.bookmarks || [];
+    let newBookmarks: string[];
+    
+    if (currentBookmarks.includes(term)) {
+      newBookmarks = currentBookmarks.filter(b => b !== term);
+      toast.info('Removed from bookmarks');
+    } else {
+      newBookmarks = [...currentBookmarks, term];
+      toast.success('Added to bookmarks');
+    }
+    
+    await updateProfile({ bookmarks: newBookmarks });
+  };
+
+  const handleSpeak = async (text: string) => {
+    if (isSpeaking) return;
+    setIsSpeaking(true);
+    
+    try {
+      const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY! });
+      const response = await ai.models.generateContent({
+        model: "gemini-2.5-flash-preview-tts",
+        contents: [{ parts: [{ text: `Say clearly: ${text}` }] }],
+        config: {
+          responseModalities: [Modality.AUDIO],
+          speechConfig: {
+            voiceConfig: {
+              prebuiltVoiceConfig: { voiceName: 'Kore' },
+            },
+          },
+        },
+      });
+
+      const base64Audio = response.candidates?.[0]?.content?.parts?.[0]?.inlineData?.data;
+      if (base64Audio) {
+        const binaryString = atob(base64Audio);
+        const len = binaryString.length;
+        const bytes = new Uint8Array(len);
+        for (let i = 0; i < len; i++) {
+          bytes[i] = binaryString.charCodeAt(i);
+        }
+        
+        // Convert PCM16 to Float32
+        const float32Data = new Float32Array(bytes.length / 2);
+        const dataView = new DataView(bytes.buffer);
+        for (let i = 0; i < float32Data.length; i++) {
+          float32Data[i] = dataView.getInt16(i * 2, true) / 32768.0;
+        }
+
+        const audioCtx = new (window.AudioContext || (window as any).webkitAudioContext)();
+        const audioBuffer = audioCtx.createBuffer(1, float32Data.length, 24000);
+        audioBuffer.getChannelData(0).set(float32Data);
+
+        const source = audioCtx.createBufferSource();
+        source.buffer = audioBuffer;
+        source.connect(audioCtx.destination);
+        source.onended = () => setIsSpeaking(false);
+        source.start();
+      } else {
+        throw new Error('No audio data received');
+      }
+    } catch (error) {
+      console.error('TTS Error:', error);
+      toast.error('Failed to play pronunciation');
+      setIsSpeaking(false);
+    }
   };
 
   const currentCard = cards[currentIndex];
+  const isBookmarked = profile?.bookmarks?.includes(currentCard.term);
 
   return (
     <motion.div 
@@ -61,11 +165,11 @@ const Flashcards: React.FC = () => {
         <div className="flex gap-4">
           <div className="bg-green-500/10 border border-green-500/20 px-4 py-2 rounded-xl flex items-center gap-2">
             <Check className="w-4 h-4 text-green-500" />
-            <span className="text-green-500 font-bold">{knownCount}</span>
+            <span className="text-green-500 font-bold">{profile?.masteredCount || 0}</span>
           </div>
           <div className="bg-red-500/10 border border-red-500/20 px-4 py-2 rounded-xl flex items-center gap-2">
             <X className="w-4 h-4 text-red-500" />
-            <span className="text-red-500 font-bold">{unknownCount}</span>
+            <span className="text-red-500 font-bold">{profile?.learningCount || 0}</span>
           </div>
         </div>
       </div>
@@ -90,10 +194,10 @@ const Flashcards: React.FC = () => {
                 <span>{currentCard.origin}</span>
               </div>
               <button 
-                onClick={(e) => { e.stopPropagation(); toggleBookmark(currentIndex); }}
+                onClick={(e) => { e.stopPropagation(); toggleBookmark(currentCard.term); }}
                 className="absolute top-10 right-10 p-3 hover:bg-white/5 rounded-full transition-colors"
               >
-                <Bookmark className={`w-6 h-6 ${bookmarked.has(currentIndex) ? 'text-primary fill-primary' : 'text-cream/20'}`} />
+                <Bookmark className={`w-6 h-6 ${isBookmarked ? 'text-primary fill-primary' : 'text-cream/20'}`} />
               </button>
               
               <div className="text-7xl font-headline font-bold text-cream mb-6 tracking-tight">{currentCard.term}</div>
@@ -113,10 +217,17 @@ const Flashcards: React.FC = () => {
                   "{currentCard.example}"
                 </div>
                 <div className="flex justify-center gap-4">
-                  <button className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center hover:bg-primary hover:text-forest transition-all">
-                    <Volume2 className="w-6 h-6" />
+                  <button 
+                    onClick={(e) => { e.stopPropagation(); handleSpeak(currentCard.term); }}
+                    disabled={isSpeaking}
+                    className="w-12 h-12 bg-primary/10 text-primary rounded-xl flex items-center justify-center hover:bg-primary hover:text-forest transition-all disabled:opacity-50"
+                  >
+                    {isSpeaking ? <Loader2 className="w-6 h-6 animate-spin" /> : <Volume2 className="w-6 h-6" />}
                   </button>
-                  <button className="w-12 h-12 bg-white/5 text-cream/40 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all">
+                  <button 
+                    onClick={(e) => e.stopPropagation()}
+                    className="w-12 h-12 bg-white/5 text-cream/40 rounded-xl flex items-center justify-center hover:bg-white/10 transition-all"
+                  >
                     <Info className="w-6 h-6" />
                   </button>
                 </div>
@@ -161,7 +272,13 @@ const Flashcards: React.FC = () => {
         </div>
 
         <button 
-          onClick={() => handleNext(true)}
+          onClick={() => {
+            setDirection(1);
+            setIsFlipped(false);
+            setTimeout(() => {
+              setCurrentIndex((prev) => (prev + 1) % cards.length);
+            }, 200);
+          }}
           className="w-16 h-16 bg-white/5 border border-white/10 rounded-full flex items-center justify-center text-cream/40 hover:text-primary transition-all hover:scale-110"
         >
           <ChevronRight className="w-8 h-8" />

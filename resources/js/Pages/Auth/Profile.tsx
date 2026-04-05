@@ -1,5 +1,5 @@
-import React from 'react';
-import { motion } from 'framer-motion';
+import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Settings, 
   Shield, 
@@ -18,10 +18,10 @@ import {
   Clock, 
   Volume2,
   TrendingUp,
-  BarChart3
+  BarChart3,
+  X
 } from 'lucide-react';
 import { Role } from '../../types';
-import { UserProfile } from '../../Contexts/FirebaseContext';
 import { 
   AreaChart, 
   Area, 
@@ -34,55 +34,188 @@ import {
   Bar,
   Cell
 } from 'recharts';
+import { useFirebase } from '../../Contexts/FirebaseContext';
+import { toast } from 'sonner';
 
 interface ProfileProps {
-  profile: UserProfile | null;
   userRole: Role;
   onRoleChange: (role: Role) => void;
   onLogout: () => void;
 }
 
-const progressData = [
-  { day: 'Mon', xp: 400 },
-  { day: 'Tue', xp: 300 },
-  { day: 'Wed', xp: 600 },
-  { day: 'Thu', xp: 800 },
-  { day: 'Fri', xp: 500 },
-  { day: 'Sat', xp: 900 },
-  { day: 'Sun', xp: 1200 },
+const defaultProgressData = [
+  { day: 'Mon', xp: 0 },
+  { day: 'Tue', xp: 0 },
+  { day: 'Wed', xp: 0 },
+  { day: 'Thu', xp: 0 },
+  { day: 'Fri', xp: 0 },
+  { day: 'Sat', xp: 0 },
+  { day: 'Sun', xp: 0 },
 ];
 
-const accuracyData = [
-  { subject: 'Greetings', score: 95 },
-  { subject: 'Numbers', score: 82 },
-  { subject: 'Nature', score: 75 },
-  { subject: 'Family', score: 88 },
-  { subject: 'Rituals', score: 60 },
+const defaultAccuracyData = [
+  { subject: 'Greetings', score: 0 },
+  { subject: 'Numbers', score: 0 },
+  { subject: 'Nature', score: 0 },
+  { subject: 'Family', score: 0 },
+  { subject: 'Rituals', score: 0 },
 ];
 
-const Profile: React.FC<ProfileProps> = ({ profile, userRole, onRoleChange, onLogout }) => {
+const Profile: React.FC<ProfileProps> = ({ userRole, onRoleChange, onLogout }) => {
+  const { profile, updateProfile } = useFirebase();
+  const [activeModal, setActiveModal] = useState<string | null>(null);
+
+  const progressData = profile?.xpHistory?.length ? profile.xpHistory : defaultProgressData;
+  const accuracyData = profile?.accuracy?.length ? profile.accuracy : defaultAccuracyData;
+
+  const overallAccuracy = profile?.accuracy?.length 
+    ? Math.round(profile.accuracy.reduce((acc, curr) => acc + curr.score, 0) / profile.accuracy.length)
+    : 0;
+
   const stats = [
-    { label: 'Total XP', val: (profile?.xp || 0).toLocaleString(), icon: Zap, color: 'text-primary' },
-    { label: 'Lessons', val: (profile?.completedLessons?.length || 0).toString(), icon: BookOpen, color: 'text-blue-400' },
+    { label: 'Total XP', val: profile?.xp?.toLocaleString() || '0', icon: Zap, color: 'text-primary' },
+    { label: 'Lessons', val: profile?.completedLessons?.length?.toString() || '0', icon: BookOpen, color: 'text-blue-400' },
     { label: 'Streak', val: `${profile?.streak || 0} Days`, icon: Trophy, color: 'text-orange-500' },
-    { label: 'Accuracy', val: `${profile?.accuracy || 0}%`, icon: Target, color: 'text-green-500' },
+    { label: 'Accuracy', val: `${overallAccuracy}%`, icon: Target, color: 'text-green-500' },
   ];
 
   const settings = [
-    { icon: Settings, label: 'Account Settings', desc: 'Manage your profile and security' },
-    { icon: Bell, label: 'Notifications', desc: 'Configure learning reminders' },
-    { icon: Globe, label: 'Language Preferences', desc: 'Choose your primary dialects' },
-    { icon: Shield, label: 'Privacy & Data', desc: 'Control your ancestral footprint' },
+    { id: 'account', icon: Settings, label: 'Account Settings', desc: 'Manage your profile and security' },
+    { id: 'notifications', icon: Bell, label: 'Notifications', desc: 'Configure learning reminders' },
+    { id: 'language', icon: Globe, label: 'Language Preferences', desc: 'Choose your primary dialects' },
+    { id: 'privacy', icon: Shield, label: 'Privacy & Data', desc: 'Control your ancestral footprint' },
   ];
 
   const artifacts = [
-    { name: 'Golden Loom', icon: Globe, rarity: 'Epic', unlocked: true },
-    { name: 'Sacred Thread', icon: Sparkles, rarity: 'Rare', unlocked: true },
-    { name: 'Elder Voice', icon: Volume2, rarity: 'Common', unlocked: true },
-    { name: 'Domain Map', icon: MapPin, rarity: 'Common', unlocked: true },
-    { name: 'Spirit Needle', icon: Hash, rarity: 'Rare', unlocked: false },
-    { name: 'Ancient Dye', icon: MapPin, rarity: 'Epic', unlocked: false },
-  ];
+    { id: 'golden_loom', name: 'Golden Loom', icon: Globe, rarity: 'Epic' },
+    { id: 'sacred_thread', name: 'Sacred Thread', icon: Sparkles, rarity: 'Rare' },
+    { id: 'elder_voice', name: 'Elder Voice', icon: Volume2, rarity: 'Common' },
+    { id: 'domain_map', name: 'Domain Map', icon: MapPin, rarity: 'Common' },
+    { id: 'spirit_needle', name: 'Spirit Needle', icon: Hash, rarity: 'Rare' },
+    { id: 'ancient_dye', name: 'Ancient Dye', icon: MapPin, rarity: 'Epic' },
+  ].map(a => ({ ...a, unlocked: profile?.artifacts?.includes(a.id) || false }));
+
+  const renderModal = () => {
+    if (!activeModal) return null;
+
+    const modalData: Record<string, { title: string; content: React.ReactNode }> = {
+      account: {
+        title: 'Account Settings',
+        content: (
+          <div className="space-y-6">
+            <div className="space-y-4">
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <label className="text-[10px] font-black uppercase tracking-widest text-cream/40 mb-2 block">Display Name</label>
+                <input 
+                  type="text" 
+                  defaultValue={profile?.displayName || ''} 
+                  className="w-full bg-transparent border-none outline-none text-cream font-bold"
+                  onBlur={(e) => updateProfile({ displayName: e.target.value })}
+                />
+              </div>
+              <div className="p-4 bg-white/5 border border-white/10 rounded-2xl opacity-50">
+                <label className="text-[10px] font-black uppercase tracking-widest text-cream/40 mb-2 block">Email Address</label>
+                <div className="text-cream font-bold">{profile?.email}</div>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                setActiveModal(null);
+                toast.success('Profile settings updated!');
+              }}
+              className="w-full bg-primary text-forest py-4 rounded-2xl font-black uppercase tracking-widest text-xs gold-shadow"
+            >
+              Save Changes
+            </button>
+          </div>
+        )
+      },
+      notifications: {
+        title: 'Notifications',
+        content: (
+          <div className="space-y-4">
+            {['Daily Reminders', 'Streak Alerts', 'New Lessons', 'Community Updates'].map((item) => (
+              <div key={item} className="flex items-center justify-between p-4 bg-white/5 border border-white/10 rounded-2xl">
+                <span className="text-cream font-bold">{item}</span>
+                <div className="w-10 h-5 bg-primary rounded-full relative">
+                  <div className="absolute top-1 right-1 w-3 h-3 bg-forest rounded-full"></div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )
+      },
+      language: {
+        title: 'Language Preferences',
+        content: (
+          <div className="space-y-4">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-widest text-cream/40 px-2">Primary Dialect</label>
+              <div className="grid grid-cols-2 gap-2">
+                {['Mansaka', 'Mandaya'].map(d => (
+                  <button key={d} className={`py-3 rounded-xl text-xs font-bold uppercase tracking-widest border transition-all ${d === 'Mansaka' ? 'bg-primary border-primary text-forest' : 'bg-white/5 border-white/10 text-cream/40'}`}>
+                    {d}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        )
+      },
+      privacy: {
+        title: 'Privacy & Data',
+        content: (
+          <div className="space-y-6">
+            <div className="p-4 bg-white/5 border border-white/10 rounded-2xl">
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-cream font-bold">Public Profile</span>
+                <div className="w-10 h-5 bg-white/10 rounded-full relative">
+                  <div className="absolute top-1 left-1 w-3 h-3 bg-cream/40 rounded-full"></div>
+                </div>
+              </div>
+              <p className="text-[10px] text-cream/40">Allow other weavers to see your progress and artifacts.</p>
+            </div>
+            <button className="w-full bg-terracotta/10 border border-terracotta/20 text-terracotta py-4 rounded-2xl font-black uppercase tracking-widest text-xs">Delete Account Data</button>
+          </div>
+        )
+      }
+    };
+
+    const currentModal = modalData[activeModal];
+    if (!currentModal) return null;
+
+    return (
+      <motion.div 
+        key="modal-overlay"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
+        className="fixed inset-0 z-[100] flex items-center justify-center px-4"
+      >
+        <div 
+          onClick={() => setActiveModal(null)}
+          className="absolute inset-0 bg-forest/80 backdrop-blur-md"
+        />
+        <motion.div 
+          initial={{ opacity: 0, scale: 0.95, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          exit={{ opacity: 0, scale: 0.95, y: 20 }}
+          className="relative w-full max-w-md bg-surface-high border border-white/10 rounded-[2.5rem] p-8 shadow-2xl"
+        >
+          <div className="flex items-center justify-between mb-8">
+            <h3 className="text-2xl font-bold text-cream">{currentModal.title}</h3>
+            <button 
+              onClick={() => setActiveModal(null)}
+              className="p-2 hover:bg-white/5 rounded-full transition-colors"
+            >
+              <X className="w-5 h-5 text-cream/40" />
+            </button>
+          </div>
+          {currentModal.content}
+        </motion.div>
+      </motion.div>
+    );
+  };
 
   return (
     <motion.div 
@@ -91,21 +224,24 @@ const Profile: React.FC<ProfileProps> = ({ profile, userRole, onRoleChange, onLo
       exit={{ opacity: 0, y: -20 }}
       className="max-w-4xl mx-auto space-y-12 pb-32 px-4 sm:px-6 lg:px-8"
     >
+      <AnimatePresence>
+        {renderModal()}
+      </AnimatePresence>
       {/* Profile Header */}
       <section className="relative overflow-hidden bg-forest/50 rounded-[3rem] p-8 md:p-12 border border-white/5 text-center">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-orange-500 to-primary"></div>
         <div className="relative z-10">
           <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-primary p-1 mx-auto mb-6 gold-shadow">
             <img 
-              src="https://api.dicebear.com/7.x/avataaars/svg?seed=Datu" 
+              src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.uid || 'default'}`} 
               alt="Profile" 
               className="w-full h-full rounded-full bg-forest"
               referrerPolicy="no-referrer"
             />
           </div>
-          <h2 className="text-3xl md:text-4xl font-headline font-bold text-cream mb-2">Datu Marvin</h2>
+          <h2 className="text-3xl md:text-4xl font-headline font-bold text-cream mb-2">{profile?.displayName || 'Unknown Weaver'}</h2>
           <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-            <span className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg text-[10px] font-bold text-primary uppercase tracking-widest">Level 12 Weaver</span>
+            <span className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg text-[10px] font-bold text-primary uppercase tracking-widest">Level {profile?.level || 1} Weaver</span>
             <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-lg text-[10px] font-bold text-cream/40 uppercase tracking-widest">Mansaka Community</span>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
@@ -130,8 +266,8 @@ const Profile: React.FC<ProfileProps> = ({ profile, userRole, onRoleChange, onLo
             </div>
             <TrendingUp className="w-5 h-5 text-primary" />
           </div>
-          <div className="h-64 w-full min-h-[256px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[256px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={1}>
               <AreaChart data={progressData}>
                 <defs>
                   <linearGradient id="colorXp" x1="0" y1="0" x2="0" y2="1">
@@ -172,8 +308,8 @@ const Profile: React.FC<ProfileProps> = ({ profile, userRole, onRoleChange, onLo
             </div>
             <BarChart3 className="w-5 h-5 text-blue-400" />
           </div>
-          <div className="h-64 w-full min-h-[256px]">
-            <ResponsiveContainer width="100%" height="100%">
+          <div className="h-[256px] w-full min-w-0">
+            <ResponsiveContainer width="100%" height="100%" minWidth={0} debounce={1}>
               <BarChart data={accuracyData} layout="vertical">
                 <CartesianGrid strokeDasharray="3 3" stroke="#ffffff05" horizontal={false} />
                 <XAxis type="number" hide domain={[0, 100]} />
@@ -245,7 +381,11 @@ const Profile: React.FC<ProfileProps> = ({ profile, userRole, onRoleChange, onLo
           <h3 className="text-[10px] font-black uppercase tracking-widest text-cream/20 border-b border-white/10 pb-2">Application Settings</h3>
           <div className="space-y-3">
             {settings.map((item, i) => (
-              <button key={i} className="w-full flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group text-left min-h-[44px]">
+              <button 
+                key={i} 
+                onClick={() => setActiveModal(item.id)}
+                className="w-full flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group text-left min-h-[44px]"
+              >
                 <div className="w-10 h-10 bg-white/5 rounded-xl flex items-center justify-center text-cream/40 group-hover:text-primary transition-colors">
                   <item.icon className="w-5 h-5" />
                 </div>

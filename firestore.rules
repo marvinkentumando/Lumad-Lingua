@@ -15,6 +15,7 @@ service cloud.firestore {
     //   - xp: number (required) - Total XP.
     //   - streak: number (required) - Current streak.
     //   - level: number (required) - Current level.
+    //   - lastLessonDate: string (optional) - ISO date of last lesson.
     //   - artifacts: list (optional) - Unlocked artifact IDs.
     //   - lastActive: timestamp (optional) - Last activity time.
     //
@@ -43,6 +44,18 @@ service cloud.firestore {
     //   - goalXp: number (required) - Goal XP.
     //   - currentXp: number (required) - Current XP.
     //   - endsAt: timestamp (required) - End time.
+    //
+    // Collection: cultural_sites
+    // Document ID: siteId
+    // Fields:
+    //   - name: string (required)
+    //   - community: string (required)
+    //   - type: string (required)
+    //   - coords: list (required) - [lat, lng]
+    //   - population: number (required)
+    //   - dialect: string (required)
+    //   - status: string (required)
+    //   - description: string (required)
     //
     // ===============================================================
 
@@ -79,7 +92,8 @@ service cloud.firestore {
              data.role in ['learner', 'contributor', 'validator', 'admin'] &&
              data.xp is number && data.xp >= 0 &&
              data.streak is number && data.streak >= 0 &&
-             data.level is number && data.level >= 0;
+             data.level is number && data.level >= 0 &&
+             (!('lastLessonDate' in data) || data.lastLessonDate is string);
     }
 
     function isValidWord(data) {
@@ -100,6 +114,19 @@ service cloud.firestore {
              data.easeFactor is number && data.easeFactor >= 1.3;
     }
 
+    function isValidCulturalSite(data) {
+      return data.keys().hasAll(['name', 'community', 'type', 'coords', 'population', 'dialect', 'status', 'description']) &&
+             data.name is string && data.name.size() > 0 && data.name.size() < 200 &&
+             data.community is string &&
+             data.type is string &&
+             data.coords is list && data.coords.size() == 2 &&
+             data.coords[0] is number && data.coords[1] is number &&
+             data.population is number &&
+             data.dialect is string &&
+             data.status is string &&
+             data.description is string && data.description.size() < 5000;
+    }
+
     // ===============================================================
     // Rules
     // ===============================================================
@@ -109,6 +136,7 @@ service cloud.firestore {
       allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'learner' || isAdmin());
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data) && 
                     ((isOwner(userId) && !isAdmin()) ? request.resource.data.role == resource.data.role : true);
+      allow delete: if isAdmin();
       
       match /reviews/{reviewId} {
         allow read: if isOwner(userId);
@@ -131,6 +159,11 @@ service cloud.firestore {
       allow write: if isAdmin();
       // Allow users to update currentXp via atomic increments (simplified for now)
       allow update: if isAuthenticated() && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['currentXp', 'participants']);
+    }
+
+    match /cultural_sites/{siteId} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
     }
 
     // Default deny

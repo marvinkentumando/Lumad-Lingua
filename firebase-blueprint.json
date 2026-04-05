@@ -11,8 +11,8 @@
         "role": { "type": "string", "enum": ["learner", "contributor", "validator", "admin"], "description": "The user's role in the system." },
         "xp": { "type": "integer", "description": "Total experience points earned." },
         "streak": { "type": "integer", "description": "Current daily learning streak." },
-        "accuracy": { "type": "number", "description": "Overall learning accuracy percentage." },
         "level": { "type": "integer", "description": "Current learning level." },
+        "lastLessonDate": { "type": "string", "format": "date", "description": "ISO date of the last completed lesson." },
         "artifacts": {
           "type": "array",
           "items": { "type": "string" },
@@ -76,21 +76,29 @@
       },
       "required": ["title", "goalXp", "currentXp", "endsAt"]
     },
-    "Weaver": {
-      "title": "Master Weaver",
-      "description": "Profile of a master weaver from the community.",
+    "CulturalSite": {
+      "title": "Cultural Site",
+      "description": "An ancestral domain, sacred site, or cultural hub on the map.",
       "type": "object",
       "properties": {
-        "id": { "type": "string", "description": "Unique ID for the weaver." },
-        "name": { "type": "string", "description": "Name of the weaver." },
-        "community": { "type": "string", "description": "The community the weaver belongs to (e.g., Mansaka, Mandaya)." },
-        "bio": { "type": "string", "description": "Biography or story of the weaver." },
-        "imageUrl": { "type": "string", "format": "uri", "description": "URL to the weaver's photo." },
-        "expertise": { "type": "array", "items": { "type": "string" }, "description": "Areas of expertise or specific weaving styles." },
-        "location": { "type": "string", "description": "Location or village of the weaver." },
-        "createdAt": { "type": "string", "format": "date-time", "description": "When the weaver profile was created." }
+        "id": { "type": "string", "description": "Unique ID for the site." },
+        "name": { "type": "string", "description": "The name of the site." },
+        "community": { "type": "string", "description": "The community or tribe associated with the site." },
+        "type": { "type": "string", "description": "The category of the site (e.g., Sacred Site, Ancestral Domain)." },
+        "coords": {
+          "type": "array",
+          "items": { "type": "number" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "[latitude, longitude]"
+        },
+        "population": { "type": "integer", "description": "Estimated population in the area." },
+        "dialect": { "type": "string", "description": "The primary dialect spoken." },
+        "status": { "type": "string", "description": "Current status (e.g., Active, Protected, UNESCO)." },
+        "description": { "type": "string", "description": "A brief history or description of the site." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the site was added." }
       },
-      "required": ["name", "community", "bio"]
+      "required": ["name", "community", "type", "coords", "population", "dialect", "status", "description"]
     }
   },
   "firestore": {
@@ -98,6 +106,6 @@
     "/words/{wordId}": { "schema": "Word", "description": "Dictionary entries." },
     "/users/{userId}/reviews/{reviewId}": { "schema": "SRSReview", "description": "User-specific SRS data." },
     "/challenges/{challengeId}": { "schema": "Challenge", "description": "Community challenges." },
-    "/weavers/{weaverId}": { "schema": "Weaver", "description": "Master weavers profiles." }
+    "/cultural_sites/{siteId}": { "schema": "CulturalSite", "description": "Cultural sites and ancestral domains." }
   }
 }

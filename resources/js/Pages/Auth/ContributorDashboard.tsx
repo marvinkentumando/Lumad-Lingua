@@ -292,7 +292,7 @@ const ContributorDashboard: React.FC = () => {
                   <div className="flex-1">
                     <div className="text-sm font-bold text-cream group-hover:text-primary transition-colors">{sub.term}</div>
                     <div className="text-[10px] text-cream/40 uppercase font-black tracking-widest mt-1">
-                      {sub.meaning} · {sub.createdAt?.toDate ? sub.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                      {sub.definition} · {sub.createdAt?.toDate ? sub.createdAt.toDate().toLocaleDateString() : 'Just now'}
                     </div>
                   </div>
                   <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded border ${

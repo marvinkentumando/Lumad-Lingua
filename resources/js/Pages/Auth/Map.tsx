@@ -19,20 +19,59 @@ import {
 } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
+import { collection, onSnapshot, query } from 'firebase/firestore';
+import { db } from '../../firebase';
+import { toast } from 'sonner';
 
 const Map: React.FC = () => {
   const [selectedLocation, setSelectedLocation] = useState<any>(null);
   const [activeFilter, setActiveFilter] = useState('All');
-  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+  const [mapLayer, setMapLayer] = useState('dark');
+  const [is3D, setIs3D] = useState(false);
+  const [locations, setLocations] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const locations = [
-    { id: 1, name: 'Mainit Hot Springs', community: 'Mansaka', type: 'Sacred Site', coords: [7.5, 126.0], population: 1240, dialect: 'Northern Mansaka', status: 'Active', description: 'A geothermal wonder considered sacred by the Mansaka people for its healing properties.' },
-    { id: 2, name: 'Maragusan Valley', community: 'Mansaka', type: 'Ancestral Domain', coords: [7.3, 126.1], population: 3500, dialect: 'Valley Mansaka', status: 'Protected', description: 'The heart of the Mansaka ancestral lands, rich in biodiversity and traditional agriculture.' },
-    { id: 3, name: 'Mount Hamiguitan', community: 'Mandaya', type: 'Heritage Site', coords: [6.7, 126.2], population: 800, dialect: 'Coastal Mandaya', status: 'UNESCO', description: 'A UNESCO World Heritage site known for its unique pygmy forest and Mandaya heritage.' },
-    { id: 4, name: 'Lake Sebu', community: 'Tboli', type: 'Cultural Hub', coords: [6.2, 124.7], population: 5200, dialect: 'Central Tboli', status: 'Active', description: 'The spiritual and cultural center of the Tboli people, famous for Tnalak weaving.' },
-  ];
+  useEffect(() => {
+    const q = query(collection(db, 'cultural_sites'));
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const sites = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      setLocations(sites);
+      setLoading(false);
+    }, (error) => {
+      console.error("Error fetching cultural sites:", error);
+      toast.error("Failed to load map data");
+      setLoading(false);
+    });
 
-  const filteredLocations = locations.filter(loc => activeFilter === 'All' || loc.community === activeFilter);
+    return () => unsubscribe();
+  }, []);
+
+  const filteredLocations = locations.filter(loc => {
+    const matchesFilter = activeFilter === 'All' || loc.community === activeFilter;
+    const matchesSearch = loc.name.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                         loc.community.toLowerCase().includes(searchQuery.toLowerCase());
+    return matchesFilter && matchesSearch;
+  });
+
+  const toggleFullscreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch(err => {
+        toast.error(`Error attempting to enable full-screen mode: ${err.message}`);
+      });
+    } else {
+      document.exitFullscreen();
+    }
+  };
+
+  const layers = {
+    dark: 'https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png',
+    light: 'https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png',
+    satellite: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}'
+  };
 
   return (
     <motion.div 
@@ -66,6 +105,8 @@ const Map: React.FC = () => {
             <input 
               type="text" 
               placeholder="Search ancestral lands..." 
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-transparent border-none outline-none text-[10px] font-bold text-cream placeholder:text-cream/20 w-40"
             />
           </div>
@@ -73,57 +114,74 @@ const Map: React.FC = () => {
       </div>
 
       {/* Map Container */}
-      <MapContainer 
-        center={[7.0, 125.5]} 
-        zoom={8} 
-        className="h-full w-full z-0"
-        zoomControl={false}
-      >
-        <TileLayer
-          url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
-        />
-        {filteredLocations.map(loc => (
-          <CircleMarker 
-            key={loc.id}
-            center={loc.coords as [number, number]}
-            radius={14}
-            pathOptions={{ 
-              fillColor: loc.community === 'Mansaka' ? '#FFC200' : loc.community === 'Mandaya' ? '#FF4D00' : '#60A5FA',
-              color: 'white',
-              weight: 2,
-              fillOpacity: 0.8
-            }}
-            eventHandlers={{
-              click: () => setSelectedLocation(loc)
-            }}
-          >
-            <Popup className="custom-popup">
-              <div className="p-2">
-                <div className="font-bold text-forest">{loc.name}</div>
-                <div className="text-xs text-forest/60">{loc.community} Community</div>
-              </div>
-            </Popup>
-          </CircleMarker>
-        ))}
-        <ZoomControl position="bottomright" />
-      </MapContainer>
+      <div className={`h-full w-full transition-all duration-700 ${is3D ? '[transform:rotateX(20deg)_rotateZ(-5deg)] scale-110' : ''}`}>
+        <MapContainer 
+          center={[7.0, 125.5]} 
+          zoom={8} 
+          className="h-full w-full z-0"
+          zoomControl={false}
+        >
+          <TileLayer
+            url={(layers as any)[mapLayer]}
+            attribution='&copy; OpenStreetMap contributors'
+          />
+          {filteredLocations.map(loc => (
+            <CircleMarker 
+              key={loc.id}
+              center={loc.coords as [number, number]}
+              radius={14}
+              pathOptions={{ 
+                fillColor: loc.community === 'Mansaka' ? '#FFC200' : loc.community === 'Mandaya' ? '#FF4D00' : '#60A5FA',
+                color: 'white',
+                weight: 2,
+                fillOpacity: 0.8
+              }}
+              eventHandlers={{
+                click: () => setSelectedLocation(loc)
+              }}
+            >
+              <Popup className="custom-popup">
+                <div className="p-2">
+                  <div className="font-bold text-forest">{loc.name}</div>
+                  <div className="text-xs text-forest/60">{loc.community} Community</div>
+                </div>
+              </Popup>
+            </CircleMarker>
+          ))}
+          <ZoomControl position="bottomright" />
+        </MapContainer>
+      </div>
 
       {/* Right Side Controls */}
       <div className="absolute right-4 top-24 md:top-4 z-10 flex flex-col gap-2">
-        {[
-          { icon: Layers, label: 'Layers' },
-          { icon: Globe, label: '3D View' },
-          { icon: Maximize2, label: 'Fullscreen' },
-        ].map((control, i) => (
-          <button 
-            key={i}
-            className="w-11 h-11 bg-forest/80 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center text-cream/60 hover:text-primary transition-colors shadow-xl min-h-[44px] min-w-[44px]"
-            title={control.label}
-          >
-            <control.icon className="w-5 h-5" />
-          </button>
-        ))}
+        <button 
+          onClick={() => {
+            const nextLayer = mapLayer === 'dark' ? 'light' : mapLayer === 'light' ? 'satellite' : 'dark';
+            setMapLayer(nextLayer);
+            toast.info(`Switched to ${nextLayer} view`);
+          }}
+          className={`w-11 h-11 bg-forest/80 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center transition-colors shadow-xl min-h-[44px] min-w-[44px] ${mapLayer !== 'dark' ? 'text-primary' : 'text-cream/60'}`}
+          title="Change Layers"
+        >
+          <Layers className="w-5 h-5" />
+        </button>
+        <button 
+          onClick={() => {
+            setIs3D(!is3D);
+            toast.info(is3D ? "Switched to 2D view" : "Switched to 3D perspective");
+          }}
+          className={`w-11 h-11 bg-forest/80 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center transition-colors shadow-xl min-h-[44px] min-w-[44px] ${is3D ? 'text-primary' : 'text-cream/60'}`}
+          title="3D View"
+        >
+          <Globe className="w-5 h-5" />
+        </button>
+        <button 
+          onClick={toggleFullscreen}
+          className="w-11 h-11 bg-forest/80 backdrop-blur-xl border border-white/10 rounded-xl flex items-center justify-center text-cream/60 hover:text-primary transition-colors shadow-xl min-h-[44px] min-w-[44px]"
+          title="Fullscreen"
+        >
+          <Maximize2 className="w-5 h-5" />
+        </button>
       </div>
 
       {/* Bottom Stats Bar */}
@@ -243,7 +301,13 @@ const Map: React.FC = () => {
                 </div>
 
                 <div className="pt-4 pb-8">
-                  <button className="w-full bg-primary text-forest py-5 rounded-2xl font-black uppercase tracking-widest gold-shadow hover:-translate-y-1 transition-all flex items-center justify-center gap-3 min-h-[56px]">
+                  <button 
+                    onClick={() => {
+                      const [lat, lng] = selectedLocation.coords;
+                      window.open(`https://www.google.com/maps/dir/?api=1&destination=${lat},${lng}`, '_blank');
+                    }}
+                    className="w-full bg-primary text-forest py-5 rounded-2xl font-black uppercase tracking-widest gold-shadow hover:-translate-y-1 transition-all flex items-center justify-center gap-3 min-h-[56px]"
+                  >
                     <Navigation className="w-5 h-5" />
                     Navigate to Site
                   </button>

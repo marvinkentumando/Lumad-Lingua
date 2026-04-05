@@ -220,7 +220,7 @@ const ValidatorDashboard: React.FC = () => {
                 <div className="flex-1">
                   <div className="text-sm font-bold text-cream group-hover:text-primary transition-colors">{sub.term}</div>
                   <div className="text-[10px] text-cream/40 uppercase font-black tracking-widest mt-1">
-                    {sub.meaning} · {sub.createdAt?.toDate ? sub.createdAt.toDate().toLocaleDateString() : 'Just now'}
+                    {sub.definition} · {sub.createdAt?.toDate ? sub.createdAt.toDate().toLocaleDateString() : 'Just now'}
                   </div>
                 </div>
                 <ChevronRight className="w-4 h-4 text-cream/20 group-hover:text-primary group-hover:translate-x-1 transition-all" />

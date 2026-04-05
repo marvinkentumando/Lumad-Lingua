@@ -28,8 +28,8 @@ const BottomNav: React.FC<BottomNavProps> = ({ active, setActive, userRole }) =>
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 h-24 bg-forest/80 backdrop-blur-xl border-t border-white/5 z-50 px-4 sm:px-8 flex items-center justify-center overflow-x-auto hide-scrollbar">
-      <div className="flex items-center gap-4 sm:gap-8 w-full justify-start sm:justify-center max-w-4xl px-4">
+    <nav className="fixed bottom-0 left-0 right-0 h-24 bg-forest/80 backdrop-blur-xl border-t border-white/5 z-50 px-4 flex items-center justify-center overflow-x-auto hide-scrollbar">
+      <div className="flex items-center gap-3 sm:gap-8 justify-center mx-auto px-4">
         {navItems.map((item) => (
           <button 
             key={item.id}

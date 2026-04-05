@@ -6,12 +6,13 @@ import { toast } from 'sonner';
 import { collection, query, where, onSnapshot } from 'firebase/firestore';
 import { db, handleFirestoreError, OperationType } from '../../firebase';
 import { DICTIONARY_WORDS } from '../../constants/dictionaryData';
+import { useFirebase } from '../../Contexts/FirebaseContext';
 
 const Dictionary: React.FC = () => {
+  const { profile, updateProfile } = useFirebase();
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState('All');
   const [expandedWord, setExpandedWord] = useState<string | null>(null);
-  const [bookmarkedWords, setBookmarkedWords] = useState<Set<string>>(new Set(['Kalumanan']));
   const [isListening, setIsListening] = useState(false);
   const [showSettings, setShowSettings] = useState(false);
   const [fontSize, setFontSize] = useState<'sm' | 'md' | 'lg'>('md');
@@ -157,16 +158,21 @@ const Dictionary: React.FC = () => {
     return matchesSearch && matchesCategory;
   });
 
-  const toggleBookmark = (term: string) => {
-    const newBookmarks = new Set(bookmarkedWords);
-    if (newBookmarks.has(term)) {
-      newBookmarks.delete(term);
+  const toggleBookmark = async (term: string) => {
+    if (!profile) return;
+    const currentBookmarks = profile.bookmarks || [];
+    const isBookmarked = currentBookmarks.includes(term);
+    
+    let newBookmarks;
+    if (isBookmarked) {
+      newBookmarks = currentBookmarks.filter(b => b !== term);
       toast.info(`Removed ${term} from saved words.`);
     } else {
-      newBookmarks.add(term);
+      newBookmarks = [...currentBookmarks, term];
       toast.success(`Saved ${term} to your words.`);
     }
-    setBookmarkedWords(newBookmarks);
+    
+    await updateProfile({ bookmarks: newBookmarks });
   };
 
   const highlightText = (text: string, highlight: string) => {
@@ -266,14 +272,7 @@ const Dictionary: React.FC = () => {
       </div>
 
       {/* Word of the Day Card */}
-      <div className="bg-gradient-to-br from-terracotta to-[#8B310A] rounded-[2.5rem] p-10 relative overflow-hidden terracotta-shadow mb-8 group" style={{
-    borderTopLeftRadius: "24px",
-    borderTopRightRadius: "24px",
-    borderBottomRightRadius: "24px",
-    borderBottomLeftRadius: "24px",
-    backgroundColor: "rgb(255, 255, 255)",
-    background: "none"
-}}>
+      <div className="bg-gradient-to-br from-terracotta to-[#8B310A] rounded-[2.5rem] p-10 relative overflow-hidden terracotta-shadow mb-8 group">
         <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -mr-32 -mt-32 blur-3xl group-hover:scale-110 transition-transform duration-1000"></div>
         <div className="absolute bottom-0 left-0 w-48 h-48 bg-primary/10 rounded-full -ml-24 -mb-24 blur-2xl"></div>
         
@@ -523,11 +522,11 @@ const Dictionary: React.FC = () => {
                               <button 
                                 onClick={() => toggleBookmark(word.term)}
                                 className={`flex-1 border py-3.5 rounded-xl font-black uppercase tracking-widest text-[10px] transition-all flex items-center justify-center gap-2 ${
-                                  bookmarkedWords.has(word.term) ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-white/10 text-cream/40 hover:bg-white/10'
+                                  profile?.bookmarks?.includes(word.term) ? 'bg-primary/10 border-primary text-primary' : 'bg-white/5 border-white/10 text-cream/40 hover:bg-white/10'
                                 }`}
                               >
-                                <Bookmark className={`w-3.5 h-3.5 ${bookmarkedWords.has(word.term) ? 'fill-current' : ''}`} />
-                                {bookmarkedWords.has(word.term) ? 'Saved' : 'Save'}
+                                <Bookmark className={`w-3.5 h-3.5 ${profile?.bookmarks?.includes(word.term) ? 'fill-current' : ''}`} />
+                                {profile?.bookmarks?.includes(word.term) ? 'Saved' : 'Save'}
                               </button>
                             </div>
                           </div>

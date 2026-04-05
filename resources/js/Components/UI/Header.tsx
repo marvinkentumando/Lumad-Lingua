@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { Search, Zap, Flame, Sparkles, Bell, Settings, Wifi, WifiOff, Book, PlayCircle } from 'lucide-react';
+import { Search, Zap, Flame, Sparkles, Bell, Settings, Wifi, WifiOff, Book, PlayCircle, Heart } from 'lucide-react';
+import NotificationPanel from './NotificationPanel';
 
 interface HeaderProps {
   onSearch: (query: string) => void;
@@ -13,6 +14,7 @@ interface HeaderProps {
 
 const Header: React.FC<HeaderProps> = ({ onSearch, searchQuery, searchResults, onSearchResultClick, xp, streak, level }) => {
   const [isOnline, setIsOnline] = useState(true);
+  const [isNotificationOpen, setIsNotificationOpen] = useState(false);
 
   useEffect(() => {
     const handleOnline = () => setIsOnline(true);
@@ -91,6 +93,10 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchQuery, searchResults, o
             <Flame className="w-4 h-4 text-terracotta fill-current" />
             <span className="text-sm font-black text-cream">{streak}d</span>
           </div>
+          <div className="flex items-center gap-2 border-r border-white/10 pr-4">
+            <Heart className="w-4 h-4 text-red-500 fill-current" />
+            <span className="text-sm font-black text-cream">5/5</span>
+          </div>
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 bg-blue-500/20 rounded-lg flex items-center justify-center">
               <span className="text-[10px] font-black text-blue-400">{level}</span>
@@ -100,10 +106,16 @@ const Header: React.FC<HeaderProps> = ({ onSearch, searchQuery, searchResults, o
         </div>
 
         <div className="flex items-center gap-3">
-          <button className="w-11 h-11 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-cream/40 hover:text-primary hover:bg-primary/10 transition-all relative min-h-[44px] min-w-[44px]">
-            <Bell className="w-5 h-5" />
-            <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-terracotta rounded-full border-2 border-forest"></div>
-          </button>
+          <div className="relative">
+            <button 
+              onClick={() => setIsNotificationOpen(!isNotificationOpen)}
+              className="w-11 h-11 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-cream/40 hover:text-primary hover:bg-primary/10 transition-all active:scale-95 relative min-h-[44px] min-w-[44px]"
+            >
+              <Bell className="w-5 h-5" />
+              <div className="absolute top-2.5 right-2.5 w-2 h-2 bg-terracotta rounded-full border-2 border-forest"></div>
+            </button>
+            <NotificationPanel isOpen={isNotificationOpen} onClose={() => setIsNotificationOpen(false)} />
+          </div>
           <button className="w-11 h-11 bg-white/5 border border-white/10 rounded-xl flex items-center justify-center text-cream/40 hover:text-primary hover:bg-primary/10 transition-all min-h-[44px] min-w-[44px]">
             <Settings className="w-5 h-5" />
           </button>
