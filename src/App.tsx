@@ -24,6 +24,8 @@ import Profile from '@/resources/js/Pages/Auth/Profile';
 import AdminDashboard from '@/resources/js/Pages/Admin/Dashboard';
 import ContributorDashboard from '@/resources/js/Pages/Auth/ContributorDashboard';
 import ValidatorDashboard from '@/resources/js/Pages/Auth/ValidatorDashboard';
+import EducatorDashboard from '@/resources/js/Pages/Auth/EducatorDashboard';
+import LessonCreator from '@/resources/js/Pages/Educator/LessonCreator';
 import Onboarding from '@/resources/js/Pages/Auth/Onboarding';
 
 // Data
@@ -36,45 +38,15 @@ const AppRoutes: React.FC = () => {
   const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
   const [selectedLessonType, setSelectedLessonType] = useState<string | null>(null);
   const [isSignup, setIsSignup] = useState(false);
-  const [globalSearchQuery, setGlobalSearchQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
-
-  // Memoize search results
-  const searchResults = useMemo(() => {
-    if (globalSearchQuery.trim() === '') return [];
-    const dictionaryTerms = DICTIONARY_WORDS.map(w => ({ term: w.term, type: 'Dictionary', desc: w.english }));
-    const lessons = Object.entries(LESSON_DATA).flatMap(([id, content]) => 
-      content.steps.map(step => ({
-        id,
-        term: step.title,
-        type: 'Lesson',
-        desc: content.discussion.title
-      }))
-    );
-    return [...dictionaryTerms, ...lessons].filter(item => 
-      item.term.toLowerCase().includes(globalSearchQuery.toLowerCase()) || 
-      item.desc.toLowerCase().includes(globalSearchQuery.toLowerCase())
-    ).slice(0, 5);
-  }, [globalSearchQuery]);
-
-  const handleSearchResultClick = (result: any) => {
-    setGlobalSearchQuery('');
-    if (result.type === 'Dictionary') {
-      navigate('/dictionary');
-    } else if (result.type === 'Lesson') {
-      navigate('/learn');
-      setIsQuizActive(true);
-      setSelectedLessonId(result.id);
-      setSelectedLessonType('vocab');
-    }
-  };
 
   useEffect(() => {
     if (profile && location.pathname === '/') {
       if (profile.role === 'admin') navigate('/admin');
       else if (profile.role === 'contributor') navigate('/contributor');
       else if (profile.role === 'validator') navigate('/validator');
+      else if (profile.role === 'educator') navigate('/educator');
       else navigate('/home');
     }
   }, [profile?.role, location.pathname, navigate]);
@@ -132,10 +104,6 @@ const AppRoutes: React.FC = () => {
       activeScreen={path as Screen}
       setActiveScreen={(screen) => navigate(`/${screen}`)}
       userRole={profile?.role || 'learner'}
-      onSearch={setGlobalSearchQuery}
-      searchQuery={globalSearchQuery}
-      searchResults={searchResults}
-      onSearchResultClick={handleSearchResultClick}
       xp={profile?.xp || 0}
       streak={profile?.streak || 0}
       level={profile?.level || 1}
@@ -158,13 +126,15 @@ const AppRoutes: React.FC = () => {
           <Route path="/profile" element={
             <Profile 
               userRole={profile?.role || 'learner'} 
-              onRoleChange={(role) => updateProfile({ role })} 
               onLogout={handleLogout} 
             />
           } />
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/contributor" element={<ContributorDashboard />} />
           <Route path="/validator" element={<ValidatorDashboard />} />
+          <Route path="/educator" element={<EducatorDashboard />} />
+          <Route path="/educator/lesson/new" element={<LessonCreator />} />
+          <Route path="/educator/lesson/edit/:lessonId" element={<LessonCreator />} />
           <Route path="/flashcards" element={<Flashcards />} />
           <Route path="*" element={<Navigate to="/home" replace />} />
         </Routes>

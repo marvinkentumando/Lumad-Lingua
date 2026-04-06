@@ -31,61 +31,33 @@ const Login: React.FC<LoginProps> = ({ onLogin, onGoToSignup }) => {
           <p className="text-cream/40 font-medium">Enter the canopy of ancestral echoes</p>
         </div>
 
-        <form 
-          onSubmit={(e) => { e.preventDefault(); onLogin(); }}
-          className="space-y-6"
-        >
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-cream/30 ml-4">Weaver Email</label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                <User className="w-5 h-5 text-cream/20 group-focus-within:text-primary transition-colors" />
-              </div>
-              <input 
-                type="email" 
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="w-full bg-white/5 border-2 border-transparent rounded-2xl py-4 pl-14 pr-6 text-cream placeholder:text-cream/20 focus:border-primary/30 focus:bg-white/10 transition-all outline-none"
-                placeholder="weaver@ancestry.com"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <label className="text-[10px] font-black uppercase tracking-[0.2em] text-cream/30 ml-4">Secret Echo</label>
-            <div className="relative group">
-              <div className="absolute inset-y-0 left-5 flex items-center pointer-events-none">
-                <Lock className="w-5 h-5 text-cream/20 group-focus-within:text-primary transition-colors" />
-              </div>
-              <input 
-                type="password" 
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                required
-                className="w-full bg-white/5 border-2 border-transparent rounded-2xl py-4 pl-14 pr-6 text-cream placeholder:text-cream/20 focus:border-primary/30 focus:bg-white/10 transition-all outline-none"
-                placeholder="••••••••"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between px-2">
-            <label className="flex items-center gap-2 cursor-pointer group">
-              <div className="w-5 h-5 bg-white/5 border border-white/10 rounded flex items-center justify-center group-hover:border-primary/50 transition-colors">
-                <div className="w-2.5 h-2.5 bg-primary rounded-sm"></div>
-              </div>
-              <span className="text-xs text-cream/40 font-bold">Remember Me</span>
-            </label>
-            <button type="button" className="text-xs text-primary font-bold hover:underline">Forgot Echo?</button>
-          </div>
-
+        <div className="space-y-6">
           <button 
-            type="submit"
-            className="w-full bg-primary text-forest py-5 rounded-2xl font-black uppercase tracking-widest gold-shadow hover:-translate-y-1 active:translate-y-1 transition-all mt-4"
+            onClick={onLogin}
+            className="w-full bg-white/5 border border-white/10 text-cream py-5 rounded-2xl font-black uppercase tracking-widest hover:bg-white/10 hover:-translate-y-1 active:translate-y-1 transition-all flex items-center justify-center gap-4 group"
           >
-            Ascend to Canopy
+            <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" className="w-6 h-6" alt="Google" />
+            <span>Sign in with Google</span>
           </button>
-        </form>
+          
+          <div className="relative py-4">
+            <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-white/5"></div></div>
+            <div className="relative flex justify-center text-[10px] uppercase tracking-widest font-black text-cream/20">
+              <span className="bg-surface-low px-4">Traditional Weaver Access</span>
+            </div>
+          </div>
+
+          <div className="space-y-4 opacity-40 pointer-events-none">
+            <div className="space-y-2">
+              <label className="text-[10px] font-black uppercase tracking-[0.2em] text-cream/30 ml-4">Weaver Email</label>
+              <div className="relative">
+                <div className="absolute inset-y-0 left-5 flex items-center"><User className="w-5 h-5 text-cream/20" /></div>
+                <input disabled className="w-full bg-white/5 border-2 border-transparent rounded-2xl py-4 pl-14 pr-6 text-cream outline-none" placeholder="weaver@ancestry.com" />
+              </div>
+            </div>
+            <p className="text-center text-[10px] text-cream/20 font-bold italic">Email login coming soon to the tribe</p>
+          </div>
+        </div>
 
         <div className="mt-10 text-center">
           <p className="text-cream/40 text-sm">

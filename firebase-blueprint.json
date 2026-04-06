@@ -8,10 +8,12 @@
         "uid": { "type": "string", "description": "The user's unique ID from Firebase Auth." },
         "displayName": { "type": "string", "description": "The user's display name." },
         "email": { "type": "string", "format": "email", "description": "The user's email address." },
-        "role": { "type": "string", "enum": ["learner", "contributor", "validator", "admin"], "description": "The user's role in the system." },
+        "role": { "type": "string", "enum": ["learner", "contributor", "validator", "educator", "admin"], "description": "The user's role in the system." },
         "xp": { "type": "integer", "description": "Total experience points earned." },
         "streak": { "type": "integer", "description": "Current daily learning streak." },
         "level": { "type": "integer", "description": "Current learning level." },
+        "lives": { "type": "integer", "description": "Current number of lives (max 5)." },
+        "lastLifeLostAt": { "type": "string", "format": "date-time", "description": "The timestamp when the last life was lost." },
         "lastLessonDate": { "type": "string", "format": "date", "description": "ISO date of the last completed lesson." },
         "artifacts": {
           "type": "array",
@@ -26,7 +28,67 @@
         },
         "lastActive": { "type": "string", "format": "date-time", "description": "The last time the user was active." }
       },
-      "required": ["uid", "role", "xp", "streak", "level", "onboarded", "completedLessons"]
+      "required": ["uid", "role", "xp", "streak", "level", "lives", "onboarded", "completedLessons"]
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "A notification for a specific user.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the notification." },
+        "userId": { "type": "string", "description": "The UID of the user who should receive this notification." },
+        "title": { "type": "string", "description": "The title of the notification." },
+        "message": { "type": "string", "description": "The message body of the notification." },
+        "type": { "type": "string", "enum": ["validation", "challenge", "system", "social"], "description": "The category of the notification." },
+        "read": { "type": "boolean", "description": "Whether the notification has been read." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the notification was created." },
+        "link": { "type": "string", "description": "An optional link to navigate to when the notification is clicked." }
+      },
+      "required": ["userId", "title", "message", "type", "read", "createdAt"]
+    },
+    "Lesson": {
+      "title": "Lesson",
+      "description": "A structured learning module created by an educator.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the lesson." },
+        "title": { "type": "string", "description": "Title of the lesson." },
+        "description": { "type": "string", "description": "A brief overview of the lesson." },
+        "educatorId": { "type": "string", "description": "The UID of the educator who created this lesson." },
+        "dialect": { "type": "string", "description": "The dialect or community this lesson focuses on." },
+        "difficulty": { "type": "string", "enum": ["beginner", "intermediate", "advanced"], "description": "The difficulty level." },
+        "wordIds": { "type": "array", "items": { "type": "string" }, "description": "List of words included in this lesson." },
+        "quizIds": { "type": "array", "items": { "type": "string" }, "description": "List of quizzes associated with this lesson." },
+        "status": { "type": "string", "enum": ["draft", "published"], "description": "The publication status." },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the lesson was created." }
+      },
+      "required": ["title", "educatorId", "dialect", "difficulty", "status", "createdAt"]
+    },
+    "Quiz": {
+      "title": "Quiz",
+      "description": "An interactive assessment within a lesson.",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string", "description": "Unique ID for the quiz." },
+        "lessonId": { "type": "string", "description": "The ID of the lesson this quiz belongs to." },
+        "title": { "type": "string", "description": "Title of the quiz." },
+        "questions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "type": { "type": "string", "enum": ["multiple-choice", "matching", "audio-recognition", "translation"], "description": "The type of question." },
+              "prompt": { "type": "string", "description": "The question prompt or text." },
+              "options": { "type": "array", "items": { "type": "string" }, "description": "Possible answers (for multiple-choice)." },
+              "correctAnswer": { "type": "string", "description": "The correct answer." },
+              "audioUrl": { "type": "string", "description": "Optional audio for audio-recognition questions." }
+            },
+            "required": ["type", "prompt", "correctAnswer"]
+          }
+        },
+        "createdAt": { "type": "string", "format": "date-time", "description": "When the quiz was created." }
+      },
+      "required": ["lessonId", "title", "questions", "createdAt"]
     },
     "Word": {
       "title": "Word Entry",
@@ -40,7 +102,7 @@
         "example": { "type": "string", "description": "An example sentence using the word." },
         "audioUrl": { "type": "string", "format": "uri", "description": "URL to the audio recording." },
         "contributorId": { "type": "string", "description": "UID of the user who contributed this word." },
-        "community": { "type": "string", "description": "The community or dialect this word belongs to." },
+        "dialect": { "type": "string", "description": "The community or dialect this word belongs to." },
         "status": { "type": "string", "enum": ["pending", "validated", "rejected"], "description": "The validation status of the word." },
         "validatorId": { "type": "string", "description": "UID of the validator who reviewed this word." },
         "createdAt": { "type": "string", "format": "date-time", "description": "When the word was submitted." }
@@ -106,6 +168,9 @@
     "/words/{wordId}": { "schema": "Word", "description": "Dictionary entries." },
     "/users/{userId}/reviews/{reviewId}": { "schema": "SRSReview", "description": "User-specific SRS data." },
     "/challenges/{challengeId}": { "schema": "Challenge", "description": "Community challenges." },
-    "/cultural_sites/{siteId}": { "schema": "CulturalSite", "description": "Cultural sites and ancestral domains." }
+    "/cultural_sites/{siteId}": { "schema": "CulturalSite", "description": "Cultural sites and ancestral domains." },
+    "/notifications/{notificationId}": { "schema": "Notification", "description": "User notifications." },
+    "/lessons/{lessonId}": { "schema": "Lesson", "description": "Educational lessons." },
+    "/quizzes/{quizId}": { "schema": "Quiz", "description": "Lesson quizzes." }
   }
 }

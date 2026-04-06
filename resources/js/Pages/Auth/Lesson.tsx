@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, Heart, Star, BookOpen, GraduationCap, Volume2, Hash, Mic, Square, RefreshCw } from 'lucide-react';
+import { X, Heart, Star, BookOpen, GraduationCap, Volume2, Hash, Mic, Square, RefreshCw, Type, MessageSquare, CheckCircle2, AlertCircle } from 'lucide-react';
+import confetti from 'canvas-confetti';
 import { useFirebase } from '../../Contexts/FirebaseContext';
 import { calculateSRS } from '../../lib/srs';
 import { collection, doc, setDoc, getDoc, Timestamp } from 'firebase/firestore';
@@ -11,7 +12,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { GoogleGenAI, Modality } from "@google/genai";
 import { toast } from 'sonner';
 
-import { LESSON_DATA } from '../../constants/lessonData';
+import { LESSON_DATA, LessonStep } from '../../constants/lessonData';
 
 interface LessonProps {
   onExit: () => void;
@@ -49,7 +50,7 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
   const [isIntro, setIsIntro] = useState(true);
 
   const lessonContent = lessonId ? LESSON_DATA[lessonId] : null;
-  const steps = lessonContent?.steps || [];
+  const steps: LessonStep[] = lessonContent?.steps || [];
 
   const updateSRS = async (wordId: string, isCorrect: boolean) => {
     if (!user) return;
@@ -100,6 +101,10 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
   const [fillAnswered, setFillAnswered] = useState(false);
   const [sequence, setSequence] = useState<any[]>([]);
   const [sequenceAnswered, setSequenceAnswered] = useState(false);
+  const [sentenceWords, setSentenceWords] = useState<string[]>([]);
+  const [targetSentence, setTargetSentence] = useState<string[]>([]);
+  const [sentenceIndex, setSentenceIndex] = useState(0);
+  const [sentenceAnswered, setSentenceAnswered] = useState(false);
 
   // Pronunciation States
   const [isRecording, setIsRecording] = useState(false);
@@ -120,6 +125,15 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
     if (currentStep && (currentStep.type === 'sorting' || currentStep.type === 'sequence') && sequence.length === 0) {
       const shuffled = [...currentStep.content].sort(() => Math.random() - 0.5);
       setSequence(shuffled);
+    }
+    if (currentStep && currentStep.type === 'sentence_building') {
+      const current = currentStep.content[sentenceIndex];
+      if (current && sentenceWords.length === 0) {
+        const shuffled = [...current.words].sort(() => Math.random() - 0.5);
+        setSentenceWords(shuffled);
+        setTargetSentence([]);
+        setSentenceAnswered(false);
+      }
     }
     if (currentStep && currentStep.type === 'family_tree' && treeNodes.length === 0) {
       const nodes = currentStep.content.map((c: any) => ({ ...c, placed: false, currentPos: null }));
@@ -374,6 +388,12 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
 
   const handleFinish = async () => {
     if (isFinished) return;
+    confetti({
+      particleCount: 150,
+      spread: 70,
+      origin: { y: 0.6 },
+      colors: ['#D4AF37', '#2D5A27', '#E2725B', '#F5F5DC']
+    });
     const finalXp = xpEarned + 20;
     const accuracyScore = Math.round((totalCorrect / (totalCorrect + totalWrong)) * 100) || 0;
 
@@ -495,6 +515,10 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
       setFillAnswered(false);
       setSequence([]);
       setSequenceAnswered(false);
+      setSentenceWords([]);
+      setTargetSentence([]);
+      setSentenceIndex(0);
+      setSentenceAnswered(false);
       setTreeNodes([]);
       setSelectedMember(null);
       setIsRecording(false);
@@ -620,13 +644,13 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
   return (
     <div className="fixed inset-0 bg-forest z-[100] flex flex-col font-body">
       {/* Top Bar */}
-      <div className="bg-forest/90 backdrop-blur-md border-b border-white/10 px-8 py-4 flex items-center gap-8">
+      <div className="bg-forest/90 backdrop-blur-md border-b border-white/10 px-4 md:px-8 py-3 md:py-4 flex items-center gap-4 md:gap-8 shrink-0">
         <button onClick={onExit} className="p-2 hover:bg-white/5 rounded-full transition-colors">
-          <X className="w-6 h-6 text-cream/40" />
+          <X className="w-5 h-5 md:w-6 md:h-6 text-cream/40" />
         </button>
-        <div className="flex-1">
-          <div className="text-[10px] font-mono text-cream/40 uppercase tracking-widest">Mansaka · Learning Path</div>
-          <div className="text-lg font-bold text-cream">
+        <div className="flex-1 min-w-0">
+          <div className="text-[8px] md:text-[10px] font-mono text-cream/40 uppercase tracking-widest truncate">Mansaka · Learning Path</div>
+          <div className="text-sm md:text-lg font-bold text-cream truncate">
             {isIntro ? 'Lesson Introduction' : currentStep?.title}
           </div>
         </div>
@@ -639,24 +663,24 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
             <div className="h-full bg-primary transition-all duration-500" style={{ width: `${((currentStepIndex + 1) / (steps.length + 1)) * 100}%` }}></div>
           </div>
         </div>
-        <div className="flex items-center gap-4">
-          <div className="flex gap-1">
+        <div className="flex items-center gap-2 md:gap-4">
+          <div className="flex gap-0.5 md:gap-1">
             {[1, 2, 3].map(i => (
-              <Heart key={i} className={`w-5 h-5 ${i <= lives ? 'text-red-500 fill-red-500' : 'text-white/10'}`} />
+              <Heart key={i} className={`w-4 h-4 md:w-5 md:h-5 ${i <= lives ? 'text-red-500 fill-red-500' : 'text-white/10'}`} />
             ))}
           </div>
           {!isIntro && (currentStep?.type === 'mcq' || currentStep?.type === 'listen' || currentStep?.type === 'scenario') && (
-            <div className={`text-xl font-mono font-bold ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-primary'}`}>
+            <div className={`text-base md:text-xl font-mono font-bold ${timeLeft < 10 ? 'text-red-500 animate-pulse' : 'text-primary'}`}>
               {timeLeft}
             </div>
           )}
-          <div className="text-xl font-headline font-bold text-primary">+{xpEarned} XP</div>
+          <div className="text-sm md:text-xl font-headline font-bold text-primary">+{xpEarned} XP</div>
         </div>
       </div>
 
-      <div className="flex-1 flex overflow-hidden">
+      <div className="flex-1 flex overflow-hidden relative">
         {/* Main Stage */}
-        <div className="flex-1 overflow-y-auto p-8 md:p-16 flex items-center justify-center">
+        <div className="flex-1 overflow-y-auto p-4 md:p-16 flex items-center justify-center">
           <AnimatePresence mode="wait">
             {isIntro && (
               <motion.div 
@@ -664,35 +688,35 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="w-full max-w-3xl space-y-8"
+                className="w-full max-w-3xl space-y-6 md:space-y-8"
               >
-                <div className="bg-white/5 border border-white/10 rounded-[3rem] p-12 space-y-8">
-                  <div className="space-y-4">
-                    <h2 className="text-4xl font-headline font-bold text-primary">{lessonContent?.discussion.title}</h2>
-                    <p className="text-xl text-cream/80 leading-relaxed">{lessonContent?.discussion.text}</p>
+                <div className="bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 space-y-6 md:space-y-8">
+                  <div className="space-y-3 md:space-y-4">
+                    <h2 className="text-2xl md:text-4xl font-headline font-bold text-primary">{lessonContent?.discussion.title}</h2>
+                    <p className="text-base md:text-xl text-cream/80 leading-relaxed">{lessonContent?.discussion.text}</p>
                   </div>
 
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                    <div className="space-y-4">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                        <GraduationCap className="w-4 h-4" /> Learning Objectives
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 md:gap-8">
+                    <div className="space-y-3 md:space-y-4">
+                      <h3 className="text-[10px] md:text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+                        <GraduationCap className="w-3 h-3 md:w-4 md:h-4" /> Learning Objectives
                       </h3>
-                      <ul className="space-y-2">
+                      <ul className="space-y-1.5 md:space-y-2">
                         {lessonContent?.objectives.map((obj, i) => (
-                          <li key={i} className="text-cream/60 flex gap-3">
+                          <li key={i} className="text-cream/60 flex gap-2 md:gap-3 text-sm md:text-base">
                             <span className="text-primary">•</span> {obj}
                           </li>
                         ))}
                       </ul>
                     </div>
                     {lessonContent?.discussion.grammar && (
-                      <div className="space-y-4">
-                        <h3 className="text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
-                          <BookOpen className="w-4 h-4" /> Grammar Notes
+                      <div className="space-y-3 md:space-y-4">
+                        <h3 className="text-[10px] md:text-sm font-black uppercase tracking-widest text-primary/60 flex items-center gap-2">
+                          <BookOpen className="w-3 h-3 md:w-4 md:h-4" /> Grammar Notes
                         </h3>
-                        <ul className="space-y-2">
+                        <ul className="space-y-1.5 md:space-y-2">
                           {lessonContent.discussion.grammar.map((note, i) => (
-                            <li key={i} className="text-cream/60 flex gap-3">
+                            <li key={i} className="text-cream/60 flex gap-2 md:gap-3 text-sm md:text-base">
                               <span className="text-primary">•</span> {note}
                             </li>
                           ))}
@@ -702,15 +726,15 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                   </div>
 
                   {lessonContent?.discussion.culture && (
-                    <div className="p-6 bg-primary/5 border border-primary/20 rounded-2xl">
-                      <h3 className="text-sm font-black uppercase tracking-widest text-primary mb-2">Cultural Context</h3>
-                      <p className="text-cream/60 italic">{lessonContent.discussion.culture}</p>
+                    <div className="p-4 md:p-6 bg-primary/5 border border-primary/20 rounded-xl md:rounded-2xl">
+                      <h3 className="text-[10px] md:text-sm font-black uppercase tracking-widest text-primary mb-1 md:mb-2">Cultural Context</h3>
+                      <p className="text-xs md:text-sm text-cream/60 italic">{lessonContent.discussion.culture}</p>
                     </div>
                   )}
 
                   <button 
                     onClick={nextStep}
-                    className="w-full bg-primary text-forest py-6 rounded-2xl font-black text-xl gold-shadow hover:-translate-y-1 transition-all"
+                    className="w-full bg-primary text-forest py-4 md:py-6 rounded-xl md:rounded-2xl font-black text-lg md:text-xl gold-shadow hover:-translate-y-1 transition-all"
                   >
                     Start Activities →
                   </button>
@@ -724,36 +748,36 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, scale: 0.9 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.9 }}
-                className="w-full max-w-xl space-y-8"
+                className="w-full max-w-xl space-y-6 md:space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <span className="px-4 py-1 bg-green-500/20 text-green-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-green-500/30">📝 Vocabulary Drill</span>
-                  <div className="text-cream/40 font-mono text-xs">Word {vocabIndex + 1} of {currentStep.content.length}</div>
+                  <span className="px-3 md:px-4 py-1 bg-green-500/20 text-green-400 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-green-500/30">📝 Vocabulary Drill</span>
+                  <div className="text-cream/40 font-mono text-[10px] md:text-xs">Word {vocabIndex + 1} of {currentStep.content.length}</div>
                 </div>
 
                 <motion.div 
                   onClick={() => setVocabFlipped(!vocabFlipped)}
-                  className="aspect-[4/3] bg-white/5 border border-white/10 rounded-[3rem] p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 transition-all gold-shadow relative overflow-hidden group touch-none"
+                  className="aspect-[4/3] bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 flex flex-col items-center justify-center text-center cursor-pointer hover:bg-white/10 transition-all gold-shadow relative overflow-hidden group touch-none"
                 >
                   {!vocabFlipped ? (
                     <>
                       <img 
                         src={`https://picsum.photos/seed/${currentStep.content[vocabIndex].word}/400/300`} 
                         alt={currentStep.content[vocabIndex].word}
-                        className="w-32 h-32 rounded-2xl mb-6 object-cover border-2 border-primary/20"
+                        className="w-24 h-24 md:w-32 md:h-32 rounded-xl md:rounded-2xl mb-4 md:mb-6 object-cover border-2 border-primary/20"
                         referrerPolicy="no-referrer"
                       />
-                      <div className="text-6xl font-headline font-bold text-cream mb-4">{currentStep.content[vocabIndex].word}</div>
-                      <div className="mt-12 text-[10px] font-black uppercase tracking-widest text-primary/40">Tap to reveal meaning</div>
+                      <div className="text-4xl md:text-6xl font-headline font-bold text-cream mb-2 md:mb-4">{currentStep.content[vocabIndex].word}</div>
+                      <div className="mt-8 md:mt-12 text-[8px] md:text-[10px] font-black uppercase tracking-widest text-primary/40">Tap to reveal meaning</div>
                     </>
                   ) : (
                     <motion.div 
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className="space-y-6"
+                      className="space-y-4 md:space-y-6"
                     >
-                      <div className="text-3xl font-bold text-primary">{currentStep.content[vocabIndex].meaning}</div>
-                      <div className="text-lg text-cream/60 italic">{currentStep.content[vocabIndex].context}</div>
+                      <div className="text-2xl md:text-3xl font-bold text-primary">{currentStep.content[vocabIndex].meaning}</div>
+                      <div className="text-base md:text-lg text-cream/60 italic">{currentStep.content[vocabIndex].context}</div>
                     </motion.div>
                   )}
                 </motion.div>
@@ -784,20 +808,20 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="w-full max-w-4xl space-y-12"
+                className="w-full max-w-4xl space-y-8 md:space-y-12"
               >
                 <div className="text-center space-y-2">
-                  <span className="px-4 py-1 bg-orange-500/20 text-orange-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-orange-500/30">🔗 Word Matching</span>
-                  <div className="text-cream/40 font-mono text-xs">{matchedPairs} / {currentStep.content.length} pairs matched</div>
+                  <span className="px-3 md:px-4 py-1 bg-orange-500/20 text-orange-400 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-orange-500/30">🔗 Word Matching</span>
+                  <div className="text-cream/40 font-mono text-[10px] md:text-xs">{matchedPairs} / {currentStep.content.length} pairs matched</div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-12">
-                  <div className="space-y-4">
+                <div className="grid grid-cols-2 gap-4 md:gap-12">
+                  <div className="space-y-3 md:space-y-4">
                     {currentStep.content.map((pair: any, i: number) => (
                       <button 
                         key={i}
                         onClick={() => handleMatch('left', i, pair.left)}
-                        className={`w-full p-6 rounded-3xl border-2 transition-all text-left text-xl font-headline font-bold ${
+                        className={`w-full p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 transition-all text-left text-base md:text-xl font-headline font-bold ${
                           selectedLeft?.idx === i 
                             ? 'bg-primary/10 border-primary text-primary' 
                             : 'bg-white/5 border-white/10 text-cream/80 hover:bg-white/10'
@@ -807,12 +831,12 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                       </button>
                     ))}
                   </div>
-                  <div className="space-y-4">
+                  <div className="space-y-3 md:space-y-4">
                     {[...currentStep.content].sort((a, b) => a.right.localeCompare(b.right)).map((pair: any, i: number) => (
                       <button 
                         key={i}
                         onClick={() => handleMatch('right', i, pair.left)}
-                        className={`w-full p-6 rounded-3xl border-2 transition-all text-left text-lg font-bold ${
+                        className={`w-full p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 transition-all text-left text-sm md:text-lg font-bold ${
                           selectedRight?.idx === i 
                             ? 'bg-primary/10 border-primary text-primary' 
                             : 'bg-white/5 border-white/10 text-cream/80 hover:bg-white/10'
@@ -832,28 +856,28 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full max-w-2xl space-y-12"
+                className="w-full max-w-2xl space-y-8 md:space-y-12"
               >
                 <div className="text-center space-y-2">
-                  <span className="px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-blue-500/30">🎧 Listening Exercise</span>
-                  <div className="text-cream/40 font-mono text-xs">Question {listenIndex + 1} of {currentStep.content.length}</div>
+                  <span className="px-3 md:px-4 py-1 bg-blue-500/20 text-blue-400 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-blue-500/30">🎧 Listening Exercise</span>
+                  <div className="text-cream/40 font-mono text-[10px] md:text-xs">Question {listenIndex + 1} of {currentStep.content.length}</div>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center space-y-8">
+                <div className="bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 text-center space-y-6 md:space-y-8">
                   <button 
                     onClick={() => {
                       setListenPlayed(true);
                       handleSpeak(currentStep.content[listenIndex].word);
                     }}
                     disabled={isSpeaking}
-                    className={`w-24 h-24 rounded-full border-4 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all mx-auto ${listenPlayed ? 'animate-pulse' : ''} disabled:opacity-50`}
+                    className={`w-20 h-20 md:w-24 md:h-24 rounded-full border-4 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all mx-auto ${listenPlayed ? 'animate-pulse' : ''} disabled:opacity-50`}
                   >
-                    {isSpeaking ? <RefreshCw className="w-10 h-10 animate-spin" /> : <Volume2 className="w-10 h-10" />}
+                    {isSpeaking ? <RefreshCw className="w-8 h-8 md:w-10 md:h-10 animate-spin" /> : <Volume2 className="w-8 h-8 md:w-10 md:h-10" />}
                   </button>
-                  <div className="text-cream/60">Press play to hear the word</div>
+                  <div className="text-cream/60 text-sm md:text-base">Press play to hear the word</div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {currentStep.content[listenIndex].options.map((opt: string, i: number) => {
                     const isCorrect = opt === currentStep.content[listenIndex].correct;
                     const isSelected = selectedMcq === opt;
@@ -873,9 +897,9 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                           setListenAnswered(true);
                           handleAnswer(isCorrect, currentStep.content[listenIndex].word);
                         }}
-                        className={`p-6 rounded-3xl border-2 transition-all text-left flex items-center gap-4 group ${stateStyles} ${!listenPlayed ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
+                        className={`p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 transition-all text-left flex items-center gap-4 group ${stateStyles} ${!listenPlayed ? 'opacity-50 grayscale cursor-not-allowed' : ''}`}
                       >
-                        <span className="font-bold text-lg">{opt}</span>
+                        <span className="font-bold text-base md:text-lg">{opt}</span>
                       </button>
                     );
                   })}
@@ -908,19 +932,19 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="w-full max-w-2xl space-y-8"
+                className="w-full max-w-2xl space-y-6 md:space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <span className="px-4 py-1 bg-primary/20 text-primary rounded-full text-[10px] font-black uppercase tracking-widest border border-primary/30">❓ Multiple Choice</span>
-                  <div className="text-cream/40 font-mono text-xs">Question {mcqIndex + 1} of {currentStep.content.length}</div>
+                  <span className="px-3 md:px-4 py-1 bg-primary/20 text-primary rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-primary/30">❓ Multiple Choice</span>
+                  <div className="text-cream/40 font-mono text-[10px] md:text-xs">Question {mcqIndex + 1} of {currentStep.content.length}</div>
                 </div>
 
-                <div className="space-y-4">
-                  <div className="text-sm font-mono text-cream/40 uppercase tracking-widest text-center">{currentStep.content[mcqIndex].instruction}</div>
-                  <div className="text-6xl font-headline font-bold text-cream text-center">{currentStep.content[mcqIndex].word}</div>
+                <div className="space-y-3 md:space-y-4">
+                  <div className="text-[10px] md:text-sm font-mono text-cream/40 uppercase tracking-widest text-center">{currentStep.content[mcqIndex].instruction}</div>
+                  <div className="text-4xl md:text-6xl font-headline font-bold text-cream text-center">{currentStep.content[mcqIndex].word}</div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {currentStep.content[mcqIndex].options.map((opt: string, i: number) => {
                     const isCorrect = opt === currentStep.content[mcqIndex].correct;
                     const isSelected = selectedMcq === opt;
@@ -942,9 +966,9 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                           setMcqAnswered(true);
                           handleAnswer(isCorrect, currentStep.content[mcqIndex].word);
                         }}
-                        className={`p-6 rounded-3xl border-2 transition-all text-left flex items-center gap-4 group ${stateStyles}`}
+                        className={`p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 transition-all text-left flex items-center gap-4 group ${stateStyles}`}
                       >
-                        <span className="font-bold text-lg">{opt}</span>
+                        <span className="font-bold text-base md:text-lg">{opt}</span>
                       </button>
                     );
                   })}
@@ -989,18 +1013,18 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="w-full max-w-2xl space-y-8"
+                className="w-full max-w-2xl space-y-6 md:space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <span className="px-4 py-1 bg-purple-500/20 text-purple-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-purple-500/30">🎭 Scenario Selection</span>
+                  <span className="px-3 md:px-4 py-1 bg-purple-500/20 text-purple-400 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-purple-500/30">🎭 Scenario Selection</span>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center space-y-6">
-                  <div className="text-2xl font-bold text-cream leading-relaxed">{currentStep.content[0].scenario}</div>
-                  <div className="text-cream/40 italic">What would you say?</div>
+                <div className="bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 text-center space-y-4 md:space-y-6">
+                  <div className="text-lg md:text-2xl font-bold text-cream leading-relaxed">{currentStep.content[0].scenario}</div>
+                  <div className="text-[10px] md:text-sm text-cream/40 italic">What would you say?</div>
                 </div>
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 md:gap-4">
                   {currentStep.content[0].options.map((opt: string, i: number) => {
                     const isCorrect = opt === currentStep.content[0].correct;
                     const isSelected = selectedScenario === opt;
@@ -1020,7 +1044,7 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                           setScenarioAnswered(true);
                           handleAnswer(isCorrect);
                         }}
-                        className={`p-6 rounded-3xl border-2 transition-all text-left font-bold text-lg ${stateStyles}`}
+                        className={`p-4 md:p-6 rounded-2xl md:rounded-3xl border-2 transition-all text-left font-bold text-base md:text-lg ${stateStyles}`}
                       >
                         {opt}
                       </button>
@@ -1119,40 +1143,148 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
               </motion.div>
             )}
 
+            {!isIntro && currentStep?.type === 'sentence_building' && (
+              <motion.div 
+                key="sentence"
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -20 }}
+                className="w-full max-w-3xl space-y-8 md:space-y-12"
+              >
+                <div className="text-center space-y-3 md:space-y-4">
+                  <span className="px-3 md:px-4 py-1 bg-primary/20 text-primary rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-primary/30">🧶 Sentence Weaver</span>
+                  <div className="text-cream/40 font-mono text-[10px] md:text-xs">Sentence {sentenceIndex + 1} of {currentStep.content.length}</div>
+                  <h3 className="text-xl md:text-2xl font-bold text-cream">Arrange the words correctly</h3>
+                </div>
+
+                <div className="min-h-[100px] md:min-h-[120px] p-6 md:p-8 bg-white/5 border-2 border-dashed border-white/10 rounded-[2rem] md:rounded-[2.5rem] flex flex-wrap justify-center gap-2 md:gap-3 items-center">
+                  <AnimatePresence>
+                    {targetSentence.map((word, idx) => (
+                      <motion.button
+                        key={`${word}-${idx}`}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        onClick={() => {
+                          if (sentenceAnswered) return;
+                          setTargetSentence(prev => prev.filter((_, i) => i !== idx));
+                          setSentenceWords(prev => [...prev, word]);
+                        }}
+                        className="px-4 md:px-6 py-2 md:py-3 bg-primary text-forest rounded-xl md:rounded-2xl font-bold text-base md:text-lg gold-shadow hover:-translate-y-1 transition-all"
+                      >
+                        {word}
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
+                  {targetSentence.length === 0 && <span className="text-cream/20 font-bold italic text-sm md:text-base">Tap words below to weave your sentence...</span>}
+                </div>
+
+                <div className="flex flex-wrap justify-center gap-2 md:gap-3">
+                  <AnimatePresence>
+                    {sentenceWords.map((word, idx) => (
+                      <motion.button
+                        key={`${word}-${idx}`}
+                        initial={{ scale: 0, opacity: 0 }}
+                        animate={{ scale: 1, opacity: 1 }}
+                        exit={{ scale: 0, opacity: 0 }}
+                        onClick={() => {
+                          if (sentenceAnswered) return;
+                          setSentenceWords(prev => prev.filter((_, i) => i !== idx));
+                          setTargetSentence(prev => [...prev, word]);
+                        }}
+                        className="px-4 md:px-6 py-2 md:py-3 bg-white/5 border border-white/10 text-cream rounded-xl md:rounded-2xl font-bold text-base md:text-lg hover:bg-white/10 hover:-translate-y-1 transition-all"
+                      >
+                        {word}
+                      </motion.button>
+                    ))}
+                  </AnimatePresence>
+                </div>
+
+                {targetSentence.length === currentStep.content[sentenceIndex].words.length && !sentenceAnswered && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    onClick={() => {
+                      const isCorrect = targetSentence.join(' ') === currentStep.content[sentenceIndex].sentence;
+                      handleAnswer(isCorrect);
+                      setSentenceAnswered(true);
+                    }}
+                    className="w-full bg-primary text-forest py-6 rounded-2xl font-black text-xl gold-shadow"
+                  >
+                    Check Sentence →
+                  </motion.button>
+                )}
+
+                {sentenceAnswered && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className={`p-6 rounded-[2rem] border flex items-center justify-between gap-6 ${
+                      targetSentence.join(' ') === currentStep.content[sentenceIndex].sentence ? 'bg-green-500/10 border-green-500/30' : 'bg-red-500/10 border-red-500/30'
+                    }`}
+                  >
+                    <div className="flex-1">
+                      <div className={`font-black text-lg mb-1 ${targetSentence.join(' ') === currentStep.content[sentenceIndex].sentence ? 'text-green-400' : 'text-red-400'}`}>
+                        {targetSentence.join(' ') === currentStep.content[sentenceIndex].sentence ? '✓ Perfect Weaving!' : '✗ The threads are tangled.'}
+                      </div>
+                      <div className="text-sm text-cream/60">
+                        {targetSentence.join(' ') === currentStep.content[sentenceIndex].sentence ? 'Your sentence is grammatically correct.' : `Correct: ${currentStep.content[sentenceIndex].sentence}`}
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => {
+                        if (sentenceIndex < currentStep.content.length - 1) {
+                          setSentenceIndex(prev => prev + 1);
+                          setSentenceWords([]);
+                          setTargetSentence([]);
+                          setSentenceAnswered(false);
+                        } else {
+                          nextStep();
+                        }
+                      }}
+                      className="bg-primary text-forest px-8 py-3 rounded-xl font-black gold-shadow hover:-translate-y-1 transition-all"
+                    >
+                      Next →
+                    </button>
+                  </motion.div>
+                )}
+              </motion.div>
+            )}
+
             {!isIntro && currentStep?.type === 'pronounce' && (
               <motion.div 
                 key="pronounce"
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
-                className="w-full max-w-2xl space-y-12"
+                className="w-full max-w-2xl space-y-8 md:space-y-12"
               >
                 <div className="text-center space-y-2">
-                  <span className="px-4 py-1 bg-pink-500/20 text-pink-400 rounded-full text-[10px] font-black uppercase tracking-widest border border-pink-500/30">🗣️ Pronunciation Practice</span>
+                  <span className="px-3 md:px-4 py-1 bg-pink-500/20 text-pink-400 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border border-pink-500/30">🗣️ Pronunciation Practice</span>
                 </div>
 
-                <div className="bg-white/5 border border-white/10 rounded-[3rem] p-12 text-center space-y-8">
-                  <div className="text-6xl font-headline font-bold text-primary">{currentStep.content[0].word}</div>
-                  <div className="text-xl text-cream/40 italic">{currentStep.content[0].phonetic}</div>
+                <div className="bg-white/5 border border-white/10 rounded-[2rem] md:rounded-[3rem] p-8 md:p-12 text-center space-y-6 md:space-y-8">
+                  <div className="text-4xl md:text-6xl font-headline font-bold text-primary">{currentStep.content[0].word}</div>
+                  <div className="text-lg md:text-xl text-cream/40 italic">{currentStep.content[0].phonetic}</div>
                   
-                  <div className="flex justify-center gap-6">
+                  <div className="flex justify-center gap-4 md:gap-6">
                     <button 
                       onClick={() => handleSpeak(currentStep.content[0].word)}
                       disabled={isSpeaking}
-                      className="w-20 h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all disabled:opacity-50"
+                      className="w-16 h-16 md:w-20 md:h-20 rounded-full bg-primary/10 border-2 border-primary flex items-center justify-center text-primary hover:bg-primary hover:text-forest transition-all disabled:opacity-50"
                     >
-                      {isSpeaking ? <RefreshCw className="w-8 h-8 animate-spin" /> : <Volume2 className="w-8 h-8" />}
+                      {isSpeaking ? <RefreshCw className="w-6 h-6 md:w-8 md:h-8 animate-spin" /> : <Volume2 className="w-6 h-6 md:w-8 md:h-8" />}
                     </button>
                     <button 
                       onClick={isRecording ? stopRecording : startRecording}
-                      className={`w-20 h-20 rounded-full border-2 flex items-center justify-center transition-all ${
+                      className={`w-16 h-16 md:w-20 md:h-20 rounded-full border-2 flex items-center justify-center transition-all ${
                         isRecording ? 'bg-red-500 text-white border-red-500 animate-pulse' : 'bg-red-500/10 border-red-500 text-red-500 hover:bg-red-500 hover:text-white'
                       }`}
                     >
-                      {isRecording ? <Square className="w-8 h-8 fill-current" /> : <Mic className="w-8 h-8" />}
+                      {isRecording ? <Square className="w-6 h-6 md:w-8 md:h-8 fill-current" /> : <Mic className="w-6 h-6 md:w-8 md:h-8" />}
                     </button>
                   </div>
-                  <div className="text-cream/40">
+                  <div className="text-[10px] md:text-sm text-cream/40">
                     {isRecording ? 'Recording... Tap to stop' : isAnalyzing ? 'Analyzing pronunciation...' : 'Listen and then record your voice'}
                   </div>
 
@@ -1211,9 +1343,9 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                   </div>
 
                   {/* Tree Diagram */}
-                  <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-[2rem] p-8 flex flex-col items-center justify-center gap-8 relative">
+                  <div className="lg:col-span-2 bg-white/5 border border-white/10 rounded-[1.5rem] md:rounded-[2rem] p-4 md:p-8 flex flex-col items-center justify-center gap-6 md:gap-8 relative overflow-x-auto">
                     {/* Top row: Parents */}
-                    <div className="flex gap-12">
+                    <div className="flex gap-4 md:gap-12">
                       {['Amahan', 'Inahan'].map((rel, idx) => {
                         const placedNode = treeNodes.find(n => n.placed && n.relation === rel);
                         return (
@@ -1231,29 +1363,29 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                                   ));
                                 }
                               }}
-                              className={`w-32 h-20 rounded-2xl border-2 border-dashed flex items-center justify-center transition-all ${
-                                placedNode ? 'bg-primary/20 border-primary text-primary font-bold text-xl' : 'border-white/20 hover:border-primary/50 hover:bg-white/5'
+                              className={`w-24 h-16 md:w-32 md:h-20 rounded-xl md:rounded-2xl border-2 border-dashed flex items-center justify-center transition-all ${
+                                placedNode ? 'bg-primary/20 border-primary text-primary font-bold text-base md:text-xl' : 'border-white/20 hover:border-primary/50 hover:bg-white/5'
                               }`}
                             >
                               {placedNode ? placedNode.word : '?'}
                             </button>
-                            <div className="text-[10px] font-black uppercase tracking-widest text-cream/40">{rel}</div>
+                            <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-cream/40">{rel}</div>
                           </div>
                         );
                       })}
                     </div>
                     
                     {/* Lines */}
-                    <div className="w-px h-8 bg-white/20"></div>
-                    <div className="w-64 h-px bg-white/20"></div>
+                    <div className="w-px h-4 md:h-8 bg-white/20"></div>
+                    <div className="w-48 md:w-64 h-px bg-white/20"></div>
                     
                     {/* Bottom row: Children */}
-                    <div className="flex gap-8">
+                    <div className="flex gap-4 md:gap-8">
                       {['Igsoon (Lalaki)', 'Igsoon (Babaye)', 'Anak'].map((rel, idx) => {
                         const placedNode = treeNodes.find(n => n.placed && n.relation === rel);
                         return (
                           <div key={idx} className="flex flex-col items-center gap-2">
-                            <div className="w-px h-8 bg-white/20"></div>
+                            <div className="w-px h-4 md:h-8 bg-white/20"></div>
                             <button 
                               onClick={() => {
                                 if (selectedMember) {
@@ -1267,13 +1399,13 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                                   ));
                                 }
                               }}
-                              className={`w-28 h-16 rounded-2xl border-2 border-dashed flex items-center justify-center transition-all ${
-                                placedNode ? 'bg-primary/20 border-primary text-primary font-bold text-lg' : 'border-white/20 hover:border-primary/50 hover:bg-white/5'
+                              className={`w-20 h-14 md:w-28 md:h-16 rounded-xl md:rounded-2xl border-2 border-dashed flex items-center justify-center transition-all ${
+                                placedNode ? 'bg-primary/20 border-primary text-primary font-bold text-sm md:text-lg' : 'border-white/20 hover:border-primary/50 hover:bg-white/5'
                               }`}
                             >
                               {placedNode ? placedNode.word : '?'}
                             </button>
-                            <div className="text-[10px] font-black uppercase tracking-widest text-cream/40 text-center">{rel}</div>
+                            <div className="text-[8px] md:text-[10px] font-black uppercase tracking-widest text-cream/40 text-center">{rel}</div>
                           </div>
                         );
                       })}
@@ -1308,15 +1440,15 @@ const Lesson: React.FC<LessonProps> = ({ onExit, lessonId, lessonType }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -20 }}
-                className="w-full max-w-2xl space-y-8"
+                className="w-full max-w-2xl space-y-6 md:space-y-8"
               >
                 <div className="text-center space-y-2">
-                  <span className={`px-4 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${
+                  <span className={`px-3 md:px-4 py-1 rounded-full text-[8px] md:text-[10px] font-black uppercase tracking-widest border ${
                     currentStep.type === 'sorting' ? 'bg-indigo-500/20 text-indigo-400 border-indigo-500/30' : 'bg-yellow-500/20 text-yellow-400 border-yellow-500/30'
                   }`}>
                     {currentStep.type === 'sorting' ? '↕️ Sorting Exercise' : '🔢 Listen & Sequence'}
                   </span>
-                  <div className="text-cream/40 font-mono text-xs">Drag and drop to reorder the items</div>
+                  <div className="text-cream/40 font-mono text-[10px] md:text-xs">Drag and drop to reorder the items</div>
                 </div>
 
                 <div className="space-y-4">

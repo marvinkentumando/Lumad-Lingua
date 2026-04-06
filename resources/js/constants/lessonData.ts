@@ -7,7 +7,7 @@ export interface VocabWord {
 }
 
 export interface LessonStep {
-  type: 'intro' | 'vocab_drill' | 'mcq' | 'listen' | 'match' | 'scenario' | 'fill_blank' | 'sequence' | 'pronounce' | 'family_tree' | 'sorting';
+  type: 'intro' | 'vocab_drill' | 'mcq' | 'listen' | 'match' | 'scenario' | 'fill_blank' | 'sequence' | 'pronounce' | 'family_tree' | 'sorting' | 'sentence_building';
   title: string;
   content?: any;
   instructions?: string;
@@ -150,6 +150,15 @@ export const LESSON_DATA: Record<string, LessonContent> = {
           { sentence: 'Ako ___ Maria.', answer: 'si' },
           { sentence: 'Ang ___ ngalan si Juan.', answer: 'akong' },
           { sentence: 'Gikan ___ sa Davao.', answer: 'ako' }
+        ]
+      },
+      {
+        type: 'sentence_building',
+        title: 'Sentence Weaver',
+        instructions: 'Arrange the words to form a correct introduction.',
+        content: [
+          { sentence: 'Ako si Maria gikan sa Davao.', words: ['Ako', 'si', 'Maria', 'gikan', 'sa', 'Davao'] },
+          { sentence: 'Ang akong amahan si Pedro.', words: ['Ang', 'akong', 'amahan', 'si', 'Pedro'] }
         ]
       }
     ]

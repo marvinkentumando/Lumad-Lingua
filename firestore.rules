@@ -72,8 +72,9 @@ service cloud.firestore {
 
     function isAdmin() {
       return isAuthenticated() && 
-        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin') ||
-         request.auth.token.email == "tumando.marvinken@dnsc.edu.ph");
+        ((request.auth.token.email == "tumando.marvinken@dnsc.edu.ph" && request.auth.token.email_verified == true) ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin'));
     }
 
     function isValidator() {
@@ -86,21 +87,58 @@ service cloud.firestore {
         ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'contributor') || isValidator());
     }
 
+    function isEducator() {
+      return isAuthenticated() && 
+        ((exists(/databases/$(database)/documents/users/$(request.auth.uid)) && get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'educator') || isAdmin());
+    }
+
     function isValidUser(data) {
-      return data.keys().hasAll(['uid', 'role', 'xp', 'streak', 'level']) &&
-             data.uid is string &&
-             data.role in ['learner', 'contributor', 'validator', 'admin'] &&
-             data.xp is number && data.xp >= 0 &&
-             data.streak is number && data.streak >= 0 &&
-             data.level is number && data.level >= 0 &&
+      return data.uid is string &&
+             data.role in ['learner', 'contributor', 'validator', 'educator', 'admin'] &&
+             (!('xp' in data) || data.xp is number) &&
+             (!('streak' in data) || data.streak is number) &&
+             (!('level' in data) || data.level is number) &&
+             (!('lives' in data) || (data.lives is number && data.lives >= 0 && data.lives <= 5)) &&
+             (!('onboarded' in data) || data.onboarded is bool) &&
+             (!('completedLessons' in data) || data.completedLessons is list) &&
+             (!('lastLifeLostAt' in data) || data.lastLifeLostAt == null || data.lastLifeLostAt is string) &&
              (!('lastLessonDate' in data) || data.lastLessonDate is string);
     }
 
+    function isValidNotification(data) {
+      return data.keys().hasAll(['userId', 'title', 'message', 'type', 'read', 'createdAt']) &&
+             data.userId is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.message is string && data.message.size() > 0 && data.message.size() < 1000 &&
+             data.type in ['validation', 'challenge', 'system', 'social'] &&
+             data.read is bool &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidLesson(data) {
+      return data.keys().hasAll(['title', 'educatorId', 'dialect', 'difficulty', 'status', 'createdAt']) &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.educatorId == request.auth.uid &&
+             data.dialect is string &&
+             data.difficulty in ['beginner', 'intermediate', 'advanced'] &&
+             data.status in ['draft', 'published'] &&
+             data.createdAt is timestamp;
+    }
+
+    function isValidQuiz(data) {
+      return data.keys().hasAll(['lessonId', 'title', 'questions', 'createdAt']) &&
+             data.lessonId is string &&
+             data.title is string && data.title.size() > 0 && data.title.size() < 200 &&
+             data.questions is list &&
+             data.createdAt is timestamp;
+    }
+
     function isValidWord(data) {
-      return data.keys().hasAll(['term', 'pos', 'tag', 'category', 'filipino', 'english', 'definition', 'contributorId', 'status', 'createdAt']) &&
+      return data.keys().hasAll(['term', 'pos', 'tag', 'category', 'filipino', 'english', 'definition', 'contributorId', 'status', 'createdAt', 'dialect']) &&
              data.term is string && data.term.size() > 0 && data.term.size() < 500 &&
              data.definition is string && data.definition.size() > 0 && data.definition.size() < 2000 &&
              data.contributorId is string &&
+             data.dialect is string &&
              data.status in ['pending', 'validated', 'rejected'] &&
              data.createdAt is timestamp;
     }
@@ -132,7 +170,7 @@ service cloud.firestore {
     // ===============================================================
 
     match /users/{userId} {
-      allow read: if isAuthenticated();
+      allow read: if isAuthenticated() && (isOwner(userId) || isAdmin());
       allow create: if isAuthenticated() && isOwner(userId) && isValidUser(request.resource.data) && (request.resource.data.role == 'learner' || isAdmin());
       allow update: if isAuthenticated() && (isOwner(userId) || isAdmin()) && isValidUser(request.resource.data) && 
                     ((isOwner(userId) && !isAdmin()) ? request.resource.data.role == resource.data.role : true);
@@ -164,6 +202,28 @@ service cloud.firestore {
     match /cultural_sites/{siteId} {
       allow read: if isAuthenticated();
       allow write: if isAdmin();
+    }
+
+    match /notifications/{notificationId} {
+      allow get: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow list: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+      allow update: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid) && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['read']);
+      allow create: if isAdmin(); // System creates notifications
+      allow delete: if isAuthenticated() && (isAdmin() || resource.data.userId == request.auth.uid);
+    }
+
+    match /lessons/{lessonId} {
+      allow read: if isAuthenticated() && (resource.data.status == 'published' || isEducator());
+      allow create: if isEducator() && isValidLesson(request.resource.data);
+      allow update: if isEducator() && resource.data.educatorId == request.auth.uid && isValidLesson(request.resource.data);
+      allow delete: if isEducator() && resource.data.educatorId == request.auth.uid;
+    }
+
+    match /quizzes/{quizId} {
+      allow read: if isAuthenticated();
+      allow create: if isEducator() && isValidQuiz(request.resource.data);
+      allow update: if isEducator() && isValidQuiz(request.resource.data);
+      allow delete: if isEducator();
     }
 
     // Default deny

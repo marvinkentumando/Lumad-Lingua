@@ -27,6 +27,7 @@ const ContributorDashboard: React.FC = () => {
     pos: '',
     tag: '',
     category: '',
+    dialect: '',
     filipino: '',
     english: '',
     definition: '',
@@ -57,7 +58,7 @@ const ContributorDashboard: React.FC = () => {
         createdAt: Timestamp.now()
       });
       setNewWord({ 
-        term: '', pos: '', tag: '', category: '', filipino: '', english: '', 
+        term: '', pos: '', tag: '', category: '', dialect: '', filipino: '', english: '', 
         definition: '', example: '', exampleTranslation: '', location: '', related: '' 
       });
       setIsSubmitting(false);
@@ -223,6 +224,23 @@ const ContributorDashboard: React.FC = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div className="space-y-2">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-cream/40">Dialect / Language</label>
+                    <select 
+                      required
+                      value={newWord.dialect}
+                      onChange={e => setNewWord({...newWord, dialect: e.target.value})}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-cream focus:border-primary outline-none transition-all appearance-none"
+                    >
+                      <option value="" disabled className="bg-surface-low">Select Dialect</option>
+                      <option value="Mansaka" className="bg-surface-low">Mansaka</option>
+                      <option value="Mandaya" className="bg-surface-low">Mandaya</option>
+                      <option value="Kagan" className="bg-surface-low">Kagan</option>
+                      <option value="B'laan" className="bg-surface-low">B'laan</option>
+                      <option value="T'boli" className="bg-surface-low">T'boli</option>
+                      <option value="Other" className="bg-surface-low">Other</option>
+                    </select>
+                  </div>
+                  <div className="space-y-2">
                     <label className="text-[10px] font-black uppercase tracking-widest text-cream/40">Location / Community</label>
                     <input 
                       required
@@ -232,17 +250,17 @@ const ContributorDashboard: React.FC = () => {
                       placeholder="e.g. Davao del Norte"
                     />
                   </div>
-                  <div className="space-y-2">
-                    <label className="text-[10px] font-black uppercase tracking-widest text-cream/40">Related Words (comma separated)</label>
-                    <input 
-                      value={newWord.related}
-                      onChange={e => setNewWord({...newWord, related: e.target.value})}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-cream focus:border-primary outline-none transition-all"
-                      placeholder="e.g. Kabilin, Lumad"
-                    />
-                  </div>
                 </div>
 
+                <div className="space-y-2">
+                  <label className="text-[10px] font-black uppercase tracking-widest text-cream/40">Related Words (comma separated)</label>
+                  <input 
+                    value={newWord.related}
+                    onChange={e => setNewWord({...newWord, related: e.target.value})}
+                    className="w-full bg-white/5 border border-white/10 rounded-xl p-4 text-cream focus:border-primary outline-none transition-all"
+                    placeholder="e.g. Kabilin, Lumad"
+                  />
+                </div>
                 <button 
                   type="submit"
                   className="w-full bg-primary text-forest py-5 rounded-2xl font-black uppercase tracking-widest gold-shadow hover:-translate-y-1 transition-all flex items-center justify-center gap-3"
@@ -276,26 +294,26 @@ const ContributorDashboard: React.FC = () => {
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Recent Submissions & Artifacts */}
         <div className="lg:col-span-8 space-y-8">
-          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-10">
-            <div className="flex items-center justify-between mb-10">
-              <h3 className="text-2xl font-bold text-cream">My Submissions</h3>
-              <button className="text-primary text-xs font-black uppercase tracking-widest hover:underline min-h-[44px]">View All</button>
+          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-6 md:p-10">
+            <div className="flex items-center justify-between mb-8 md:mb-10">
+              <h3 className="text-xl md:text-2xl font-bold text-cream">My Submissions</h3>
+              <button className="text-primary text-[10px] md:text-xs font-black uppercase tracking-widest hover:underline min-h-[44px]">View All</button>
             </div>
             
-            <div className="space-y-4">
+            <div className="space-y-3 md:space-y-4">
               {submissions.slice(0, 5).map((sub) => (
-                <div key={sub.id} className="flex items-center gap-6 p-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group min-h-[44px]">
-                  <div className={`w-2 h-2 rounded-full ${
+                <div key={sub.id} className="flex items-center gap-4 md:gap-6 p-4 md:p-6 bg-white/5 border border-white/10 rounded-2xl hover:bg-white/10 transition-all group min-h-[44px]">
+                  <div className={`w-2 h-2 rounded-full flex-shrink-0 ${
                     sub.status === 'validated' ? 'bg-green-500' : 
                     sub.status === 'rejected' ? 'bg-terracotta' : 'bg-primary'
                   }`}></div>
-                  <div className="flex-1">
-                    <div className="text-sm font-bold text-cream group-hover:text-primary transition-colors">{sub.term}</div>
-                    <div className="text-[10px] text-cream/40 uppercase font-black tracking-widest mt-1">
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-bold text-cream group-hover:text-primary transition-colors truncate">{sub.term}</div>
+                    <div className="text-[10px] text-cream/40 uppercase font-black tracking-widest mt-1 truncate">
                       {sub.definition} · {sub.createdAt?.toDate ? sub.createdAt.toDate().toLocaleDateString() : 'Just now'}
                     </div>
                   </div>
-                  <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded border ${
+                  <div className={`text-[8px] font-black uppercase tracking-widest px-2 py-1 rounded border flex-shrink-0 ${
                     sub.status === 'validated' ? 'border-green-500/30 text-green-500' : 
                     sub.status === 'rejected' ? 'border-terracotta/30 text-terracotta' : 'border-primary/30 text-primary'
                   }`}>
@@ -310,9 +328,9 @@ const ContributorDashboard: React.FC = () => {
           </div>
 
           {/* Artifacts & Badges Collection */}
-          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-8 md:p-10">
-            <div className="flex items-center justify-between mb-10">
-              <h3 className="text-2xl font-bold text-cream">Weaver's Collection</h3>
+          <div className="bg-white/5 border border-white/10 rounded-[2.5rem] p-6 md:p-10">
+            <div className="flex items-center justify-between mb-8 md:mb-10">
+              <h3 className="text-xl md:text-2xl font-bold text-cream">Weaver's Collection</h3>
               <div className="flex items-center gap-2">
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary">12 / 24 Artifacts</span>
               </div>

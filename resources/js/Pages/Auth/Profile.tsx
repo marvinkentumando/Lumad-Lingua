@@ -39,7 +39,6 @@ import { toast } from 'sonner';
 
 interface ProfileProps {
   userRole: Role;
-  onRoleChange: (role: Role) => void;
   onLogout: () => void;
 }
 
@@ -61,7 +60,7 @@ const defaultAccuracyData = [
   { subject: 'Rituals', score: 0 },
 ];
 
-const Profile: React.FC<ProfileProps> = ({ userRole, onRoleChange, onLogout }) => {
+const Profile: React.FC<ProfileProps> = ({ userRole, onLogout }) => {
   const { profile, updateProfile } = useFirebase();
   const [activeModal, setActiveModal] = useState<string | null>(null);
 
@@ -222,16 +221,16 @@ const Profile: React.FC<ProfileProps> = ({ userRole, onRoleChange, onLogout }) =
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -20 }}
-      className="max-w-4xl mx-auto space-y-12 pb-32 px-4 sm:px-6 lg:px-8"
+      className="max-w-4xl mx-auto space-y-8 md:space-y-12 pb-32"
     >
       <AnimatePresence>
         {renderModal()}
       </AnimatePresence>
       {/* Profile Header */}
-      <section className="relative overflow-hidden bg-forest/50 rounded-[3rem] p-8 md:p-12 border border-white/5 text-center">
+      <section className="relative overflow-hidden bg-forest/50 rounded-[2rem] md:rounded-[3rem] p-6 md:p-12 border border-white/5 text-center">
         <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary via-orange-500 to-primary"></div>
         <div className="relative z-10">
-          <div className="w-24 h-24 md:w-32 md:h-32 rounded-full border-4 border-primary p-1 mx-auto mb-6 gold-shadow">
+          <div className="w-20 h-20 md:w-32 md:h-32 rounded-full border-4 border-primary p-1 mx-auto mb-4 md:mb-6 gold-shadow">
             <img 
               src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${profile?.uid || 'default'}`} 
               alt="Profile" 
@@ -239,17 +238,17 @@ const Profile: React.FC<ProfileProps> = ({ userRole, onRoleChange, onLogout }) =
               referrerPolicy="no-referrer"
             />
           </div>
-          <h2 className="text-3xl md:text-4xl font-headline font-bold text-cream mb-2">{profile?.displayName || 'Unknown Weaver'}</h2>
-          <div className="flex flex-wrap items-center justify-center gap-3 mb-8">
-            <span className="bg-primary/10 border border-primary/20 px-3 py-1 rounded-lg text-[10px] font-bold text-primary uppercase tracking-widest">Level {profile?.level || 1} Weaver</span>
-            <span className="bg-white/5 border border-white/10 px-3 py-1 rounded-lg text-[10px] font-bold text-cream/40 uppercase tracking-widest">Mansaka Community</span>
+          <h2 className="text-2xl md:text-4xl font-headline font-bold text-cream mb-2">{profile?.displayName || 'Unknown Weaver'}</h2>
+          <div className="flex flex-wrap items-center justify-center gap-2 md:gap-3 mb-6 md:mb-8">
+            <span className="bg-primary/10 border border-primary/20 px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold text-primary uppercase tracking-widest">Level {profile?.level || 1} Weaver</span>
+            <span className="bg-white/5 border border-white/10 px-2.5 py-1 rounded-lg text-[9px] md:text-[10px] font-bold text-cream/40 uppercase tracking-widest">Mansaka Community</span>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 max-w-2xl mx-auto">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 max-w-2xl mx-auto">
             {stats.map((stat, i) => (
-              <div key={i} className="bg-white/5 border border-white/10 p-4 rounded-2xl min-h-[44px]">
-                <stat.icon className={`w-5 h-5 ${stat.color} mx-auto mb-2`} />
-                <div className="text-xl font-bold text-cream">{stat.val}</div>
-                <div className="text-[9px] font-black uppercase tracking-widest text-cream/20">{stat.label}</div>
+              <div key={i} className="bg-white/5 border border-white/10 p-3 md:p-4 rounded-xl md:rounded-2xl min-h-[44px]">
+                <stat.icon className={`w-4 h-4 md:w-5 md:h-5 ${stat.color} mx-auto mb-1.5 md:mb-2`} />
+                <div className="text-lg md:text-xl font-bold text-cream">{stat.val}</div>
+                <div className="text-[8px] md:text-[9px] font-black uppercase tracking-widest text-cream/20">{stat.label}</div>
               </div>
             ))}
           </div>
@@ -399,34 +398,53 @@ const Profile: React.FC<ProfileProps> = ({ userRole, onRoleChange, onLogout }) =
           </div>
         </div>
 
-        {/* Role Switcher & Actions */}
+        {/* Contributor Application & Actions */}
         <div className="space-y-6">
-          <h3 className="text-[10px] font-black uppercase tracking-widest text-cream/20 border-b border-white/10 pb-2">Role Management</h3>
+          <h3 className="text-[10px] font-black uppercase tracking-widest text-cream/20 border-b border-white/10 pb-2">Community Contribution</h3>
           <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <div className="text-sm font-bold text-cream">Current Role</div>
-                <div className="text-[10px] text-cream/40 uppercase font-black tracking-widest mt-0.5">Your active system identity</div>
+                <div className="text-sm font-bold text-cream">Contributor Status</div>
+                <div className="text-[10px] text-cream/40 uppercase font-black tracking-widest mt-0.5">Help preserve our heritage</div>
               </div>
               <div className="bg-primary/10 border border-primary/20 px-4 py-2 rounded-xl text-xs font-black text-primary uppercase tracking-widest">
-                {userRole}
+                {userRole === 'learner' ? 'Not Applied' : userRole}
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
-              {(['learner', 'contributor', 'validator', 'admin'] as Role[]).map((role) => (
+            
+            {userRole === 'learner' && (
+              <div className="space-y-4">
+                <p className="text-xs text-cream/60 leading-relaxed">
+                  Share your knowledge of dialects, rituals, and traditions. Join our community of elders and experts.
+                </p>
                 <button 
-                  key={role}
-                  onClick={() => onRoleChange(role)}
-                  className={`px-4 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all border min-h-[44px] ${
-                    userRole === role 
-                      ? 'bg-primary border-primary text-forest gold-shadow' 
-                      : 'bg-white/5 border-white/10 text-cream/40 hover:bg-white/10'
+                  onClick={async () => {
+                    try {
+                      await updateProfile({ contributorApplicationStatus: 'pending' });
+                      toast.success('Contributor application submitted! Our council will review your request.');
+                    } catch (error) {
+                      toast.error('Failed to submit application. Please try again.');
+                    }
+                  }}
+                  disabled={profile?.contributorApplicationStatus === 'pending'}
+                  className={`w-full py-4 rounded-2xl font-black uppercase tracking-widest text-xs transition-all min-h-[44px] ${
+                    profile?.contributorApplicationStatus === 'pending'
+                      ? 'bg-white/5 border border-white/10 text-cream/20 cursor-not-allowed'
+                      : 'bg-primary text-forest gold-shadow hover:-translate-y-1 active:translate-y-0'
                   }`}
                 >
-                  {role}
+                  {profile?.contributorApplicationStatus === 'pending' ? 'Application Pending' : 'Apply as a Contributor'}
                 </button>
-              ))}
-            </div>
+              </div>
+            )}
+
+            {userRole !== 'learner' && (
+              <div className="p-4 bg-primary/5 border border-primary/10 rounded-2xl">
+                <p className="text-xs text-primary font-bold">
+                  You are already an active contributor to the Echo community. Thank you for your wisdom.
+                </p>
+              </div>
+            )}
           </div>
 
           <div className="space-y-3">

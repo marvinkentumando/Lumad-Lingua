@@ -135,31 +135,31 @@ const Learn: React.FC<LearnProps> = ({ setIsQuizActive }) => {
       className="pb-32"
     >
       {/* Hero Band */}
-      <section className="relative overflow-hidden bg-forest/50 rounded-[2.5rem] p-10 mb-12 border border-white/5">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-start justify-between gap-12">
-          <div className="pt-4">
-            <div className="flex items-center gap-2 text-[10px] font-mono uppercase tracking-widest text-primary/60 mb-4">
+      <section className="relative overflow-hidden bg-forest/50 rounded-[2rem] md:rounded-[2.5rem] p-6 md:p-10 mb-8 md:mb-12 border border-white/5">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-start justify-between gap-6 md:gap-12">
+          <div className="pt-2 md:pt-4">
+            <div className="flex items-center gap-2 text-[9px] md:text-[10px] font-mono uppercase tracking-widest text-primary/60 mb-3 md:mb-4">
               <span>Dashboard</span>
               <span>→</span>
               <span className="text-primary">Language Learning</span>
             </div>
-            <h2 className="text-5xl font-headline font-bold text-cream mb-6 leading-tight">Your Learning <em className="text-primary not-italic">Journey</em></h2>
-            <p className="text-cream/60 max-w-md text-lg leading-relaxed">Every level is a step higher on the mountain. The ancestors are watching your progress.</p>
+            <h2 className="text-3xl sm:text-4xl md:text-5xl font-headline font-bold text-cream mb-4 md:mb-6 leading-tight">Your Learning <em className="text-primary not-italic">Journey</em></h2>
+            <p className="text-cream/60 max-w-md text-sm md:text-lg leading-relaxed">Every level is a step higher on the mountain. The ancestors are watching your progress.</p>
           </div>
-          <div className="bg-white/5 border border-white/10 rounded-[2rem] p-8 min-w-[340px] relative overflow-hidden shadow-2xl">
+          <div className="bg-white/5 border border-white/10 rounded-[1.5rem] md:rounded-[2rem] p-5 md:p-8 w-full lg:min-w-[340px] relative overflow-hidden shadow-2xl">
             <div className="absolute top-0 left-0 right-0 h-1.5 bg-gradient-to-r from-primary to-orange-500"></div>
             <div className="flex items-center gap-2 text-[10px] font-black uppercase tracking-[0.2em] text-primary mb-2">
               <span>🌿 MAAYONG BUNTAG</span>
             </div>
-            <div className="text-4xl font-headline font-bold text-cream mb-6">{profile?.role || 'Learner'}</div>
-            <div className="grid grid-cols-2 gap-4 mb-6">
-              <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
-                <div className="text-3xl font-headline font-bold text-primary">{profile?.streak || 0}</div>
-                <div className="text-[9px] uppercase font-black text-cream/40 tracking-widest mt-1">Day Streak</div>
+            <div className="text-3xl md:text-4xl font-headline font-bold text-cream mb-4 md:mb-6">{profile?.role || 'Learner'}</div>
+            <div className="grid grid-cols-2 gap-3 md:gap-4 mb-4 md:mb-6">
+              <div className="bg-white/5 border border-white/10 p-3 md:p-5 rounded-xl md:rounded-2xl">
+                <div className="text-xl md:text-3xl font-headline font-bold text-primary">{profile?.streak || 0}</div>
+                <div className="text-[8px] md:text-[9px] uppercase font-black text-cream/40 tracking-widest mt-1">Day Streak</div>
               </div>
-              <div className="bg-white/5 border border-white/10 p-5 rounded-2xl">
-                <div className="text-3xl font-headline font-bold text-primary">{profile?.completedLessons?.length || 0}</div>
-                <div className="text-[9px] uppercase font-black text-cream/40 tracking-widest mt-1">Completed</div>
+              <div className="bg-white/5 border border-white/10 p-3 md:p-5 rounded-xl md:rounded-2xl">
+                <div className="text-xl md:text-3xl font-headline font-bold text-primary">{profile?.completedLessons?.length || 0}</div>
+                <div className="text-[8px] md:text-[9px] uppercase font-black text-cream/40 tracking-widest mt-1">Completed</div>
               </div>
             </div>
             <div className="space-y-3">
@@ -301,38 +301,42 @@ const Learn: React.FC<LearnProps> = ({ setIsQuizActive }) => {
 
           {/* Learning Path */}
           <div className="space-y-6">
-            <div className="flex items-baseline justify-between border-b border-primary/20 pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-baseline justify-between border-b border-primary/20 pb-4 gap-4">
               <div>
                 <span className="text-[10px] font-black uppercase tracking-widest text-primary mb-1 block">🏔️ Climb the Mountain</span>
                 <h3 className="text-2xl font-bold text-cream">{currentLang === 'mansaka' ? 'Mansaka' : 'Mandaya'} Learning <em className="text-primary not-italic">Path</em></h3>
               </div>
-              <button className="text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary/80">View All →</button>
+              <button className="text-[10px] font-mono uppercase tracking-widest text-primary hover:text-primary/80 text-left sm:text-right">View All →</button>
             </div>
 
-            <div className="relative pl-10 space-y-4">
-              <div className="absolute left-4.5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/30 to-transparent"></div>
+            <div className="relative pl-6 md:pl-10 space-y-4">
+              <div className="absolute left-2.5 md:left-4.5 top-0 bottom-0 w-0.5 bg-gradient-to-b from-primary via-primary/30 to-transparent"></div>
               
               {currentPath.map((unit) => (
                 <div key={unit.id} className="relative">
-                  <div className={`absolute -left-7.5 top-5 w-4 h-4 rounded-full border-2 z-10 ${
+                  <div className={`absolute -left-5.5 md:-left-7.5 top-5 w-3.5 h-3.5 md:w-4 md:h-4 rounded-full border-2 z-10 ${
                     getUnitStatus(unit.id, currentPath) === 'done' ? 'bg-green-500 border-green-500 shadow-[0_0_12px_rgba(34,197,94,0.4)]' :
                     getUnitStatus(unit.id, currentPath) === 'active' ? 'bg-primary border-primary' : 'bg-white/10 border-white/20'
                   }`}></div>
                   
                   <button 
                     onClick={() => toggleUnit(unit.id)}
-                    className="w-full flex items-center gap-4 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-left"
+                    className="w-full flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-4 p-4 bg-white/5 border border-white/10 rounded-xl hover:bg-white/10 transition-all text-left"
                   >
-                    <span className="bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg text-[10px] font-bold text-primary">{unit.unit}</span>
-                    <span className="flex-1 font-bold text-cream">{unit.title}</span>
-                    <span className="font-mono text-[10px] text-cream/20">{unit.lessons.filter(l => profile?.completedLessons.includes(l.id)).length}/{unit.lessons.length}</span>
-                    <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
-                      getUnitStatus(unit.id, currentPath) === 'done' ? 'bg-green-500/20 text-green-500' :
-                      getUnitStatus(unit.id, currentPath) === 'active' ? 'bg-primary/20 text-primary' : 'bg-white/10 text-cream/40'
-                    }`}>
-                      {getUnitStatus(unit.id, currentPath) === 'done' ? '✓ Complete' : getUnitStatus(unit.id, currentPath) === 'active' ? '▶ In Progress' : '🔒 Locked'}
-                    </span>
-                    <ChevronRight className={`w-4 h-4 text-cream/40 transition-transform ${expandedUnits.has(unit.id) ? 'rotate-90' : ''}`} />
+                    <div className="flex items-center gap-3 flex-1">
+                      <span className="bg-primary/10 border border-primary/20 px-2 py-1 rounded-lg text-[10px] font-bold text-primary">{unit.unit}</span>
+                      <span className="font-bold text-cream text-sm md:text-base">{unit.title}</span>
+                    </div>
+                    <div className="flex items-center justify-between sm:justify-end gap-4">
+                      <span className="font-mono text-[10px] text-cream/20">{unit.lessons.filter(l => profile?.completedLessons.includes(l.id)).length}/{unit.lessons.length}</span>
+                      <span className={`text-[9px] font-black uppercase px-2 py-1 rounded-full ${
+                        getUnitStatus(unit.id, currentPath) === 'done' ? 'bg-green-500/20 text-green-500' :
+                        getUnitStatus(unit.id, currentPath) === 'active' ? 'bg-primary/20 text-primary' : 'bg-white/10 text-cream/40'
+                      }`}>
+                        {getUnitStatus(unit.id, currentPath) === 'done' ? '✓ Complete' : getUnitStatus(unit.id, currentPath) === 'active' ? '▶ In Progress' : '🔒 Locked'}
+                      </span>
+                      <ChevronRight className={`w-4 h-4 text-cream/40 transition-transform ${expandedUnits.has(unit.id) ? 'rotate-90' : ''}`} />
+                    </div>
                   </button>
 
                   <AnimatePresence>

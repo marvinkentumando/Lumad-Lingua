@@ -136,9 +136,15 @@ const ValidatorDashboard: React.FC = () => {
                 </div>
                 <div className="grid grid-cols-2 gap-8">
                   <div>
+                    <div className="text-[10px] font-black uppercase tracking-widest text-cream/20 mb-1">Dialect / Language</div>
+                    <div className="text-sm text-primary font-bold">{selectedWord.dialect || 'Lumad'}</div>
+                  </div>
+                  <div>
                     <div className="text-[10px] font-black uppercase tracking-widest text-cream/20 mb-1">Tag & Category</div>
                     <div className="text-sm text-cream">{selectedWord.tag} / {selectedWord.category}</div>
                   </div>
+                </div>
+                <div className="grid grid-cols-1 gap-8">
                   <div>
                     <div className="text-[10px] font-black uppercase tracking-widest text-cream/20 mb-1">Location / Community</div>
                     <div className="text-sm text-cream/60">{selectedWord.location || 'Unknown'}</div>
