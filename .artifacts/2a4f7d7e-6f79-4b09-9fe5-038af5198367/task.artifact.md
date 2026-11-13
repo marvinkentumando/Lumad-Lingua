@@ -1,0 +1,4 @@
+- [ ] Create `AdminConfigService` to read admin algorithm settings from Cloud Firestore `system_config/app_settings`
+- [ ] Update `LocalMlService` to support dynamic algorithm selection based on admin preferences
+- [ ] Clean up `PronunciationScreen` dialogs to remove technical algorithm jargon for learners
+- [ ] Verify functionality with automated tests and code analysis

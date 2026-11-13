@@ -1,4 +1,4 @@
-package com.example.lumad_lingua
+package com.lumadlingua.lumad_lingua
 
 import io.flutter.embedding.android.FlutterActivity
 

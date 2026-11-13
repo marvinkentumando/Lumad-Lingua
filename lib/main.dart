@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'config/app_config.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
@@ -14,6 +15,14 @@ void main() async {
       await Firebase.initializeApp();
     } catch (e) {
       debugPrint('Firebase initialization warning: $e');
+    }
+    try {
+      await Supabase.initialize(
+        url: 'https://ovdwgowtnlujnbcyldkk.supabase.co',
+        publishableKey: 'sb_publishable_rMQ9kc8SVsba4_p-aPrOPg_3XDgAbR8',
+      );
+    } catch (e) {
+      debugPrint('Supabase initialization warning: $e');
     }
     runApp(
       const ProviderScope(

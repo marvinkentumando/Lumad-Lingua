@@ -6,6 +6,8 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../utils/constants.dart';
 import '../../providers/pronunciation_provider.dart';
+import '../../services/local_ml_service.dart';
+import '../../services/admin_config_service.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/audio/recording_button.dart';
@@ -90,22 +92,46 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
     }
   }
 
-  void _submitAssessment() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Backend Assessment Unavailable'),
-        content: const Text(
-          'DTW + SSL Speech Embedding Pronunciation Model is ready for Phase B integration via FastAPI. Frontend audio recording complete.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: const Text('OK'),
+  Future<void> _submitAssessment() async {
+    final state = ref.read(pronunciationProvider);
+
+    final adminConfig = AdminConfigService();
+    final config = await adminConfig.getActiveAlgorithmConfig();
+    final algoMode = config['pronunciation_algorithm'] as String? ?? 'dtw_hmm';
+
+    final finalScore = await LocalMlService.evaluatePronunciationFromFileWithConfig(state.audioPath, algoMode);
+
+    if (mounted) {
+      showDialog(
+        context: context,
+        builder: (context) => AlertDialog(
+          title: const Text('Pronunciation Assessment'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Accuracy Score: ${finalScore.toStringAsFixed(1)}%',
+                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.blue),
+              ),
+              const SizedBox(height: 12),
+              Text(
+                finalScore >= 85
+                    ? 'Fantastic job! Your pronunciation and pacing sound natural and clear.'
+                    : 'Good effort! Try focusing slightly more on vowel length and tone.',
+                style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+              ),
+            ],
           ),
-        ],
-      ),
-    );
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('OK'),
+            ),
+          ],
+        ),
+      );
+    }
   }
 
   @override

@@ -1,0 +1,57 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Helper function to check if user is authenticated
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    // Helper function to check if the user is accessing their own document
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    // Users collection
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+
+      // User achievements subcollection
+      match /achievements/{achievementId} {
+        allow read: if isAuthenticated();
+        allow write: if isOwner(userId);
+      }
+    }
+
+    // Learning Units (Public read for authenticated learners)
+    match /learning_units/{unitId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // Lessons (Public read)
+    match /lessons/{lessonId} {
+      allow read: if isAuthenticated();
+      allow write: if isAuthenticated();
+    }
+
+    // Learning Activities (Public read)
+    match /learning_activities/{activityId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+
+    // User Progress collection
+    match /user_progress/{userId} {
+      allow read: if isAuthenticated();
+      allow write: if isOwner(userId);
+    }
+
+    // Vocabulary / Dictionary (Public read)
+    match /vocabulary/{wordId} {
+      allow read: if isAuthenticated();
+      allow write: if false;
+    }
+  }
+}

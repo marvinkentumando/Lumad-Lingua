@@ -38,13 +38,13 @@
 
 ---
 
-### Phase B: Backend Integration (Upcoming)
+### Phase B: Backend Integration
 
 | Stage | Stage Name | Description | Status |
 |---|---|---|---|
-| **Stage 15** | Firebase Integration | Firebase Auth, Cloud Firestore database schema, Security Rules | ⏳ Pending |
-| **Stage 16** | Supabase Audio | Supabase Storage buckets for reference recordings & cached playback | ⏳ Pending |
-| **Stage 17** | FastAPI & ML Models | DTW + SSL speech embeddings for pronunciation & Naive Bayes/SVM/BiLSTM for sentiment | ⏳ Pending |
+| **Stage 15** | Firebase Integration | Firebase Auth, Cloud Firestore database schema, Security Rules | ✅ Completed |
+| **Stage 16** | Supabase Audio | Supabase Storage buckets for reference recordings & cached playback | ✅ Completed |
+| **Stage 17** | Local Algorithms Engine | DTW, HMM, Naive Bayes, SVM, BiLSTM & Ensemble implemented 100% locally in Dart | ✅ Completed |
 
 ---
 
@@ -52,7 +52,7 @@
 
 | Stage | Stage Name | Description | Status |
 |---|---|---|---|
-| **Stage 18** | Final Integration | Connecting frontend repositories to Firebase, Supabase, and FastAPI APIs | ⏳ Pending |
+| **Stage 18** | Final Integration | Connecting frontend repositories to Firebase, Supabase, and Firestore Admin Config | ⏳ Pending |
 | **Stage 19** | System Testing | End-to-end user flow verification, performance auditing, ML evaluation | ⏳ Pending |
 | **Stage 20** | Android Deployment | APK / App Bundle generation & release build verification | ⏳ Pending |
 

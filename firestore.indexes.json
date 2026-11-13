@@ -1,0 +1,20 @@
+{
+  "indexes": [
+    {
+      "collectionGroup": "lessons",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "unitId", "order": "ASCENDING" },
+        { "fieldPath": "lessonOrder", "order": "ASCENDING" }
+      ]
+    },
+    {
+      "collectionGroup": "learning_units",
+      "queryScope": "COLLECTION",
+      "fields": [
+        { "fieldPath": "unitNumber", "order": "ASCENDING" }
+      ]
+    }
+  ],
+  "fieldOverrides": []
+}
