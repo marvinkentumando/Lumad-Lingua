@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:just_audio/just_audio.dart';
 import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:path_provider/path_provider.dart';
 import '../../utils/constants.dart';
 import '../../providers/pronunciation_provider.dart';
 import '../../widgets/common/app_button.dart';
@@ -48,7 +49,8 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
       final permission = await Permission.microphone.request();
       if (permission.isGranted) {
         if (await _audioRecorder.hasPermission()) {
-          final String recordPath = 'mock_recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          final directory = await getTemporaryDirectory();
+          final String recordPath = '${directory.path}/mock_recording_${DateTime.now().millisecondsSinceEpoch}.m4a';
           notifier.startRecording();
           await _audioRecorder.start(
             const RecordConfig(encoder: AudioEncoder.aacLc),
