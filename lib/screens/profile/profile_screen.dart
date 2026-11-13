@@ -16,6 +16,7 @@ class ProfileScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final authState = ref.watch(authStateProvider);
     final user = authState.value;
+    final isGuest = user == null;
     final progressAsync = ref.watch(userProgressProvider);
 
     return Scaffold(
@@ -28,6 +29,42 @@ class ProfileScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
+              if (isGuest) ...[
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    color: AppColors.lightGreenBackground,
+                    borderRadius: BorderRadius.circular(AppRadius.md),
+                    border: Border.all(color: AppColors.brightGreen),
+                  ),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.account_circle, color: AppColors.forestGreen, size: 36),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: const [
+                            Text(
+                              'Exploring as Guest',
+                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                            ),
+                            Text(
+                              'Sign in to sync your XP, streak & progress',
+                              style: TextStyle(fontSize: 12, color: Colors.grey),
+                            ),
+                          ],
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () => context.push('/login'),
+                        child: const Text('Sign In'),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.md),
+              ],
               // User Header Card
               AppCard(
                 child: Column(
@@ -147,16 +184,48 @@ class ProfileScreen extends ConsumerWidget {
                   ],
                 ),
               ),
+              const SizedBox(height: AppSpacing.md),
+
+              // Settings Shortcut
+              AppCard(
+                onTap: () => context.push('/settings'),
+                child: Row(
+                  children: const [
+                    Icon(Icons.settings_outlined, color: AppColors.forestGreen, size: 32),
+                    SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'App Settings',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          Text(
+                            'Preferences, audio & notifications',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: AppColors.forestGreen),
+                  ],
+                ),
+              ),
               const SizedBox(height: AppSpacing.xxl),
 
-              // Logout Button
+              // Auth Button
               AppButton(
-                text: 'Sign Out',
-                variant: AppButtonVariant.outline,
+                text: isGuest ? 'Sign In / Register' : 'Sign Out',
+                variant: isGuest ? AppButtonVariant.primary : AppButtonVariant.outline,
                 onPressed: () async {
-                  await ref.read(authStateProvider.notifier).logout();
-                  if (context.mounted) {
-                    context.go('/login');
+                  if (isGuest) {
+                    context.push('/login');
+                  } else {
+                    await ref.read(authStateProvider.notifier).logout();
+                    if (context.mounted) {
+                      context.go('/home');
+                    }
                   }
                 },
               ),

@@ -89,4 +89,56 @@ class AppTheme {
       ),
     );
   }
+
+  static ThemeData get darkTheme {
+    return ThemeData(
+      useMaterial3: true,
+      fontFamily: GoogleFonts.nunitoSans().fontFamily,
+      colorScheme: const ColorScheme.dark(
+        primary: AppColors.brightGreen,
+        secondary: AppColors.secondary,
+        tertiary: AppColors.gold,
+        surface: Color(0xFF1E2923),
+        error: AppColors.error,
+        onPrimary: AppColors.darkCharcoal,
+        onSecondary: Colors.white,
+        onSurface: Colors.white,
+        onError: Colors.white,
+      ),
+      scaffoldBackgroundColor: const Color(0xFF121B16),
+      appBarTheme: AppBarTheme(
+        backgroundColor: const Color(0xFF1E2923),
+        foregroundColor: Colors.white,
+        elevation: 0,
+        centerTitle: true,
+        titleTextStyle: GoogleFonts.baloo2(
+          fontSize: 22,
+          fontWeight: FontWeight.bold,
+          color: Colors.white,
+        ),
+      ),
+      elevatedButtonTheme: ElevatedButtonThemeData(
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.brightGreen,
+          foregroundColor: AppColors.darkCharcoal,
+          minimumSize: const Size(double.infinity, AppSpacing.buttonHeight),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppRadius.md),
+          ),
+          textStyle: GoogleFonts.nunitoSans(
+            fontSize: 16,
+            fontWeight: FontWeight.w800,
+          ),
+          elevation: 2,
+        ),
+      ),
+      cardTheme: CardThemeData(
+        color: const Color(0xFF1E2923),
+        elevation: 2,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppRadius.lg),
+        ),
+      ),
+    );
+  }
 }

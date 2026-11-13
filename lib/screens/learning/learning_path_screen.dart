@@ -16,7 +16,7 @@ class LearningPathScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mansaka Curriculum'),
+        title: const Text('Learn Mansaka'),
       ),
       body: unitsAsync.when(
         data: (units) => ListView.separated(

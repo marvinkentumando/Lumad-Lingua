@@ -43,7 +43,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Align(
                 alignment: Alignment.topRight,
                 child: TextButton(
-                  onPressed: () => context.go('/login'),
+                  onPressed: () => context.go('/home'),
                   child: const Text('Skip', style: TextStyle(color: AppColors.forestGreen)),
                 ),
               ),
@@ -122,7 +122,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       curve: Curves.easeInOut,
                     );
                   } else {
-                    context.go('/login');
+                    context.go('/home');
                   }
                 },
               ),
