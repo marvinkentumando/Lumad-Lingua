@@ -185,7 +185,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                           shrinkWrap: true,
                           physics: const NeverScrollableScrollPhysics(),
                           itemCount: students.length,
-                          separatorBuilder: (_, __) => const SizedBox(height: 8),
+                          separatorBuilder: (_, index) => const SizedBox(height: 8),
                           itemBuilder: (context, index) {
                             final student = students[index];
                             final name = student['name'] ?? 'Learner';

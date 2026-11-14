@@ -9,6 +9,7 @@ import '../screens/auth/forgot_password_screen.dart';
 import '../screens/home/home_screen.dart';
 import '../screens/learning/learning_path_screen.dart';
 import '../screens/learning/unit_details_screen.dart';
+import '../screens/learning/lesson_study_screen.dart';
 import '../screens/learning/lesson_screen.dart';
 import '../screens/learning/lesson_result_screen.dart';
 import '../screens/dictionary/dictionary_screen.dart';
@@ -59,6 +60,12 @@ final appRouter = GoRouter(
     ),
     GoRoute(
       path: '/lesson/:id',
+      builder: (context, state) => LessonStudyScreen(
+        lessonId: state.pathParameters['id']!,
+      ),
+    ),
+    GoRoute(
+      path: '/lesson/:id/drills',
       builder: (context, state) => LessonScreen(
         lessonId: state.pathParameters['id']!,
       ),

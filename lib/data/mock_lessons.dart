@@ -39,7 +39,7 @@ final List<LearningUnitModel> mockUnits = [
 
 final List<LessonModel> mockLessons = [
   // Unit 1 Lessons
-  const LessonModel(
+  LessonModel(
     id: 'lesson_1_1',
     unitId: 'unit_1',
     title: 'Greetings',
@@ -48,8 +48,40 @@ final List<LessonModel> mockLessons = [
     xpReward: 30,
     status: LessonStatus.completed,
     starsEarned: 3,
+    flashcards: [
+      const LessonFlashcard(
+        id: 'fc_1_1_1',
+        mansaka: 'Madyaw na masurom',
+        english: 'Good morning',
+        pronunciation: 'Mad-yaw na ma-su-rom',
+        partOfSpeech: 'Greeting',
+        exampleMansaka: 'Madyaw na masurom sang tanan!',
+        exampleEnglish: 'Good morning to everyone!',
+        audioPath: 'audio/dataset/greetings/madyaw_na_masurom.wav',
+      ),
+      const LessonFlashcard(
+        id: 'fc_1_1_2',
+        mansaka: 'Madyaw na maudto',
+        english: 'Good afternoon',
+        pronunciation: 'Mad-yaw na ma-ud-to',
+        partOfSpeech: 'Greeting',
+        exampleMansaka: 'Madyaw na maudto kimo.',
+        exampleEnglish: 'Good afternoon to you.',
+        audioPath: 'audio/dataset/greetings/madyaw_na_maudto.wav',
+      ),
+      const LessonFlashcard(
+        id: 'fc_1_1_3',
+        mansaka: 'Madyaw na masawg',
+        english: 'Good evening',
+        pronunciation: 'Mad-yaw na ma-sawg',
+        partOfSpeech: 'Greeting',
+        exampleMansaka: 'Madyaw na masawg sa tagsa-tagsa.',
+        exampleEnglish: 'Good evening to each and every one.',
+        audioPath: 'audio/dataset/greetings/madyaw_na_masawg.wav',
+      ),
+    ],
   ),
-  const LessonModel(
+  LessonModel(
     id: 'lesson_1_2',
     unitId: 'unit_1',
     title: 'Basic Expressions',
@@ -58,8 +90,40 @@ final List<LessonModel> mockLessons = [
     xpReward: 30,
     status: LessonStatus.inProgress,
     starsEarned: 0,
+    flashcards: [
+      const LessonFlashcard(
+        id: 'fc_1_2_1',
+        mansaka: 'Salamat',
+        english: 'Thank you',
+        pronunciation: 'Sa-la-mat',
+        partOfSpeech: 'Interjection',
+        exampleMansaka: 'Salamat sa tababang mo.',
+        exampleEnglish: 'Thank you for your help.',
+        audioPath: 'audio/dataset/expressions/salamat.wav',
+      ),
+      const LessonFlashcard(
+        id: 'fc_1_2_2',
+        mansaka: 'Walay sapayan',
+        english: 'You\'re welcome',
+        pronunciation: 'Wa-lay sa-pa-yan',
+        partOfSpeech: 'Phrase',
+        exampleMansaka: 'Walay sapayan, amigo.',
+        exampleEnglish: 'You\'re welcome, friend.',
+        audioPath: 'audio/dataset/expressions/walay_sapayan.wav',
+      ),
+      const LessonFlashcard(
+        id: 'fc_1_2_3',
+        mansaka: 'Pasayloha ako',
+        english: 'Forgive me / Excuse me',
+        pronunciation: 'Pa-say-lo-ha a-ko',
+        partOfSpeech: 'Phrase',
+        exampleMansaka: 'Pasayloha ako sa kasaypanan ko.',
+        exampleEnglish: 'Forgive me for my mistake.',
+        audioPath: 'audio/dataset/expressions/pasayloha.wav',
+      ),
+    ],
   ),
-  const LessonModel(
+  LessonModel(
     id: 'lesson_1_3',
     unitId: 'unit_1',
     title: 'Introducing Yourself',
@@ -68,10 +132,22 @@ final List<LessonModel> mockLessons = [
     xpReward: 35,
     status: LessonStatus.available,
     starsEarned: 0,
+    flashcards: [
+      const LessonFlashcard(
+        id: 'fc_1_3_1',
+        mansaka: 'Ako si...',
+        english: 'My name is...',
+        pronunciation: 'A-ko si...',
+        partOfSpeech: 'Phrase',
+        exampleMansaka: 'Ako si Juan, lumadnon.',
+        exampleEnglish: 'I am Juan, an indigenous person.',
+        audioPath: 'audio/dataset/intro/ako_si.wav',
+      ),
+    ],
   ),
 
   // Unit 2 Lessons
-  const LessonModel(
+  LessonModel(
     id: 'lesson_2_1',
     unitId: 'unit_2',
     title: 'Numbers (Mga Numero)',
@@ -80,8 +156,30 @@ final List<LessonModel> mockLessons = [
     xpReward: 30,
     status: LessonStatus.available,
     starsEarned: 0,
+    flashcards: [
+      const LessonFlashcard(
+        id: 'fc_2_1_1',
+        mansaka: 'Isa',
+        english: 'One',
+        pronunciation: 'I-sa',
+        partOfSpeech: 'Number',
+        exampleMansaka: 'Isa ka buok binuhi.',
+        exampleEnglish: 'One pet animal.',
+        audioPath: 'audio/dataset/numbers/isa.wav',
+      ),
+      const LessonFlashcard(
+        id: 'fc_2_1_2',
+        mansaka: 'Duha',
+        english: 'Two',
+        pronunciation: 'Du-ha',
+        partOfSpeech: 'Number',
+        exampleMansaka: 'Duha ka mata.',
+        exampleEnglish: 'Two eyes.',
+        audioPath: 'audio/dataset/numbers/duha.wav',
+      ),
+    ],
   ),
-  const LessonModel(
+  LessonModel(
     id: 'lesson_2_2',
     unitId: 'unit_2',
     title: 'Colors (Mga Kolor)',
@@ -90,8 +188,9 @@ final List<LessonModel> mockLessons = [
     xpReward: 30,
     status: LessonStatus.locked,
     starsEarned: 0,
+    flashcards: [],
   ),
-  const LessonModel(
+  LessonModel(
     id: 'lesson_2_3',
     unitId: 'unit_2',
     title: 'Family Members',
@@ -100,10 +199,11 @@ final List<LessonModel> mockLessons = [
     xpReward: 35,
     status: LessonStatus.locked,
     starsEarned: 0,
+    flashcards: [],
   ),
 
   // Unit 3 Lessons
-  const LessonModel(
+  LessonModel(
     id: 'lesson_3_1',
     unitId: 'unit_3',
     title: 'Asking Questions',
@@ -112,8 +212,9 @@ final List<LessonModel> mockLessons = [
     xpReward: 40,
     status: LessonStatus.locked,
     starsEarned: 0,
+    flashcards: [],
   ),
-  const LessonModel(
+  LessonModel(
     id: 'lesson_3_2',
     unitId: 'unit_3',
     title: 'Daily Activities',
@@ -122,18 +223,7 @@ final List<LessonModel> mockLessons = [
     xpReward: 40,
     status: LessonStatus.locked,
     starsEarned: 0,
-  ),
-
-  // Unit 4 Lessons
-  const LessonModel(
-    id: 'lesson_4_1',
-    unitId: 'unit_4',
-    title: 'Sentence Construction',
-    description: 'Combine vocabulary into complete Mansaka sentences.',
-    lessonOrder: 1,
-    xpReward: 50,
-    status: LessonStatus.locked,
-    starsEarned: 0,
+    flashcards: [],
   ),
 ];
 
@@ -142,61 +232,19 @@ final List<ActivityModel> mockLesson1Activities = [
     id: 'act_1_1',
     lessonId: 'lesson_1_1',
     type: ActivityType.multipleChoice,
-    questionText: 'What is the Mansaka translation for "Good morning"?',
-    targetEnglish: 'Good morning',
-    options: [
-      'Madyaw na masurom',
-      'Madyaw na gabila',
-      'Madyaw na gabi',
-      'Madyaw na aras dose'
-    ],
-    correctOptionIndex: 0,
+    questionText: 'What is the Mansaka greeting for "Good morning"?',
+    options: ['Madyaw na maudto', 'Madyaw na masurom', 'Madyaw na masawg', 'Salamat'],
+    correctOptionIndex: 1,
     xpReward: 10,
   ),
   const ActivityModel(
     id: 'act_1_2',
     lessonId: 'lesson_1_1',
-    type: ActivityType.wordMatching,
-    questionText: 'Match the Mansaka greetings with their English meanings:',
-    matchingPairs: [
-      MatchingPair(mansaka: 'Madyaw na masurom', english: 'Good morning'),
-      MatchingPair(mansaka: 'Madyaw na gabila', english: 'Good afternoon'),
-      MatchingPair(mansaka: 'Madyaw na gabi', english: 'Good evening'),
-      MatchingPair(mansaka: 'Madyaw na aras dose', english: 'Good noon'),
-    ],
-    xpReward: 10,
-  ),
-  const ActivityModel(
-    id: 'act_1_3',
-    lessonId: 'lesson_1_1',
     type: ActivityType.listeningExercise,
-    questionText: 'Listen to the audio and select the phrase you hear:',
-    targetMansaka: 'Madyaw na gabila',
-    options: [
-      'Madyaw na masurom',
-      'Madyaw na gabila',
-      'Madyaw na gabi',
-      'Kadyaw sang karaw'
-    ],
-    correctOptionIndex: 1,
-    xpReward: 15,
-  ),
-  const ActivityModel(
-    id: 'act_1_4',
-    lessonId: 'lesson_1_1',
-    type: ActivityType.wordArrangement,
-    questionText: 'Arrange the words to form "Good evening":',
-    wordsToArrange: ['gabi', 'na', 'Madyaw'],
-    correctArrangement: ['Madyaw', 'na', 'gabi'],
+    questionText: 'Listen and select the correct greeting:',
+    audioAssetPath: 'audio/dataset/greetings/madyaw_na_masurom.wav',
+    options: ['Madyaw na masurom', 'Madyaw na maudto', 'Walay sapayan', 'Ako si Juan'],
+    correctOptionIndex: 0,
     xpReward: 10,
-  ),
-  const ActivityModel(
-    id: 'act_1_5',
-    lessonId: 'lesson_1_1',
-    type: ActivityType.pronunciationPractice,
-    questionText: 'Practice saying "Madyaw na masurom" clearly:',
-    targetMansaka: 'Madyaw na masurom',
-    targetEnglish: 'Good morning',
-    xpReward: 15,
   ),
 ];
