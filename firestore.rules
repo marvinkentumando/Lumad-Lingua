@@ -53,5 +53,25 @@ service cloud.firestore {
       allow read: if isAuthenticated();
       allow write: if false;
     }
+
+    // Classrooms collection
+    match /classrooms/{classId} {
+      allow read: if isAuthenticated();
+      allow create, delete: if false;
+
+      allow update: if isAuthenticated()
+        && (
+          request.resource.data.diff(resource.data).affectedKeys().hasOnly(['studentIds'])
+          && (
+            // Joining: new list == old list + [auth.uid]
+            (request.resource.data.studentIds.hasAll(resource.data.studentIds)
+              && request.resource.data.studentIds.removeAll(resource.data.studentIds) == [request.auth.uid])
+            ||
+            // Leaving: old list == new list + [auth.uid]
+            (resource.data.studentIds.hasAll(request.resource.data.studentIds)
+              && resource.data.studentIds.removeAll(request.resource.data.studentIds) == [request.auth.uid])
+          )
+        );
+    }
   }
 }

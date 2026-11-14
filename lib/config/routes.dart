@@ -18,6 +18,7 @@ import '../screens/sentiment/sentiment_screen.dart';
 import '../screens/achievements/achievements_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/settings_screen.dart';
+import '../screens/classroom/classroom_dashboard_screen.dart';
 import '../widgets/common/app_bottom_navigation.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -87,6 +88,16 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/achievements',
       builder: (context, state) => const AchievementsScreen(),
+    ),
+    GoRoute(
+      path: '/classroom/dashboard',
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>? ?? {};
+        return ClassroomDashboardScreen(
+          classId: args['classId'] ?? '',
+          classroomData: args['classroomData'] ?? {},
+        );
+      },
     ),
 
     // Bottom Navigation Shell
