@@ -27,7 +27,8 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Streaks & XP Dashboard'),
+        title: Text('Streaks & XP Dashboard', style: AppTypography.h2.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.forest700,
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16.0),
@@ -37,17 +38,17 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: AppColors.gold500.withValues(alpha: 0.2),
+                    color: AppColors.gold500,
                     borderRadius: BorderRadius.circular(AppRadius.chip),
-                    border: Border.all(color: AppColors.gold500),
+                    border: Border.all(color: AppColors.gold700),
                   ),
                   child: Row(
                     children: [
-                      const Icon(Icons.diamond, color: AppColors.gold500, size: 16),
+                      const Icon(Icons.diamond, color: AppColors.forest900, size: 16),
                       const SizedBox(width: 4),
                       Text(
                         '$crystals',
-                        style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+                        style: AppTypography.labelBold.copyWith(color: AppColors.forest900),
                       ),
                     ],
                   ),
@@ -70,22 +71,18 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.local_fire_department, color: Colors.orange, size: 48),
+                        const Icon(Icons.local_fire_department, color: AppColors.terracotta, size: 48),
                         const SizedBox(width: 8),
                         Text(
                           '$streak Days',
-                          style: TextStyle(
-                            fontSize: 36,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textColor(context),
-                          ),
+                          style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 36),
                         ),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Current Learning Streak',
-                      style: TextStyle(fontSize: 14, color: AppColors.subtitleColor(context)),
+                      style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     // Weekly check-in row
@@ -101,19 +98,23 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
                               width: 36,
                               height: 36,
                               decoration: BoxDecoration(
-                                color: isActive ? AppColors.forestGreen : AppColors.progressTrack,
+                                color: isActive ? AppColors.gold500 : AppColors.forest700,
                                 shape: BoxShape.circle,
+                                border: Border.all(
+                                  color: isActive ? AppColors.gold700 : AppColors.forest300,
+                                  width: 1.5,
+                                ),
                               ),
                               child: Center(
                                 child: Icon(
                                   isActive ? Icons.check : Icons.remove,
-                                  color: isActive ? Colors.white : Colors.grey,
+                                  color: isActive ? AppColors.forest900 : AppColors.creamText3,
                                   size: 18,
                                 ),
                               ),
                             ),
                             const SizedBox(height: 4),
-                            Text(day, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
+                            Text(day, style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 12)),
                           ],
                         );
                       }).toList(),
@@ -133,11 +134,7 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
                       children: [
                         Text(
                           'Level $level Learner',
-                          style: TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textColor(context),
-                          ),
+                          style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 22),
                         ),
                         XPBadge(xp: xp),
                       ],
@@ -146,22 +143,24 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Level Progress', style: TextStyle(fontSize: 13, color: AppColors.subtitleColor(context))),
-                        Text('$xpInCurrentLevel / $xpNeededForNextLevel XP', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.bold)),
+                        Text('Level Progress', style: AppTypography.body.copyWith(color: AppColors.creamBorder)),
+                        Text('$xpInCurrentLevel / $xpNeededForNextLevel XP', style: AppTypography.xpValue.copyWith(color: AppColors.gold400)),
                       ],
                     ),
                     const SizedBox(height: 8),
-                    LinearProgressIndicator(
-                      value: progress.clamp(0.0, 1.0),
-                      backgroundColor: AppColors.progressTrack,
-                      color: AppColors.gold500,
-                      minHeight: 12,
-                      borderRadius: BorderRadius.circular(6),
+                    ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      child: LinearProgressIndicator(
+                        value: progress.clamp(0.0, 1.0),
+                        backgroundColor: AppColors.forest700,
+                        color: AppColors.gold500,
+                        minHeight: 14,
+                      ),
                     ),
                     const SizedBox(height: 8),
                     Text(
                       'Earn ${xpNeededForNextLevel - xpInCurrentLevel} more XP to reach Level ${level + 1}!',
-                      style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.subtitleColor(context)),
+                      style: AppTypography.caption.copyWith(color: AppColors.gold300, fontStyle: FontStyle.italic),
                     ),
                   ],
                 ),
@@ -170,38 +169,37 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
 
               // Crystal Currency Banner
               AppCard(
-                backgroundColor: AppColors.gold500.withValues(alpha: 0.1),
-                border: Border.all(color: AppColors.gold500, width: 1.5),
-                child: Row(
-                  children: [
-                    const Icon(Icons.diamond, color: AppColors.gold500, size: 40),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            '$crystals Crystals Available',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppColors.textColor(context),
+                backgroundColor: AppColors.gold500,
+                border: Border.all(color: AppColors.gold700, width: 1.5),
+                child: DefaultTextStyle(
+                  style: const TextStyle(color: AppColors.forest900),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.diamond, color: AppColors.forest900, size: 40),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              '$crystals Crystals Available',
+                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Use crystals in the shop to buy streak freezes, boosters, and avatars.',
-                            style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              'Use crystals in the shop to buy streak freezes, boosters, and avatars.',
+                              style: AppTypography.body.copyWith(color: AppColors.forest800),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    BrandButton(
-                      text: 'Shop',
-                      type: BrandButtonType.primary,
-                      onPressed: () => context.push('/shop'),
-                    ),
-                  ],
+                      BrandButton(
+                        text: 'Shop',
+                        type: BrandButtonType.primary,
+                        onPressed: () => context.push('/shop'),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             ],

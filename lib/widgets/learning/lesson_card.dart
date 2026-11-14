@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/lesson_model.dart';
 import '../../utils/constants.dart';
-import '../common/app_card.dart';
+import '../common/brand_card.dart';
 
 class LessonCard extends StatelessWidget {
   final LessonModel lesson;
@@ -18,19 +18,24 @@ class LessonCard extends StatelessWidget {
     final isLocked = lesson.status == LessonStatus.locked;
     final isCompleted = lesson.status == LessonStatus.completed;
 
-    Color iconBgColor = AppColors.forestGreen;
+    Color iconBgColor = AppColors.forest500;
     IconData iconData = Icons.play_arrow;
 
     if (isLocked) {
-      iconBgColor = AppColors.lockedGray;
+      iconBgColor = AppColors.creamText3;
       iconData = Icons.lock;
     } else if (isCompleted) {
-      iconBgColor = AppColors.brightGreen;
+      iconBgColor = AppColors.semanticGreen;
       iconData = Icons.check;
     }
 
-    return AppCard(
+    return BrandCard(
       onTap: isLocked ? null : onTap,
+      backgroundColor: isLocked ? AppColors.forest100 : AppColors.creamSurface,
+      border: Border.all(
+        color: isLocked ? AppColors.forest300 : AppColors.creamBorder,
+        width: 1.0,
+      ),
       child: Row(
         children: [
           Container(
@@ -48,18 +53,15 @@ class LessonCard extends StatelessWidget {
               children: [
                 Text(
                   lesson.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: isLocked ? AppColors.lockedGray : AppColors.darkCharcoal,
+                  style: AppTypography.lessonTitle.copyWith(
+                    color: isLocked ? AppColors.creamText3 : AppColors.creamText,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   lesson.description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: AppColors.darkCharcoal.withValues(alpha: 0.7),
+                  style: AppTypography.body.copyWith(
+                    color: isLocked ? AppColors.creamText3 : AppColors.creamText2,
                   ),
                 ),
                 if (isCompleted) ...[
@@ -70,7 +72,7 @@ class LessonCard extends StatelessWidget {
                       (index) => Icon(
                         index < lesson.starsEarned ? Icons.star : Icons.star_border,
                         size: 16,
-                        color: AppColors.warmYellow,
+                        color: AppColors.gold500,
                       ),
                     ),
                   ),
@@ -81,20 +83,17 @@ class LessonCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: BoxDecoration(
-              color: AppColors.warmYellow.withValues(alpha: 0.2),
-              borderRadius: BorderRadius.circular(12),
+              color: AppColors.gold100,
+              borderRadius: BorderRadius.circular(AppRadius.chip),
+              border: Border.all(color: AppColors.gold300),
             ),
             child: Row(
               children: [
-                const Icon(Icons.bolt, size: 14, color: AppColors.forestGreen),
+                const Icon(Icons.bolt, size: 14, color: AppColors.gold800),
                 const SizedBox(width: 4),
                 Text(
                   '+${lesson.xpReward} XP',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.forestGreen,
-                  ),
+                  style: AppTypography.xpValue,
                 ),
               ],
             ),

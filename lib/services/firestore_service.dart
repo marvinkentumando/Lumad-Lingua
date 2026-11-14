@@ -71,17 +71,29 @@ class FirestoreService {
 
   Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId}) async {
     try {
-      final snapshot = await _lessonsCol
+      final altUnitId = unitId.contains('_') && !unitId.contains('_0')
+          ? unitId.replaceFirst('unit_', 'unit_0')
+          : (unitId.contains('_0') ? unitId.replaceFirst('unit_0', 'unit_') : unitId);
+
+      var snapshot = await _lessonsCol
           .where('unitId', isEqualTo: unitId)
-          .orderBy('lessonOrder')
           .get();
+
+      if (snapshot.docs.isEmpty) {
+        snapshot = await _lessonsCol
+            .where('unitId', isEqualTo: altUnitId)
+            .get();
+      }
 
       List<LessonModel> baseLessons = [];
       if (snapshot.docs.isEmpty) {
-        baseLessons = mockLessons.where((l) => l.unitId == unitId).toList();
+        baseLessons = mockLessons.where((l) => l.unitId == unitId || l.unitId == altUnitId).toList();
       } else {
         baseLessons = snapshot.docs.map((d) => LessonModel.fromJson(d.data())).toList();
       }
+
+      // Sort by lessonOrder
+      baseLessons.sort((a, b) => a.lessonOrder.compareTo(b.lessonOrder));
 
       if (userId == null || userId.isEmpty) {
         return baseLessons;

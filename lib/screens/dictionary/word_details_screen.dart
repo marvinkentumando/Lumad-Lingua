@@ -13,7 +13,8 @@ class WordDetailsScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text(vocabulary.headword),
+        title: Text(vocabulary.headword, style: AppTypography.h2.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.forest700,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(AppSpacing.lg),
@@ -27,36 +28,44 @@ class WordDetailsScreen extends StatelessWidget {
                   Row(
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
-                      Text(
-                        vocabulary.headword,
-                        style: const TextStyle(
-                          fontSize: 26,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.forestGreen,
+                      Expanded(
+                        child: Text(
+                          vocabulary.headword,
+                          style: AppTypography.flashcard.copyWith(color: Colors.white, fontSize: 32),
                         ),
                       ),
-                      Chip(
-                        label: Text(vocabulary.partOfSpeech),
-                        backgroundColor: AppColors.lightGreenBackground,
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold500,
+                          borderRadius: BorderRadius.circular(AppRadius.chip),
+                        ),
+                        child: Text(
+                          vocabulary.partOfSpeech.toUpperCase(),
+                          style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 11),
+                        ),
                       ),
                     ],
                   ),
-                  const SizedBox(height: AppSpacing.sm),
-                  Text(
-                    'Translation: ${vocabulary.translation}',
-                    style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: AppColors.textColor(context),
+                  if (vocabulary.pronunciation != null && vocabulary.pronunciation!.isNotEmpty) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      '[ ${vocabulary.pronunciation} ]',
+                      style: AppTypography.phoneticGuide.copyWith(color: AppColors.gold300, fontSize: 14),
                     ),
+                  ],
+                  const SizedBox(height: AppSpacing.md),
+                  Text(
+                    'Translation: "${vocabulary.translation}"',
+                    style: AppTypography.h3.copyWith(color: AppColors.creamBorder),
                   ),
                 ],
               ),
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
+            Text(
               'Reference Audio',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: AppTypography.h3,
             ),
             const SizedBox(height: AppSpacing.xs),
             AudioPlayerWidget(
@@ -64,9 +73,9 @@ class WordDetailsScreen extends StatelessWidget {
               title: vocabulary.headword,
             ),
             const SizedBox(height: AppSpacing.lg),
-            const Text(
+            Text(
               'Example Usage',
-              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+              style: AppTypography.h3,
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -75,34 +84,34 @@ class WordDetailsScreen extends StatelessWidget {
                 children: [
                   Text(
                     vocabulary.exampleSentence,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontStyle: FontStyle.italic,
-                      color: AppColors.textColor(context),
-                    ),
+                    style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontStyle: FontStyle.italic),
                   ),
                   const SizedBox(height: 8),
                   Text(
                     'English: "${vocabulary.exampleTranslation}"',
-                    style: TextStyle(
-                      fontSize: 14,
-                      color: AppColors.subtitleColor(context),
-                    ),
+                    style: AppTypography.body.copyWith(color: AppColors.creamBorder),
                   ),
                 ],
               ),
             ),
             if (vocabulary.relatedWords.isNotEmpty) ...[
               const SizedBox(height: AppSpacing.lg),
-              const Text(
+              Text(
                 'Related Vocabulary',
-                style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                style: AppTypography.h3,
               ),
               const SizedBox(height: AppSpacing.xs),
               Wrap(
                 spacing: 8,
+                runSpacing: 8,
                 children: vocabulary.relatedWords
-                    .map((word) => Chip(label: Text(word)))
+                    .map((word) => Chip(
+                          label: Text(word, style: AppTypography.labelBold.copyWith(color: AppColors.forest900)),
+                          backgroundColor: AppColors.gold500,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppRadius.chip),
+                          ),
+                        ))
                     .toList(),
               ),
             ],

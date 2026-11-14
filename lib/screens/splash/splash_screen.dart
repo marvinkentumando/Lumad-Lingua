@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
+import '../../widgets/common/lumad_logo_emblem.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -40,46 +41,32 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.forestGreen,
+      backgroundColor: AppColors.forest700,
       body: FadeTransition(
         opacity: _fadeAnimation,
         child: Center(
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Container(
-                padding: const EdgeInsets.all(24),
-                decoration: const BoxDecoration(
-                  color: Colors.white,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(
-                  Icons.menu_book_rounded,
-                  size: 64,
-                  color: AppColors.forestGreen,
-                ),
-              ),
+              const LumadLogoEmblem(size: 88, borderRadius: 24),
               const SizedBox(height: AppSpacing.lg),
-              const Text(
+              Text(
                 AppStrings.appName,
-                style: TextStyle(
-                  fontSize: 32,
-                  fontWeight: FontWeight.bold,
+                style: AppTypography.displayBold.copyWith(
                   color: Colors.white,
                   letterSpacing: 1.2,
                 ),
               ),
               const SizedBox(height: AppSpacing.sm),
-              const Text(
+              Text(
                 AppStrings.tagline,
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.creamWhite,
+                style: AppTypography.bodyLarge.copyWith(
+                  color: AppColors.creamBorder,
                 ),
               ),
               const SizedBox(height: AppSpacing.xxl),
               const CircularProgressIndicator(
-                valueColor: AlwaysStoppedAnimation<Color>(AppColors.warmYellow),
+                valueColor: AlwaysStoppedAnimation<Color>(AppColors.gold500),
               ),
             ],
           ),

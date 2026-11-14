@@ -16,7 +16,8 @@ class DictionaryScreen extends ConsumerWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Mansaka Dictionary'),
+        title: Text('Mansaka Dictionary', style: AppTypography.h2.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.forest700,
       ),
       body: Column(
         children: [
@@ -26,14 +27,30 @@ class DictionaryScreen extends ConsumerWidget {
               onChanged: (val) {
                 ref.read(searchQueryProvider.notifier).updateQuery(val);
               },
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.creamText),
               decoration: InputDecoration(
                 hintText: 'Search Mansaka or English words...',
-                prefixIcon: const Icon(Icons.search, color: AppColors.forestGreen),
+                hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
+                prefixIcon: const Icon(Icons.search, color: AppColors.forest500),
                 suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear),
+                  icon: const Icon(Icons.clear, color: AppColors.creamText2),
                   onPressed: () {
                     ref.read(searchQueryProvider.notifier).updateQuery('');
                   },
+                ),
+                filled: true,
+                fillColor: AppColors.creamSurface,
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                  borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                ),
+                enabledBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                  borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(AppRadius.button),
+                  borderSide: const BorderSide(color: AppColors.forest500, width: 2.0),
                 ),
               ),
             ),
@@ -42,8 +59,18 @@ class DictionaryScreen extends ConsumerWidget {
             child: searchResultsAsync.when(
               data: (words) {
                 if (words.isEmpty) {
-                  return const Center(
-                    child: Text('No dictionary entries match your search.'),
+                  return Center(
+                    child: Padding(
+                      padding: const EdgeInsets.all(AppSpacing.lg),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          const Icon(Icons.search_off, size: 64, color: AppColors.creamText3),
+                          const SizedBox(height: AppSpacing.md),
+                          Text('No dictionary entries match your search.', style: AppTypography.h3.copyWith(color: AppColors.creamText2), textAlign: TextAlign.center),
+                        ],
+                      ),
+                    ),
                   );
                 }
 
@@ -61,11 +88,12 @@ class DictionaryScreen extends ConsumerWidget {
                         children: [
                           Container(
                             padding: const EdgeInsets.all(12),
-                            decoration: const BoxDecoration(
-                              color: AppColors.lightGreenBackground,
-                              shape: BoxShape.circle,
+                            decoration: BoxDecoration(
+                              color: AppColors.gold100,
+                              borderRadius: BorderRadius.circular(AppRadius.chip),
+                              border: Border.all(color: AppColors.gold300),
                             ),
-                            child: const Icon(Icons.translate, color: AppColors.forestGreen),
+                            child: const Icon(Icons.translate, color: AppColors.gold800, size: 24),
                           ),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
@@ -74,32 +102,25 @@ class DictionaryScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   vocab.headword,
-                                  style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: AppColors.textColor(context),
-                                  ),
+                                  style: AppTypography.h3.copyWith(color: Colors.white),
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
                                   vocab.translation,
-                                  style: TextStyle(
-                                    fontSize: 14,
-                                    color: AppColors.subtitleColor(context),
-                                  ),
+                                  style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
                                 ),
                               ],
                             ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                             decoration: BoxDecoration(
-                              color: AppColors.softGray,
-                              borderRadius: BorderRadius.circular(6),
+                              color: AppColors.gold500,
+                              borderRadius: BorderRadius.circular(AppRadius.chip),
                             ),
                             child: Text(
-                              vocab.partOfSpeech,
-                              style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold),
+                              vocab.partOfSpeech.toUpperCase(),
+                              style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
                             ),
                           ),
                         ],

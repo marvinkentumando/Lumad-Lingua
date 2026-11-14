@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../../utils/constants.dart';
+import 'brand_button.dart';
 
 enum AppButtonVariant { primary, secondary, outline }
 
@@ -21,56 +21,25 @@ class AppButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (variant == AppButtonVariant.outline) {
-      return OutlinedButton(
-        onPressed: isLoading ? null : onPressed,
-        child: isLoading
-            ? const SizedBox(
-                height: 20,
-                width: 20,
-                child: CircularProgressIndicator(strokeWidth: 2),
-              )
-            : Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  if (icon != null) ...[
-                    Icon(icon, size: 20),
-                    const SizedBox(width: 8),
-                  ],
-                  Text(text),
-                ],
-              ),
-      );
+    BrandButtonType type;
+    switch (variant) {
+      case AppButtonVariant.primary:
+        type = BrandButtonType.primary;
+        break;
+      case AppButtonVariant.secondary:
+        type = BrandButtonType.gold;
+        break;
+      case AppButtonVariant.outline:
+        type = BrandButtonType.secondary;
+        break;
     }
 
-    final backgroundColor = variant == AppButtonVariant.secondary
-        ? AppColors.brightGreen
-        : AppColors.forestGreen;
-
-    return ElevatedButton(
-      style: ElevatedButton.styleFrom(
-        backgroundColor: backgroundColor,
-      ),
-      onPressed: isLoading ? null : onPressed,
-      child: isLoading
-          ? const SizedBox(
-              height: 20,
-              width: 20,
-              child: CircularProgressIndicator(
-                strokeWidth: 2,
-                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-              ),
-            )
-          : Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                if (icon != null) ...[
-                  Icon(icon, size: 20),
-                  const SizedBox(width: 8),
-                ],
-                Text(text),
-              ],
-            ),
+    return BrandButton(
+      text: text,
+      onPressed: onPressed,
+      type: type,
+      isLoading: isLoading,
+      icon: icon,
     );
   }
 }

@@ -19,94 +19,91 @@ class WordOfTheDayCard extends ConsumerWidget {
         if (word == null) return const SizedBox.shrink();
 
         return AppCard(
-          backgroundColor: AppColors.gold500.withValues(alpha: 0.15),
-          border: Border.all(color: AppColors.gold500, width: 1.5),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
-                    children: [
-                      const Icon(Icons.wb_sunny, color: AppColors.gold500, size: 22),
-                      const SizedBox(width: 8),
-                      Text(
-                        'WORD OF THE DAY',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 1.1,
-                          color: AppColors.textColor(context),
+          backgroundColor: AppColors.gold500,
+          border: Border.all(color: AppColors.gold700, width: 1.5),
+          child: DefaultTextStyle(
+            style: const TextStyle(color: AppColors.forest900),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.wb_sunny, color: AppColors.forest900, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          'WORD OF THE DAY',
+                          style: AppTypography.labelBold.copyWith(
+                            color: AppColors.forest900,
+                            letterSpacing: 1.1,
+                          ),
                         ),
+                      ],
+                    ),
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: AppColors.forest900,
+                        borderRadius: BorderRadius.circular(AppRadius.chip),
                       ),
-                    ],
-                  ),
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                    decoration: BoxDecoration(
-                      color: AppColors.forestGreen.withValues(alpha: 0.15),
-                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                      child: Text(
+                        word.partOfSpeech.toUpperCase(),
+                        style: AppTypography.labelBold.copyWith(color: AppColors.gold500, fontSize: 10),
+                      ),
                     ),
-                    child: Text(
-                      word.partOfSpeech.toUpperCase(),
-                      style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.forestGreen),
-                    ),
+                  ],
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                Text(
+                  word.headword,
+                  style: AppTypography.flashcard.copyWith(color: AppColors.forest900, fontSize: 30),
+                ),
+                if (word.pronunciation != null && word.pronunciation!.isNotEmpty) ...[
+                  const SizedBox(height: 2),
+                  Text(
+                    '[ ${word.pronunciation} ]',
+                    style: AppTypography.phoneticGuide.copyWith(color: AppColors.gold900, fontSize: 14),
                   ),
                 ],
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              Text(
-                word.headword,
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textColor(context),
-                ),
-              ),
-              if (word.pronunciation != null && word.pronunciation!.isNotEmpty) ...[
-                const SizedBox(height: 2),
+                const SizedBox(height: 6),
                 Text(
-                  '[ ${word.pronunciation} ]',
-                  style: TextStyle(fontSize: 14, fontStyle: FontStyle.italic, color: AppColors.forestGreen),
+                  'Meaning: "${word.translation}"',
+                  style: AppTypography.h3.copyWith(color: AppColors.forest900),
                 ),
-              ],
-              const SizedBox(height: 4),
-              Text(
-                'Meaning: "${word.translation}"',
-                style: TextStyle(fontSize: 15, fontWeight: FontWeight.w600, color: AppColors.textColor(context)),
-              ),
-              if (word.exampleSentence.isNotEmpty) ...[
-                const SizedBox(height: 8),
-                Text(
-                  '"${word.exampleSentence}"',
-                  style: TextStyle(fontSize: 13, fontStyle: FontStyle.italic, color: AppColors.subtitleColor(context)),
-                ),
-                if (word.exampleTranslation.isNotEmpty)
+                if (word.exampleSentence.isNotEmpty) ...[
+                  const SizedBox(height: 8),
                   Text(
-                    '(${word.exampleTranslation})',
-                    style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
+                    '"${word.exampleSentence}"',
+                    style: AppTypography.bodyLarge.copyWith(color: AppColors.forest800, fontStyle: FontStyle.italic),
                   ),
+                  if (word.exampleTranslation.isNotEmpty)
+                    Text(
+                      '(${word.exampleTranslation})',
+                      style: AppTypography.body.copyWith(color: AppColors.forest900),
+                    ),
+                ],
+                const SizedBox(height: AppSpacing.md),
+                AudioPlayerWidget(
+                  audioUrl: word.audioUrl,
+                  title: 'Pronunciation: ${word.headword}',
+                ),
+                const SizedBox(height: AppSpacing.sm),
+                BrandButton(
+                  text: 'View Word Details in Dictionary',
+                  type: BrandButtonType.primary,
+                  onPressed: () => context.push('/dictionary/details', extra: word),
+                ),
               ],
-              const SizedBox(height: AppSpacing.md),
-              AudioPlayerWidget(
-                audioUrl: word.audioUrl,
-                title: 'Pronunciation: ${word.headword}',
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              BrandButton(
-                text: 'View Word Details in Dictionary',
-                type: BrandButtonType.secondary,
-                onPressed: () => context.push('/dictionary/details', extra: word),
-              ),
-            ],
+            ),
           ),
         );
       },
       loading: () => const AppCard(
         child: Padding(
           padding: EdgeInsets.all(16.0),
-          child: Center(child: CircularProgressIndicator()),
+          child: Center(child: CircularProgressIndicator(color: AppColors.gold500)),
         ),
       ),
       error: (err, stack) => const SizedBox.shrink(),

@@ -17,19 +17,19 @@ class AnswerOptionCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    Color borderColor = AppColors.borderGray;
-    Color bgColor = AppColors.cardColor(context);
+    Color borderColor = AppColors.creamBorder;
+    Color bgColor = AppColors.creamSurface;
 
     if (isSelected) {
       if (isCorrect == null) {
-        borderColor = AppColors.forestGreen;
-        bgColor = AppColors.lightGreenBackground;
+        borderColor = AppColors.forest500;
+        bgColor = AppColors.forest50;
       } else if (isCorrect == true) {
-        borderColor = AppColors.brightGreen;
-        bgColor = AppColors.brightGreen.withValues(alpha: 0.15);
+        borderColor = AppColors.semanticGreen;
+        bgColor = AppColors.forest50;
       } else {
-        borderColor = AppColors.coralRed;
-        bgColor = AppColors.coralRed.withValues(alpha: 0.15);
+        borderColor = AppColors.semanticRed;
+        bgColor = AppColors.gold100;
       }
     }
 
@@ -37,32 +37,39 @@ class AnswerOptionCard extends StatelessWidget {
       margin: const EdgeInsets.only(bottom: AppSpacing.md),
       child: Material(
         color: bgColor,
-        borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+        borderRadius: BorderRadius.circular(AppRadius.button),
         child: InkWell(
           onTap: onTap,
-          borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+          borderRadius: BorderRadius.circular(AppRadius.button),
           child: Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
               border: Border.all(color: borderColor, width: 2),
-              borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+              borderRadius: BorderRadius.circular(AppRadius.button),
+              boxShadow: [
+                BoxShadow(
+                  color: borderColor.withValues(alpha: 0.5),
+                  offset: const Offset(0, 2),
+                  blurRadius: 0,
+                  spreadRadius: 0,
+                ),
+              ],
             ),
             child: Row(
               children: [
                 Expanded(
                   child: Text(
                     text,
-                    style: TextStyle(
-                      fontSize: 16,
-                      fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: AppColors.textColor(context),
+                    style: AppTypography.bodyLarge.copyWith(
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w500,
+                      color: AppColors.creamText,
                     ),
                   ),
                 ),
                 if (isSelected && isCorrect != null)
                   Icon(
                     isCorrect! ? Icons.check_circle : Icons.cancel,
-                    color: isCorrect! ? AppColors.brightGreen : AppColors.coralRed,
+                    color: isCorrect! ? AppColors.semanticGreen : AppColors.semanticRed,
                   ),
               ],
             ),

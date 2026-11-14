@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../../models/learning_unit_model.dart';
 import '../../utils/constants.dart';
-import '../common/app_card.dart';
+import '../common/brand_card.dart';
 
 class UnitCard extends StatelessWidget {
   final LearningUnitModel unit;
@@ -15,26 +15,24 @@ class UnitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AppCard(
+    return BrandCard(
       onTap: unit.isUnlocked ? onTap : null,
-      backgroundColor: unit.isUnlocked ? AppColors.cardColor(context) : AppColors.softGray,
+      backgroundColor: unit.isUnlocked ? AppColors.creamSurface : AppColors.forest100,
+      border: Border.all(
+        color: unit.isUnlocked ? AppColors.creamBorder : AppColors.forest300,
+        width: 1.0,
+      ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(AppSpacing.md),
             decoration: BoxDecoration(
-              color: unit.isUnlocked
-                  ? AppColors.forestGreen
-                  : AppColors.lockedGray,
+              color: unit.isUnlocked ? AppColors.forest500 : AppColors.creamText3,
               shape: BoxShape.circle,
             ),
             child: Text(
               '${unit.unitNumber}',
-              style: const TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.bold,
-                fontSize: 18,
-              ),
+              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
             ),
           ),
           const SizedBox(width: AppSpacing.md),
@@ -44,22 +42,15 @@ class UnitCard extends StatelessWidget {
               children: [
                 Text(
                   unit.title,
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: unit.isUnlocked
-                        ? AppColors.textColor(context)
-                        : AppColors.lockedGray,
+                  style: AppTypography.lessonTitle.copyWith(
+                    color: unit.isUnlocked ? AppColors.creamText : AppColors.creamText3,
                   ),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   unit.description,
-                  style: TextStyle(
-                    fontSize: 12,
-                    color: unit.isUnlocked
-                        ? AppColors.subtitleColor(context)
-                        : AppColors.lockedGray,
+                  style: AppTypography.body.copyWith(
+                    color: unit.isUnlocked ? AppColors.creamText2 : AppColors.creamText3,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
@@ -69,9 +60,7 @@ class UnitCard extends StatelessWidget {
           ),
           Icon(
             unit.isUnlocked ? Icons.chevron_right : Icons.lock,
-            color: unit.isUnlocked
-                ? AppColors.forestGreen
-                : AppColors.lockedGray,
+            color: unit.isUnlocked ? AppColors.forest500 : AppColors.creamText3,
           ),
         ],
       ),

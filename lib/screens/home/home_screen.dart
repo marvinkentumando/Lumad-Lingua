@@ -4,9 +4,11 @@ import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_card.dart';
-import '../../widgets/common/app_button.dart';
+import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/lumad_logo_emblem.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
+import '../../widgets/gamification/daily_quests_widget.dart';
 import '../../widgets/dictionary/word_of_the_day_card.dart';
 
 class HomeScreen extends ConsumerWidget {
@@ -30,36 +32,18 @@ class HomeScreen extends ConsumerWidget {
                 children: [
                   Row(
                     children: [
-                      CircleAvatar(
-                        backgroundColor: AppColors.forestGreen,
-                        radius: 24,
-                        child: Text(
-                          user?.name.substring(0, 1).toUpperCase() ?? 'L',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 20,
-                          ),
-                        ),
-                      ),
+                      const LumadLogoEmblem(size: 44, borderRadius: 12),
                       const SizedBox(width: AppSpacing.sm),
                       Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
                             'Madyaw na masurom!',
-                            style: TextStyle(
-                              fontSize: 12,
-                              color: AppColors.subtitleColor(context),
-                            ),
+                            style: AppTypography.caption.copyWith(color: AppColors.creamText2),
                           ),
                           Text(
                             user?.name ?? 'Lumad Learner',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textColor(context),
-                            ),
+                            style: AppTypography.h3.copyWith(fontSize: 16),
                           ),
                         ],
                       ),
@@ -81,21 +65,29 @@ class HomeScreen extends ConsumerWidget {
                 padding: const EdgeInsets.all(AppSpacing.md),
                 decoration: BoxDecoration(
                   gradient: const LinearGradient(
-                    colors: [AppColors.forestGreen, AppColors.brightGreen],
+                    colors: [AppColors.forest500, AppColors.forest300],
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
                   ),
-                  borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.gold500, width: 1.5),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: AppColors.forest700,
+                      offset: Offset(0, 3),
+                      blurRadius: 0,
+                    ),
+                  ],
                 ),
                 child: Row(
                   children: [
                     Container(
                       padding: const EdgeInsets.all(12),
-                      decoration: const BoxDecoration(
+                      decoration: BoxDecoration(
                         color: Colors.white24,
-                        shape: BoxShape.circle,
+                        borderRadius: BorderRadius.circular(AppRadius.chip),
                       ),
-                      child: const Icon(Icons.school, color: Colors.white, size: 32),
+                      child: const Icon(Icons.school, color: AppColors.gold500, size: 32),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
@@ -104,19 +96,12 @@ class HomeScreen extends ConsumerWidget {
                         children: [
                           Text(
                             'Level ${user?.level ?? 3} Learner',
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                            ),
+                            style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 20),
                           ),
-                          const SizedBox(height: 4),
+                          const SizedBox(height: 2),
                           Text(
                             'Keep practicing daily to unlock new Mansaka units!',
-                            style: TextStyle(
-                              color: Colors.white.withValues(alpha: 0.9),
-                              fontSize: 12,
-                            ),
+                            style: AppTypography.body.copyWith(color: AppColors.creamBorder),
                           ),
                         ],
                       ),
@@ -127,14 +112,7 @@ class HomeScreen extends ConsumerWidget {
               const SizedBox(height: AppSpacing.lg),
 
               // Continue Learning Section
-              const Text(
-                'Continue Learning',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkCharcoal,
-                ),
-              ),
+              Text('Continue Learning', style: AppTypography.h3),
               const SizedBox(height: AppSpacing.sm),
               AppCard(
                 child: Column(
@@ -143,52 +121,38 @@ class HomeScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        const Text(
+                        Text(
                           'UNIT 1: MANSAKA FUNDAMENTALS',
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.forestGreen,
-                          ),
+                          style: AppTypography.labelBold.copyWith(color: AppColors.gold500, fontSize: 11),
                         ),
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                           decoration: BoxDecoration(
-                            color: AppColors.brightGreen.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(8),
+                            color: AppColors.gold100,
+                            borderRadius: BorderRadius.circular(AppRadius.chip),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Lesson 2 of 3',
-                            style: TextStyle(
-                              fontSize: 10,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.forestGreen,
-                            ),
+                            style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 10),
                           ),
                         ),
                       ],
                     ),
                     const SizedBox(height: AppSpacing.xs),
-                    const Text(
+                    Text(
                       'Lesson 2: Basic Expressions',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkCharcoal,
-                      ),
+                      style: AppTypography.lessonTitle.copyWith(color: Colors.white),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       'Express gratitude, courtesy, and daily phrases.',
-                      style: TextStyle(
-                        fontSize: 13,
-                        color: AppColors.darkCharcoal.withValues(alpha: 0.7),
-                      ),
+                      style: AppTypography.body.copyWith(color: AppColors.creamBorder),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    AppButton(
+                    BrandButton(
                       text: 'Continue Lesson',
                       icon: Icons.play_arrow,
+                      type: BrandButtonType.primary,
                       onPressed: () {
                         context.push('/lesson/lesson_1_2');
                       },
@@ -198,15 +162,12 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
 
+              // Daily Quests & Challenges
+              const DailyQuestsWidget(),
+              const SizedBox(height: AppSpacing.lg),
+
               // Quick Practice & Tools
-              const Text(
-                'Quick Practice & Tools',
-                style: TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.darkCharcoal,
-                ),
-              ),
+              Text('Quick Practice & Tools', style: AppTypography.h3),
               const SizedBox(height: AppSpacing.sm),
               Row(
                 children: [
@@ -214,46 +175,40 @@ class HomeScreen extends ConsumerWidget {
                     child: AppCard(
                       onTap: () => context.push('/pronunciation'),
                       child: Column(
-                        children: const [
-                          Icon(Icons.mic, size: 36, color: AppColors.forestGreen),
-                          SizedBox(height: 8),
+                        children: [
+                          const Icon(Icons.mic, size: 36, color: AppColors.gold500),
+                          const SizedBox(height: 8),
                           Text(
                             'Pronunciation',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                            style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 14),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             'Audio Practice',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                            style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                           ),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.sm),
+                  const SizedBox(width: AppSpacing.md),
                   Expanded(
                     child: AppCard(
                       onTap: () => context.push('/sentiment'),
                       child: Column(
-                        children: const [
-                          Icon(Icons.analytics_outlined, size: 36, color: AppColors.forestGreen),
-                          SizedBox(height: 8),
+                        children: [
+                          const Icon(Icons.analytics_outlined, size: 36, color: AppColors.gold500),
+                          const SizedBox(height: 8),
                           Text(
                             'Sentiment Lab',
                             textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 14,
-                            ),
+                            style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 14),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             'Research Tool',
-                            style: TextStyle(fontSize: 10, color: Colors.grey),
+                            style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                           ),
                         ],
                       ),
@@ -263,37 +218,70 @@ class HomeScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
 
+              // Crystal Shop Card
+              AppCard(
+                onTap: () => context.push('/shop'),
+                backgroundColor: AppColors.gold500,
+                border: Border.all(color: AppColors.gold700, width: 1.5),
+                child: DefaultTextStyle(
+                  style: const TextStyle(color: AppColors.forest900),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.storefront_rounded, size: 40, color: AppColors.forest900),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Crystal Shop',
+                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Spend crystals on streak freezes, boosters, and avatars!',
+                              style: AppTypography.body.copyWith(color: AppColors.forest800),
+                            ),
+                          ],
+                        ),
+                      ),
+                      const Icon(Icons.chevron_right, color: AppColors.forest900),
+                    ],
+                  ),
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
               // Lingua Duels Arena Card
               AppCard(
                 onTap: () => context.push('/arena'),
-                backgroundColor: AppColors.gold500.withValues(alpha: 0.15),
-                border: Border.all(color: AppColors.gold500, width: 1.5),
-                child: Row(
-                  children: [
-                    const Icon(Icons.flash_on, size: 40, color: AppColors.gold500),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Lingua Duels Arena (PvP)',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppColors.textColor(context),
+                backgroundColor: AppColors.gold500,
+                border: Border.all(color: AppColors.gold700, width: 1.5),
+                child: DefaultTextStyle(
+                  style: const TextStyle(color: AppColors.forest900),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.flash_on, size: 40, color: AppColors.forest900),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Lingua Duels Arena (PvP)',
+                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Compete in rapid-fire trivia duels & win +150 XP +25 Crystals!',
-                            style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              'Compete in rapid-fire trivia duels & win +150 XP +25 Crystals!',
+                              style: AppTypography.body.copyWith(color: AppColors.forest800),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                    const Icon(Icons.chevron_right, color: AppColors.gold500),
-                  ],
+                      const Icon(Icons.chevron_right, color: AppColors.forest900),
+                    ],
+                  ),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),
@@ -304,33 +292,32 @@ class HomeScreen extends ConsumerWidget {
 
               // Daily Challenge Card
               AppCard(
-                backgroundColor: AppColors.warmYellow.withValues(alpha: 0.2),
-                border: Border.all(color: AppColors.warmYellow, width: 1.5),
-                child: Row(
-                  children: [
-                    const Icon(Icons.stars, size: 40, color: AppColors.forestGreen),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Daily Challenge',
-                            style: TextStyle(
-                              fontWeight: FontWeight.bold,
-                              fontSize: 16,
-                              color: AppColors.textColor(context),
+                backgroundColor: AppColors.gold100,
+                border: Border.all(color: AppColors.gold300, width: 1.5),
+                child: DefaultTextStyle(
+                  style: const TextStyle(color: AppColors.forest900),
+                  child: Row(
+                    children: [
+                      const Icon(Icons.stars, size: 40, color: AppColors.gold800),
+                      const SizedBox(width: AppSpacing.md),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Daily Challenge',
+                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
                             ),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Review 5 Mansaka greetings to earn 20 Bonus XP.',
-                            style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
-                          ),
-                        ],
+                            const SizedBox(height: 2),
+                            Text(
+                              'Review 5 Mansaka greetings to earn 20 Bonus XP.',
+                              style: AppTypography.body.copyWith(color: AppColors.forest800),
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
             ],

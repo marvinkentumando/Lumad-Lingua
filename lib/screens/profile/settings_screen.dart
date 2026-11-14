@@ -23,37 +23,41 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('App Settings'),
+        title: Text('App Settings', style: AppTypography.h2.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.forest700,
       ),
       body: ListView(
         padding: const EdgeInsets.all(AppSpacing.md),
         children: [
-          const Text(
+          Text(
             'Preferences',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
+            style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
           ),
           const SizedBox(height: AppSpacing.xs),
           AppCard(
             child: Column(
               children: [
                 SwitchListTile(
-                  title: const Text('Sound Effects'),
-                  subtitle: const Text('Play audio feedback on lesson actions'),
+                  title: Text('Sound Effects', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text('Play audio feedback on lesson actions', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                   value: _soundEffects,
+                  activeThumbColor: AppColors.gold500,
                   onChanged: (val) => setState(() => _soundEffects = val),
                 ),
-                const Divider(),
+                const Divider(color: AppColors.forest700),
                 SwitchListTile(
-                  title: const Text('Haptic Feedback'),
-                  subtitle: const Text('Vibrate on correct/incorrect answers'),
+                  title: Text('Haptic Feedback', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text('Vibrate on correct/incorrect answers', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                   value: _hapticFeedback,
+                  activeThumbColor: AppColors.gold500,
                   onChanged: (val) => setState(() => _hapticFeedback = val),
                 ),
-                const Divider(),
+                const Divider(color: AppColors.forest700),
                 SwitchListTile(
-                  title: const Text('Dark Mode'),
-                  subtitle: const Text('Use dark theme palette'),
+                  title: Text('Dark Mode', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text('Use dark theme palette', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                   value: isDarkMode,
+                  activeThumbColor: AppColors.gold500,
                   onChanged: (val) {
                     ref.read(themeModeProvider.notifier).toggleTheme(val);
                   },
@@ -62,36 +66,37 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Text(
+          Text(
             'Notifications',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
+            style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
           ),
           const SizedBox(height: AppSpacing.xs),
           AppCard(
             child: SwitchListTile(
-              title: const Text('Daily Practice Reminders'),
-              subtitle: const Text('Remind me to maintain my streak at 8:00 PM'),
+              title: Text('Daily Practice Reminders', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+              subtitle: Text('Remind me to maintain my streak at 8:00 PM', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
               value: _dailyReminder,
+              activeThumbColor: AppColors.gold500,
               onChanged: (val) => setState(() => _dailyReminder = val),
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
-          const Text(
+          Text(
             'About Lumad Lingua',
-            style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.grey),
+            style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
           ),
           const SizedBox(height: AppSpacing.xs),
           AppCard(
             child: Column(
-              children: const [
+              children: [
                 ListTile(
-                  title: Text('Version'),
-                  trailing: Text('1.0.0+1', style: TextStyle(color: Colors.grey)),
+                  title: Text('Version', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  trailing: Text('1.0.0+1', style: AppTypography.mono.copyWith(color: AppColors.gold500)),
                 ),
-                Divider(),
+                const Divider(color: AppColors.forest700),
                 ListTile(
-                  title: Text('Preserving Mansaka Language'),
-                  subtitle: Text('Built for cultural heritage and learning'),
+                  title: Text('Preserving Mansaka Language', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text('Built for cultural heritage and learning', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                 ),
               ],
             ),

@@ -8,6 +8,8 @@ import '../../providers/classroom_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/brand_card.dart';
+import '../../widgets/common/lumad_logo_emblem.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
 
@@ -67,8 +69,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text('Leave Classroom'),
-        content: Text('Are you sure you want to leave "$className"?'),
+        title: Text('Leave Classroom', style: AppTypography.h3),
+        content: Text('Are you sure you want to leave "$className"?', style: AppTypography.body),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
@@ -76,7 +78,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Leave', style: TextStyle(color: AppColors.semanticRed)),
+            child: const Text('Leave', style: TextStyle(color: AppColors.semanticRed, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -111,7 +113,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Learner Profile'),
+        title: Text('Learner Profile', style: AppTypography.h2.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.forest700,
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -120,72 +123,68 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               if (isGuest) ...[
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    color: AppColors.lightGreenBackground,
-                    borderRadius: BorderRadius.circular(AppRadius.modal),
-                    border: Border.all(color: AppColors.brightGreen),
-                  ),
+                BrandCard(
+                  backgroundColor: AppColors.gold100,
+                  border: Border.all(color: AppColors.gold500, width: 1.5),
                   child: Row(
                     children: [
-                      const Icon(Icons.account_circle, color: AppColors.forestGreen, size: 36),
+                      const LumadLogoEmblem(size: 44, borderRadius: 12),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
-                          children: const [
-                            Text(
-                              'Exploring as Guest',
-                              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                            ),
-                            Text(
-                              'Sign in to sync your XP, streak & progress',
-                              style: TextStyle(fontSize: 12, color: Colors.grey),
-                            ),
+                          children: [
+                            Text('Exploring as Guest', style: AppTypography.labelBold.copyWith(fontSize: 15, color: AppColors.creamText)),
+                            const SizedBox(height: 2),
+                            Text('Sign in to sync your XP, streak & progress', style: AppTypography.caption.copyWith(color: AppColors.creamText2)),
                           ],
                         ),
                       ),
-                      TextButton(
+                      BrandButton(
+                        text: 'Sign In',
+                        type: BrandButtonType.small,
                         onPressed: () => context.push('/login'),
-                        child: const Text('Sign In'),
                       ),
                     ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
               ],
+
               // User Header Card
               AppCard(
                 child: Column(
                   children: [
-                    CircleAvatar(
-                      radius: 40,
-                      backgroundColor: AppColors.forestGreen,
-                      child: Text(
-                        user?.name.substring(0, 1).toUpperCase() ?? 'L',
-                        style: const TextStyle(
-                          fontSize: 36,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
+                    Stack(
+                      alignment: Alignment.bottomRight,
+                      children: [
+                        CircleAvatar(
+                          radius: 40,
+                          backgroundColor: AppColors.forest500,
+                          child: Text(
+                            user?.name.substring(0, 1).toUpperCase() ?? 'L',
+                            style: AppTypography.displayBold.copyWith(color: Colors.white, fontSize: 32),
+                          ),
                         ),
-                      ),
+                        Container(
+                          padding: const EdgeInsets.all(4),
+                          decoration: const BoxDecoration(
+                            color: AppColors.gold500,
+                            shape: BoxShape.circle,
+                          ),
+                          child: const Icon(Icons.star, size: 16, color: AppColors.forest900),
+                        ),
+                      ],
                     ),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       user?.name ?? 'Lumad Learner',
-                      style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.textColor(context),
-                      ),
+                      style: AppTypography.h2.copyWith(color: Colors.white),
                     ),
+                    const SizedBox(height: 2),
                     Text(
                       user?.email ?? 'learner@lumadlingua.com',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.subtitleColor(context),
-                      ),
+                      style: AppTypography.mono.copyWith(color: AppColors.creamBorder),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     Row(
@@ -202,24 +201,15 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: AppSpacing.lg),
 
               // Classroom Dashboard Section
-              const Text(
-                'My Classrooms',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Text('My Classrooms', style: AppTypography.h3),
               const SizedBox(height: AppSpacing.sm),
               AppCard(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'Join a Classroom',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
+                    Text('Join a Classroom', style: AppTypography.labelBold.copyWith(fontSize: 15, color: Colors.white)),
                     const SizedBox(height: 4),
-                    const Text(
-                      'Enter your educator\'s join code (e.g. MANSAKA-482A):',
-                      style: TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
+                    Text('Enter your educator\'s join code (e.g. MANSAKA-482A):', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                     const SizedBox(height: AppSpacing.sm),
                     Row(
                       children: [
@@ -227,9 +217,25 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           child: TextField(
                             controller: _joinCodeController,
                             textCapitalization: TextCapitalization.characters,
-                            decoration: const InputDecoration(
+                            style: AppTypography.mono.copyWith(color: AppColors.creamText, fontWeight: FontWeight.bold),
+                            decoration: InputDecoration(
                               hintText: 'CLASS-CODE',
-                              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              hintStyle: AppTypography.mono.copyWith(color: AppColors.creamText3),
+                              filled: true,
+                              fillColor: AppColors.creamSurface,
+                              contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.creamBorder),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.creamBorder),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.forest500, width: 2),
+                              ),
                             ),
                           ),
                         ),
@@ -238,7 +244,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           width: 130,
                           child: BrandButton(
                             text: 'Join Class',
-                            type: BrandButtonType.primary,
+                            type: BrandButtonType.gold,
                             isLoading: _isJoining,
                             onPressed: isGuest ? () => context.push('/login') : _joinClassroom,
                           ),
@@ -247,27 +253,24 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     ),
                     if (_errorMessage != null) ...[
                       const SizedBox(height: 8),
-                      Text(_errorMessage!, style: const TextStyle(color: AppColors.semanticRed, fontSize: 12)),
+                      Text(_errorMessage!, style: const TextStyle(color: AppColors.semanticRed, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
                     if (_successMessage != null) ...[
                       const SizedBox(height: 8),
-                      Text(_successMessage!, style: const TextStyle(color: AppColors.semanticGreen, fontSize: 12)),
+                      Text(_successMessage!, style: const TextStyle(color: AppColors.semanticGreen, fontSize: 12, fontWeight: FontWeight.bold)),
                     ],
-                    const Divider(height: 24),
-                    const Text(
-                      'Enrolled Classes',
-                      style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
+                    const Divider(height: 24, color: AppColors.creamBorder),
+                    Text('Enrolled Classes', style: AppTypography.labelBold.copyWith(fontSize: 15, color: Colors.white)),
                     const SizedBox(height: AppSpacing.xs),
                     classroomsAsync.when(
                       data: (snapshot) {
                         final docs = snapshot.docs;
                         if (docs.isEmpty) {
-                          return const Padding(
-                            padding: EdgeInsets.symmetric(vertical: 8.0),
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 12.0),
                             child: Text(
-                              'You are not enrolled in any classrooms yet.',
-                              style: TextStyle(fontSize: 13, color: Colors.grey, fontStyle: FontStyle.italic),
+                              'You are not enrolled in any classrooms yet. Enter a code above to join your teacher\'s class!',
+                              style: AppTypography.body.copyWith(color: AppColors.creamBorder, fontStyle: FontStyle.italic),
                             ),
                           );
                         }
@@ -296,9 +299,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                               child: Container(
                                 padding: const EdgeInsets.all(12),
                                 decoration: BoxDecoration(
-                                  color: AppColors.lightGreenBackground,
+                                  color: AppColors.creamSurface,
                                   borderRadius: BorderRadius.circular(AppRadius.card),
-                                  border: Border.all(color: AppColors.border),
+                                  border: Border.all(color: AppColors.creamBorder),
                                 ),
                                 child: Column(
                                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,7 +312,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                         Expanded(
                                           child: Text(
                                             className,
-                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                            style: AppTypography.h3.copyWith(color: AppColors.creamText),
                                           ),
                                         ),
                                         BrandButton(
@@ -320,13 +323,14 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                       ],
                                     ),
                                     const SizedBox(height: 4),
-                                    Text('School / Center: $school', style: const TextStyle(fontSize: 13)),
-                                    Text('Educator: $educator', style: const TextStyle(fontSize: 12, color: Colors.grey)),
+                                    Text('School / Center: $school', style: AppTypography.body.copyWith(color: AppColors.creamText2)),
+                                    Text('Educator: $educator', style: AppTypography.mono.copyWith(color: AppColors.creamText3)),
                                     if (assignedUnits > 0) ...[
-                                      const SizedBox(height: 4),
+                                      const SizedBox(height: 6),
                                       Chip(
-                                        label: Text('$assignedUnits Assigned Units', style: const TextStyle(fontSize: 11)),
-                                        backgroundColor: AppColors.gold500.withValues(alpha: 0.3),
+                                        label: Text('$assignedUnits Assigned Units', style: AppTypography.labelBold.copyWith(color: AppColors.gold800)),
+                                        backgroundColor: AppColors.gold100,
+                                        side: const BorderSide(color: AppColors.gold300),
                                       ),
                                     ],
                                   ],
@@ -336,7 +340,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           },
                         );
                       },
-                      loading: () => const Center(child: CircularProgressIndicator()),
+                      loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
                       error: (e, _) => Text('Error loading classrooms: $e', style: const TextStyle(color: AppColors.semanticRed)),
                     ),
                   ],
@@ -345,10 +349,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               const SizedBox(height: AppSpacing.lg),
 
               // Statistics Section
-              const Text(
-                'Learning Statistics',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-              ),
+              Text('Learning Statistics', style: AppTypography.h3),
               const SizedBox(height: AppSpacing.sm),
               progressAsync.when(
                 data: (progress) => Row(
@@ -357,37 +358,37 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       child: AppCard(
                         child: Column(
                           children: [
-                            const Icon(Icons.check_circle_outline, color: AppColors.forestGreen, size: 32),
+                            const Icon(Icons.check_circle_outline, color: AppColors.gold500, size: 32),
                             const SizedBox(height: 8),
                             Text(
                               '${progress.totalLessonsCompleted}',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
                             ),
-                            const Text('Lessons Done', style: TextStyle(fontSize: 12)),
+                            Text('Lessons Done', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                           ],
                         ),
                       ),
                     ),
-                    const SizedBox(width: AppSpacing.sm),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: AppCard(
                         child: Column(
                           children: [
-                            const Icon(Icons.star_outline, color: AppColors.warmYellow, size: 32),
+                            const Icon(Icons.star_outline, color: AppColors.gold500, size: 32),
                             const SizedBox(height: 8),
                             Text(
                               '${(progress.overallMasteryPercentage * 100).toInt()}%',
-                              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
                             ),
-                            const Text('Mastery Rate', style: TextStyle(fontSize: 12)),
+                            Text('Mastery Rate', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                           ],
                         ),
                       ),
                     ),
                   ],
                 ),
-                loading: () => const CircularProgressIndicator(),
-                error: (e, _) => Text('Error loading stats: $e'),
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
+                error: (e, _) => Text('Error loading stats: $e', style: const TextStyle(color: AppColors.semanticRed)),
               ),
               const SizedBox(height: AppSpacing.lg),
 
@@ -395,25 +396,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               AppCard(
                 onTap: () => context.push('/achievements'),
                 child: Row(
-                  children: const [
-                    Icon(Icons.emoji_events, color: AppColors.warmYellow, size: 32),
-                    SizedBox(width: AppSpacing.md),
+                  children: [
+                    const Icon(Icons.emoji_events, color: AppColors.gold500, size: 32),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Achievements & Badges',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          Text(
-                            'View your earned badges and rewards',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
+                          Text('Achievements & Badges', style: AppTypography.h3.copyWith(color: Colors.white)),
+                          Text('View your earned badges and rewards', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: AppColors.forestGreen),
+                    const Icon(Icons.chevron_right, color: AppColors.gold500),
                   ],
                 ),
               ),
@@ -423,25 +418,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               AppCard(
                 onTap: () => context.push('/leaderboard'),
                 child: Row(
-                  children: const [
-                    Icon(Icons.leaderboard, color: AppColors.gold500, size: 32),
-                    SizedBox(width: AppSpacing.md),
+                  children: [
+                    const Icon(Icons.leaderboard, color: AppColors.gold500, size: 32),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Global Leaderboard',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          Text(
-                            'See top Mansaka learners worldwide',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
+                          Text('Global Leaderboard', style: AppTypography.h3.copyWith(color: Colors.white)),
+                          Text('See top Mansaka learners worldwide', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: AppColors.forestGreen),
+                    const Icon(Icons.chevron_right, color: AppColors.gold500),
                   ],
                 ),
               ),
@@ -451,25 +440,19 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               AppCard(
                 onTap: () => context.push('/settings'),
                 child: Row(
-                  children: const [
-                    Icon(Icons.settings_outlined, color: AppColors.forestGreen, size: 32),
-                    SizedBox(width: AppSpacing.md),
+                  children: [
+                    const Icon(Icons.settings_outlined, color: AppColors.gold500, size: 32),
+                    const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'App Settings',
-                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
-                          ),
-                          Text(
-                            'Preferences, audio & notifications',
-                            style: TextStyle(fontSize: 12, color: Colors.grey),
-                          ),
+                          Text('App Settings', style: AppTypography.h3.copyWith(color: Colors.white)),
+                          Text('Preferences, audio & notifications', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                         ],
                       ),
                     ),
-                    Icon(Icons.chevron_right, color: AppColors.forestGreen),
+                    const Icon(Icons.chevron_right, color: AppColors.gold500),
                   ],
                 ),
               ),
