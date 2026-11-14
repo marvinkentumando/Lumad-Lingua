@@ -28,12 +28,12 @@ class LessonResultScreen extends StatelessWidget {
                 color: AppColors.warmYellow,
               ),
               const SizedBox(height: AppSpacing.md),
-              const Text(
+              Text(
                 'Madyaw! Great Job!',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.darkCharcoal,
+                  color: AppColors.textColor(context),
                 ),
               ),
               const SizedBox(height: 4),
@@ -42,7 +42,7 @@ class LessonResultScreen extends StatelessWidget {
                 textAlign: TextAlign.center,
                 style: TextStyle(
                   fontSize: 14,
-                  color: AppColors.darkCharcoal.withValues(alpha: 0.8),
+                  color: AppColors.subtitleColor(context),
                 ),
               ),
               const SizedBox(height: AppSpacing.lg),

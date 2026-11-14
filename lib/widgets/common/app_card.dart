@@ -20,7 +20,7 @@ class AppCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Card(
-      color: backgroundColor ?? Colors.white,
+      color: backgroundColor ?? AppColors.cardColor(context),
       margin: EdgeInsets.zero,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(AppSpacing.borderRadiusMd),

@@ -34,7 +34,7 @@ class AppBottomNavigation extends StatelessWidget {
         child: NavigationBar(
           selectedIndex: navigationShell.currentIndex,
           onDestinationSelected: _onTap,
-          backgroundColor: Colors.white,
+          backgroundColor: AppColors.cardColor(context),
           indicatorColor: AppColors.brightGreen.withValues(alpha: 0.3),
           elevation: 0,
           destinations: const [

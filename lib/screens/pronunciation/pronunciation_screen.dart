@@ -119,7 +119,7 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                 finalScore >= 85
                     ? 'Fantastic job! Your pronunciation and pacing sound natural and clear.'
                     : 'Good effort! Try focusing slightly more on vowel length and tone.',
-                style: const TextStyle(fontSize: 15, color: AppColors.textPrimary),
+                style: TextStyle(fontSize: 15, color: AppColors.textColor(context)),
               ),
             ],
           ),
@@ -157,17 +157,17 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                 ),
               ),
               const SizedBox(height: 8),
-              const Text(
+              Text(
                 'Madyaw na masurom',
                 style: TextStyle(
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
+                  color: AppColors.textColor(context),
                 ),
               ),
-              const Text(
+              Text(
                 'Meaning: "Good morning"',
-                style: TextStyle(fontSize: 16, color: AppColors.textSecondary),
+                style: TextStyle(fontSize: 16, color: AppColors.subtitleColor(context)),
               ),
               const SizedBox(height: AppSpacing.lg),
 

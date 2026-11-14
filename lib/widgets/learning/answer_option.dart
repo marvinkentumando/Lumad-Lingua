@@ -18,7 +18,7 @@ class AnswerOptionCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     Color borderColor = AppColors.borderGray;
-    Color bgColor = Colors.white;
+    Color bgColor = AppColors.cardColor(context);
 
     if (isSelected) {
       if (isCorrect == null) {
@@ -55,7 +55,7 @@ class AnswerOptionCard extends StatelessWidget {
                     style: TextStyle(
                       fontSize: 16,
                       fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
-                      color: AppColors.darkCharcoal,
+                      color: AppColors.textColor(context),
                     ),
                   ),
                 ),

@@ -84,17 +84,17 @@ class ProfileScreen extends ConsumerWidget {
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       user?.name ?? 'Lumad Learner',
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 22,
                         fontWeight: FontWeight.bold,
-                        color: AppColors.darkCharcoal,
+                        color: AppColors.textColor(context),
                       ),
                     ),
                     Text(
                       user?.email ?? 'learner@lumadlingua.com',
                       style: TextStyle(
                         fontSize: 14,
-                        color: AppColors.darkCharcoal.withValues(alpha: 0.7),
+                        color: AppColors.subtitleColor(context),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.md),

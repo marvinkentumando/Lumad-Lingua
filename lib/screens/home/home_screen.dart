@@ -49,15 +49,15 @@ class HomeScreen extends ConsumerWidget {
                             'Madyaw na masurom!',
                             style: TextStyle(
                               fontSize: 12,
-                              color: AppColors.darkCharcoal.withValues(alpha: 0.7),
+                              color: AppColors.subtitleColor(context),
                             ),
                           ),
                           Text(
                             user?.name ?? 'Lumad Learner',
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 18,
                               fontWeight: FontWeight.bold,
-                              color: AppColors.darkCharcoal,
+                              color: AppColors.textColor(context),
                             ),
                           ),
                         ],
@@ -273,19 +273,19 @@ class HomeScreen extends ConsumerWidget {
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
-                        children: const [
+                        children: [
                           Text(
                             'Daily Challenge',
                             style: TextStyle(
                               fontWeight: FontWeight.bold,
                               fontSize: 16,
-                              color: AppColors.darkCharcoal,
+                              color: AppColors.textColor(context),
                             ),
                           ),
-                          SizedBox(height: 2),
+                          const SizedBox(height: 2),
                           Text(
                             'Review 5 Mansaka greetings to earn 20 Bonus XP.',
-                            style: TextStyle(fontSize: 12),
+                            style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
                           ),
                         ],
                       ),

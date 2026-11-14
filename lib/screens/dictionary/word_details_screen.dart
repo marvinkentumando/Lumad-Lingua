@@ -44,10 +44,10 @@ class WordDetailsScreen extends StatelessWidget {
                   const SizedBox(height: AppSpacing.sm),
                   Text(
                     'Translation: ${vocabulary.translation}',
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: AppColors.darkCharcoal,
+                      color: AppColors.textColor(context),
                     ),
                   ),
                 ],
@@ -75,10 +75,10 @@ class WordDetailsScreen extends StatelessWidget {
                 children: [
                   Text(
                     vocabulary.exampleSentence,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 16,
                       fontStyle: FontStyle.italic,
-                      color: AppColors.darkCharcoal,
+                      color: AppColors.textColor(context),
                     ),
                   ),
                   const SizedBox(height: 8),
@@ -86,7 +86,7 @@ class WordDetailsScreen extends StatelessWidget {
                     'English: "${vocabulary.exampleTranslation}"',
                     style: TextStyle(
                       fontSize: 14,
-                      color: AppColors.darkCharcoal.withValues(alpha: 0.8),
+                      color: AppColors.subtitleColor(context),
                     ),
                   ),
                 ],

@@ -35,6 +35,19 @@ class AppColors {
   static const Color lightGreenBackground = surfaceGreen;
   static const Color lockedGray = disabled;
   static const Color borderGray = border;
+
+  // Dynamic Theme-Aware Helpers for Dark/Light Mode
+  static Color textColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? Colors.white : textPrimary;
+  }
+
+  static Color subtitleColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? Colors.white70 : textSecondary;
+  }
+
+  static Color cardColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? const Color(0xFF1E2923) : Colors.white;
+  }
 }
 
 class AppSpacing {

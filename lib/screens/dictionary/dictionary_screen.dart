@@ -74,10 +74,10 @@ class DictionaryScreen extends ConsumerWidget {
                               children: [
                                 Text(
                                   vocab.headword,
-                                  style: const TextStyle(
+                                  style: TextStyle(
                                     fontSize: 16,
                                     fontWeight: FontWeight.bold,
-                                    color: AppColors.darkCharcoal,
+                                    color: AppColors.textColor(context),
                                   ),
                                 ),
                                 const SizedBox(height: 2),
@@ -85,7 +85,7 @@ class DictionaryScreen extends ConsumerWidget {
                                   vocab.translation,
                                   style: TextStyle(
                                     fontSize: 14,
-                                    color: AppColors.darkCharcoal.withValues(alpha: 0.8),
+                                    color: AppColors.subtitleColor(context),
                                   ),
                                 ),
                               ],

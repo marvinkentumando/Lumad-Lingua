@@ -17,7 +17,7 @@ class UnitCard extends StatelessWidget {
   Widget build(BuildContext context) {
     return AppCard(
       onTap: unit.isUnlocked ? onTap : null,
-      backgroundColor: unit.isUnlocked ? Colors.white : AppColors.softGray,
+      backgroundColor: unit.isUnlocked ? AppColors.cardColor(context) : AppColors.softGray,
       child: Row(
         children: [
           Container(
@@ -48,7 +48,7 @@ class UnitCard extends StatelessWidget {
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: unit.isUnlocked
-                        ? AppColors.darkCharcoal
+                        ? AppColors.textColor(context)
                         : AppColors.lockedGray,
                   ),
                 ),
@@ -57,7 +57,9 @@ class UnitCard extends StatelessWidget {
                   unit.description,
                   style: TextStyle(
                     fontSize: 12,
-                    color: AppColors.darkCharcoal.withValues(alpha: 0.7),
+                    color: unit.isUnlocked
+                        ? AppColors.subtitleColor(context)
+                        : AppColors.lockedGray,
                   ),
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
