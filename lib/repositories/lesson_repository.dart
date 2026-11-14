@@ -5,9 +5,9 @@ import '../data/mock_lessons.dart';
 
 abstract class LessonRepository {
   Future<List<LearningUnitModel>> getUnits();
-  Future<List<LessonModel>> getLessonsForUnit(String unitId);
+  Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId});
   Future<List<ActivityModel>> getActivitiesForLesson(String lessonId);
-  Future<void> updateLessonProgress(String lessonId, int starsEarned);
+  Future<void> updateLessonProgress(String lessonId, int starsEarned, {String? userId});
 }
 
 class MockLessonRepository implements LessonRepository {
@@ -20,7 +20,7 @@ class MockLessonRepository implements LessonRepository {
   }
 
   @override
-  Future<List<LessonModel>> getLessonsForUnit(String unitId) async {
+  Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId}) async {
     await Future.delayed(const Duration(milliseconds: 200));
     return _lessons.where((l) => l.unitId == unitId).toList();
   }
@@ -28,14 +28,11 @@ class MockLessonRepository implements LessonRepository {
   @override
   Future<List<ActivityModel>> getActivitiesForLesson(String lessonId) async {
     await Future.delayed(const Duration(milliseconds: 200));
-    if (lessonId == 'lesson_1_1' || lessonId == 'lesson_1_2') {
-      return mockLesson1Activities;
-    }
     return mockLesson1Activities;
   }
 
   @override
-  Future<void> updateLessonProgress(String lessonId, int starsEarned) async {
+  Future<void> updateLessonProgress(String lessonId, int starsEarned, {String? userId}) async {
     await Future.delayed(const Duration(milliseconds: 200));
     final index = _lessons.indexWhere((l) => l.id == lessonId);
     if (index != -1) {

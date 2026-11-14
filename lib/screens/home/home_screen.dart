@@ -7,6 +7,7 @@ import '../../widgets/common/app_card.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
+import '../../widgets/dictionary/word_of_the_day_card.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -260,6 +261,45 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ],
               ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Lingua Duels Arena Card
+              AppCard(
+                onTap: () => context.push('/arena'),
+                backgroundColor: AppColors.gold500.withValues(alpha: 0.15),
+                border: Border.all(color: AppColors.gold500, width: 1.5),
+                child: Row(
+                  children: [
+                    const Icon(Icons.flash_on, size: 40, color: AppColors.gold500),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Lingua Duels Arena (PvP)',
+                            style: TextStyle(
+                              fontWeight: FontWeight.bold,
+                              fontSize: 16,
+                              color: AppColors.textColor(context),
+                            ),
+                          ),
+                          const SizedBox(height: 2),
+                          Text(
+                            'Compete in rapid-fire trivia duels & win +150 XP +25 Crystals!',
+                            style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: AppColors.gold500),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Word of the Day
+              const WordOfTheDayCard(),
               const SizedBox(height: AppSpacing.lg),
 
               // Daily Challenge Card

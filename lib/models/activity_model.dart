@@ -15,8 +15,8 @@ class MatchingPair {
 
   factory MatchingPair.fromJson(Map<String, dynamic> json) {
     return MatchingPair(
-      mansaka: json['mansaka'] as String,
-      english: json['english'] as String,
+      mansaka: json['mansaka'] as String? ?? '',
+      english: json['english'] as String? ?? '',
     );
   }
 
@@ -60,23 +60,26 @@ class ActivityModel {
   });
 
   factory ActivityModel.fromJson(Map<String, dynamic> json) {
+    final parsedOptions = (json['options'] as List<dynamic>?)?.map((e) => e as String).toList();
+    final parsedWordsToArrange = (json['wordsToArrange'] as List<dynamic>?)?.map((e) => e as String).toList() ?? parsedOptions;
+
     return ActivityModel(
-      id: json['id'] as String,
-      lessonId: json['lessonId'] as String,
+      id: json['id'] as String? ?? '',
+      lessonId: json['lessonId'] as String? ?? '',
       type: ActivityType.values.firstWhere(
         (e) => e.name == json['type'],
         orElse: () => ActivityType.multipleChoice,
       ),
-      questionText: json['questionText'] as String,
-      audioAssetPath: json['audioAssetPath'] as String?,
+      questionText: json['questionText'] as String? ?? '',
+      audioAssetPath: json['audioAssetPath'] as String? ?? json['audioPath'] as String?,
       targetMansaka: json['targetMansaka'] as String?,
       targetEnglish: json['targetEnglish'] as String?,
-      options: (json['options'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      options: parsedOptions,
       correctOptionIndex: json['correctOptionIndex'] as int?,
       matchingPairs: (json['matchingPairs'] as List<dynamic>?)
           ?.map((e) => MatchingPair.fromJson(Map<String, dynamic>.from(e as Map)))
           .toList(),
-      wordsToArrange: (json['wordsToArrange'] as List<dynamic>?)?.map((e) => e as String).toList(),
+      wordsToArrange: parsedWordsToArrange,
       correctArrangement: (json['correctArrangement'] as List<dynamic>?)?.map((e) => e as String).toList(),
       xpReward: json['xpReward'] as int? ?? 10,
     );

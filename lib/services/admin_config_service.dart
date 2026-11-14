@@ -12,7 +12,15 @@ class AdminConfigService {
     try {
       final doc = await _firestore.collection('system_config').doc('app_settings').get();
       if (doc.exists && doc.data() != null) {
-        return doc.data()!;
+        final data = doc.data()!;
+        final pronunciationAlgo = data['pronunciationAlgorithm'] ?? data['pronunciation_algorithm'] ?? 'dtw_hmm';
+        final sentimentAlgo = data['sentimentAnalysisModel'] ?? data['sentiment_analysis_model'] ?? 'ensemble';
+        return {
+          'pronunciation_algorithm': pronunciationAlgo,
+          'sentiment_algorithm': sentimentAlgo,
+          'sentiment_model': sentimentAlgo,
+          ...data,
+        };
       }
     } catch (e) {
       debugPrint('Error fetching admin config from Firestore: $e');
@@ -21,6 +29,7 @@ class AdminConfigService {
     // Default fallback configuration if unconfigured or offline
     return {
       'pronunciation_algorithm': 'dtw_hmm',
+      'sentiment_algorithm': 'ensemble',
       'sentiment_model': 'ensemble',
       'mfcc_coefficients': 13,
     };

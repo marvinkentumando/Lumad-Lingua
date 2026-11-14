@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../utils/constants.dart';
+import '../../utils/audio_helper.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String? audioUrl;
@@ -34,10 +35,12 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   Future<void> _playAudio() async {
-    if (widget.audioUrl == null || widget.audioUrl!.isEmpty) {
+    final resolvedUrl = AudioHelper.resolveSupabaseAudioUrl(widget.audioUrl);
+
+    if (resolvedUrl == null) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('Reference audio is currently unavailable for this word.'),
+          content: Text('Reference audio is currently unavailable for this item.'),
           backgroundColor: AppColors.textPrimary,
         ),
       );
@@ -46,7 +49,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
     try {
       if (!_isLoaded) {
-        await _player.setUrl(widget.audioUrl!);
+        await _player.setUrl(resolvedUrl);
         _isLoaded = true;
       }
       setState(() => _isPlaying = true);

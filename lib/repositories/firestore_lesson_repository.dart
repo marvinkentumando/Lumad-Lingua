@@ -16,8 +16,8 @@ class FirestoreLessonRepository implements LessonRepository {
   }
 
   @override
-  Future<List<LessonModel>> getLessonsForUnit(String unitId) async {
-    return await _firestoreService.getLessonsForUnit(unitId);
+  Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId}) async {
+    return await _firestoreService.getLessonsForUnit(unitId, userId: userId);
   }
 
   @override
@@ -26,7 +26,9 @@ class FirestoreLessonRepository implements LessonRepository {
   }
 
   @override
-  Future<void> updateLessonProgress(String lessonId, int starsEarned) async {
-    await _firestoreService.updateLessonProgress(lessonId, starsEarned);
+  Future<void> updateLessonProgress(String lessonId, int starsEarned, {String? userId}) async {
+    if (userId != null && userId.isNotEmpty) {
+      await _firestoreService.updateLessonProgress(userId, lessonId, starsEarned);
+    }
   }
 }

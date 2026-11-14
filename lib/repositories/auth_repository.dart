@@ -6,6 +6,7 @@ abstract class AuthRepository {
   Future<UserModel> login(String email, String password);
   Future<UserModel> register(String name, String email, String password);
   Future<void> logout();
+  Future<void> saveUser(UserModel user);
 }
 
 class MockAuthRepository implements AuthRepository {
@@ -42,5 +43,10 @@ class MockAuthRepository implements AuthRepository {
   Future<void> logout() async {
     await Future.delayed(const Duration(milliseconds: 200));
     _currentUser = null;
+  }
+
+  @override
+  Future<void> saveUser(UserModel user) async {
+    _currentUser = user;
   }
 }

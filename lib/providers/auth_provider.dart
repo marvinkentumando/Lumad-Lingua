@@ -45,6 +45,23 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     state = const AsyncValue.data(null);
   }
 
+  Future<void> updateUser(UserModel updatedUser) async {
+    state = AsyncValue.data(updatedUser);
+    try {
+      await _repository.saveUser(updatedUser);
+    } catch (_) {}
+  }
+
+  Future<void> updateCrystals(int crystals) async {
+    if (state.value != null) {
+      final updated = state.value!.copyWith(crystals: crystals);
+      state = AsyncValue.data(updated);
+      try {
+        await _repository.saveUser(updated);
+      } catch (_) {}
+    }
+  }
+
   void addXp(int xp) {
     if (state.value != null) {
       final current = state.value!;

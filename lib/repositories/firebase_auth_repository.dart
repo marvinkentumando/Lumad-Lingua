@@ -89,4 +89,9 @@ class FirebaseAuthRepository implements AuthRepository {
   Future<void> logout() async {
     await _firebaseAuth.signOut();
   }
+
+  @override
+  Future<void> saveUser(UserModel user) async {
+    await _firestore.collection('users').doc(user.id).set(user.toJson(), SetOptions(merge: true));
+  }
 }

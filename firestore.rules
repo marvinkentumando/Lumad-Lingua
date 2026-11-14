@@ -73,5 +73,11 @@ service cloud.firestore {
           )
         );
     }
+
+    // Lingua Duels Arena Sessions
+    match /duel_sessions/{sessionId} {
+      allow read, create, update: if isAuthenticated();
+      allow delete: if false;
+    }
   }
 }

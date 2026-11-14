@@ -419,6 +419,34 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
 
+              // Global Leaderboard Shortcut
+              AppCard(
+                onTap: () => context.push('/leaderboard'),
+                child: Row(
+                  children: const [
+                    Icon(Icons.leaderboard, color: AppColors.gold500, size: 32),
+                    SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Global Leaderboard',
+                            style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                          ),
+                          Text(
+                            'See top Mansaka learners worldwide',
+                            style: TextStyle(fontSize: 12, color: Colors.grey),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Icon(Icons.chevron_right, color: AppColors.forestGreen),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
+
               // Settings Shortcut
               AppCard(
                 onTap: () => context.push('/settings'),

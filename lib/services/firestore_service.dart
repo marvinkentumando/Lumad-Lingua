@@ -30,6 +30,8 @@ class FirestoreService {
       _firestore.collection('user_progress');
   CollectionReference<Map<String, dynamic>> get _vocabularyCol =>
       _firestore.collection('vocabulary');
+  CollectionReference<Map<String, dynamic>> get _achievementsCol =>
+      _firestore.collection('achievements');
 
   // --- Users ---
   Future<UserModel?> getUser(String userId) async {
@@ -67,16 +69,45 @@ class FirestoreService {
     }
   }
 
-  Future<List<LessonModel>> getLessonsForUnit(String unitId) async {
+  Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId}) async {
     try {
       final snapshot = await _lessonsCol
           .where('unitId', isEqualTo: unitId)
           .orderBy('lessonOrder')
           .get();
+
+      List<LessonModel> baseLessons = [];
       if (snapshot.docs.isEmpty) {
-        return mockLessons.where((l) => l.unitId == unitId).toList();
+        baseLessons = mockLessons.where((l) => l.unitId == unitId).toList();
+      } else {
+        baseLessons = snapshot.docs.map((d) => LessonModel.fromJson(d.data())).toList();
       }
-      return snapshot.docs.map((d) => LessonModel.fromJson(d.data())).toList();
+
+      if (userId == null || userId.isEmpty) {
+        return baseLessons;
+      }
+
+      // Merge with user progress locally
+      final userProgress = await getUserProgress(userId);
+      final userModel = await getUser(userId);
+      final completedIds = userProgress?.completedLessonIds ?? [];
+      final lessonStars = userProgress?.lessonStars ?? {};
+      final currentLessonId = userModel?.currentLessonId;
+
+      return baseLessons.map((lesson) {
+        if (completedIds.contains(lesson.id)) {
+          return lesson.copyWith(
+            status: LessonStatus.completed,
+            starsEarned: lessonStars[lesson.id] ?? 3,
+          );
+        } else if (lesson.id == currentLessonId) {
+          return lesson.copyWith(status: LessonStatus.inProgress);
+        } else if (lesson.lessonOrder == 1 || completedIds.isNotEmpty) {
+          return lesson.copyWith(status: LessonStatus.available);
+        } else {
+          return lesson.copyWith(status: LessonStatus.locked);
+        }
+      }).toList();
     } catch (e) {
       return mockLessons.where((l) => l.unitId == unitId).toList();
     }
@@ -96,12 +127,33 @@ class FirestoreService {
     }
   }
 
-  Future<void> updateLessonProgress(String lessonId, int starsEarned) async {
+  /// Updates learner progress in `user_progress/{userId}` WITHOUT modifying shared `lessons/{lessonId}`
+  Future<void> updateLessonProgress(String userId, String lessonId, int starsEarned, {int totalLessonsCount = 12}) async {
     try {
-      await _lessonsCol.doc(lessonId).set({
-        'status': LessonStatus.completed.name,
-        'starsEarned': starsEarned,
-      }, SetOptions(merge: true));
+      final currentProgress = await getUserProgress(userId) ?? UserProgressModel(userId: userId);
+      final updatedCompletedIds = List<String>.from(currentProgress.completedLessonIds);
+      if (!updatedCompletedIds.contains(lessonId)) {
+        updatedCompletedIds.add(lessonId);
+      }
+
+      final updatedStars = Map<String, int>.from(currentProgress.lessonStars);
+      final existingStars = updatedStars[lessonId] ?? 0;
+      if (starsEarned > existingStars) {
+        updatedStars[lessonId] = starsEarned;
+      }
+
+      final totalCompleted = updatedCompletedIds.length;
+      final overallMastery = ((totalCompleted / (totalLessonsCount > 0 ? totalLessonsCount : 1)) * 100).round().clamp(0, 100);
+
+      final updatedProgress = currentProgress.copyWith(
+        userId: userId,
+        completedLessonIds: updatedCompletedIds,
+        lessonStars: updatedStars,
+        totalLessonsCompleted: totalCompleted,
+        overallMasteryPercentage: overallMastery.toDouble(),
+      );
+
+      await saveUserProgress(updatedProgress);
     } catch (e) {
       // Ignore offline errors
     }
@@ -131,11 +183,26 @@ class FirestoreService {
   // --- Achievements ---
   Future<List<AchievementModel>> getAchievements(String userId) async {
     try {
-      final snapshot = await _usersCol.doc(userId).collection('achievements').get();
+      final snapshot = await _achievementsCol.get();
+      final user = await getUser(userId);
+      final userXp = user?.totalXp ?? 0;
+
+      List<AchievementModel> baseAchievements = [];
       if (snapshot.docs.isEmpty) {
-        return mockAchievementsList;
+        baseAchievements = mockAchievementsList;
+      } else {
+        baseAchievements = snapshot.docs.map((d) => AchievementModel.fromJson(d.data())).toList();
       }
-      return snapshot.docs.map((d) => AchievementModel.fromJson(d.data())).toList();
+
+      // Compute local unlocked and progressRatio without overwriting global docs
+      return baseAchievements.map((ach) {
+        final isUnlocked = userXp >= ach.xpRequirement;
+        final ratio = (userXp / (ach.xpRequirement > 0 ? ach.xpRequirement : 1)).clamp(0.0, 1.0);
+        return ach.copyWith(
+          isUnlocked: isUnlocked,
+          progressRatio: ratio,
+        );
+      }).toList();
     } catch (e) {
       return mockAchievementsList;
     }

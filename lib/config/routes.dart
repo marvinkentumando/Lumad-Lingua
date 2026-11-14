@@ -20,6 +20,11 @@ import '../screens/achievements/achievements_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/settings_screen.dart';
 import '../screens/classroom/classroom_dashboard_screen.dart';
+import '../screens/gamification/streaks_xp_dashboard_screen.dart';
+import '../screens/shop/shop_screen.dart';
+import '../screens/leaderboard/leaderboard_screen.dart';
+import '../screens/arena/duel_lobby_screen.dart';
+import '../screens/arena/duel_battle_screen.dart';
 import '../widgets/common/app_bottom_navigation.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
@@ -103,6 +108,31 @@ final appRouter = GoRouter(
         return ClassroomDashboardScreen(
           classId: args['classId'] ?? '',
           classroomData: args['classroomData'] ?? {},
+        );
+      },
+    ),
+    GoRoute(
+      path: '/streaks-xp',
+      builder: (context, state) => const StreaksXpDashboardScreen(),
+    ),
+    GoRoute(
+      path: '/shop',
+      builder: (context, state) => const ShopScreen(),
+    ),
+    GoRoute(
+      path: '/leaderboard',
+      builder: (context, state) => const LeaderboardScreen(),
+    ),
+    GoRoute(
+      path: '/arena',
+      builder: (context, state) => const DuelLobbyScreen(),
+    ),
+    GoRoute(
+      path: '/arena/battle',
+      builder: (context, state) {
+        final args = state.extra as Map<String, dynamic>? ?? {};
+        return DuelBattleScreen(
+          sessionId: args['sessionId'] ?? '',
         );
       },
     ),
