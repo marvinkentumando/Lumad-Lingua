@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:just_audio/just_audio.dart';
@@ -6,10 +7,13 @@ import '../../utils/constants.dart';
 import '../../utils/audio_helper.dart';
 import '../../models/lesson_model.dart';
 import '../../data/mock_lessons.dart';
-import '../../widgets/common/app_card.dart';
+import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
+import '../../widgets/common/lumad_top_navbar.dart';
+import '../../widgets/common/lumad_background.dart';
+import '../../widgets/common/screen_header.dart';
 import 'flashcard_warmup_screen.dart';
 
 class LessonStudyScreen extends ConsumerStatefulWidget {
@@ -41,8 +45,6 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
 
   Future<void> _loadLesson() async {
     try {
-      // Find lesson from mockLessons or Firestore
-      // For robust offline/mock fallback:
       final found = mockLessons.firstWhere(
         (l) => l.id == widget.lessonId,
         orElse: () => LessonModel(
@@ -92,17 +94,21 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
   Widget build(BuildContext context) {
     if (_isLoading) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Lesson Overview')),
-        body: const LoadingWidget(message: 'Loading lesson details...'),
+        appBar: const LumadTopNavbar(),
+        body: LumadBackground(
+          child: const LoadingWidget(message: 'Loading lesson details...'),
+        ),
       );
     }
 
     if (_error != null || _lesson == null) {
       return Scaffold(
-        appBar: AppBar(title: const Text('Lesson Overview')),
-        body: AppErrorWidget(
-          message: _error ?? 'Lesson not found.',
-          onRetry: _loadLesson,
+        appBar: const LumadTopNavbar(),
+        body: LumadBackground(
+          child: AppErrorWidget(
+            message: _error ?? 'Lesson not found.',
+            onRetry: _loadLesson,
+          ),
         ),
       );
     }
@@ -110,152 +116,168 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
     final lesson = _lesson!;
 
     return Scaffold(
-      appBar: AppBar(
-        title: Text(lesson.title),
-      ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Lesson Header Card
-              AppCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Expanded(
-                          child: Text(
-                            lesson.title,
-                            style: TextStyle(
-                              fontSize: 22,
-                              fontWeight: FontWeight.bold,
-                              color: AppColors.textColor(context),
-                            ),
-                          ),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold500.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(AppRadius.chip),
-                            border: Border.all(color: AppColors.gold500),
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              const Icon(Icons.bolt, size: 16, color: AppColors.forestGreen),
-                              const SizedBox(width: 4),
-                              Text(
-                                '+${lesson.xpReward} XP',
-                                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 8),
-                    Text(
-                      lesson.description,
-                      style: TextStyle(fontSize: 14, color: AppColors.subtitleColor(context)),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    Row(
-                      children: [
-                        Icon(Icons.style, size: 16, color: AppColors.forestGreen),
-                        const SizedBox(width: 6),
-                        Text('${lesson.flashcards.length} Flashcards', style: const TextStyle(fontSize: 13)),
-                        const SizedBox(width: 16),
-                        const Icon(Icons.quiz, size: 16, color: AppColors.forestGreen),
-                        const SizedBox(width: 6),
-                        const Text('Interactive Drills', style: TextStyle(fontSize: 13)),
-                      ],
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Action CTAs
-              BrandButton(
-                text: lesson.flashcards.isNotEmpty ? 'Start Flashcard Warm-up' : 'Start Lesson Activities',
-                type: BrandButtonType.primary,
-                icon: lesson.flashcards.isNotEmpty ? Icons.style : Icons.play_arrow,
-                onPressed: () {
-                  if (lesson.flashcards.isNotEmpty) {
-                    Navigator.of(context).push(
-                      MaterialPageRoute(
-                        builder: (context) => FlashcardWarmupScreen(lesson: lesson),
-                      ),
-                    );
-                  } else {
-                    context.push('/lesson/${lesson.id}/drills');
-                  }
-                },
-              ),
-              const SizedBox(height: AppSpacing.sm),
-              BrandButton(
-                text: 'Skip to Activities (Practice Now)',
-                type: BrandButtonType.secondary,
-                onPressed: () => context.push('/lesson/${lesson.id}/drills'),
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              // Vocabulary Preview List
-              if (lesson.flashcards.isNotEmpty) ...[
-                const Text(
-                  'Vocabulary Preview',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+      appBar: const LumadTopNavbar(),
+      body: LumadBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                ScreenHeader(
+                  title: lesson.title,
+                  subtitle: 'Study vocabulary & preparation warm-up',
                 ),
                 const SizedBox(height: AppSpacing.sm),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: lesson.flashcards.length,
-                  separatorBuilder: (_, index) => const SizedBox(height: 8),
-                  itemBuilder: (context, index) {
-                    final card = lesson.flashcards[index];
-                    return AppCard(
-                      child: Row(
+
+                // Lesson Overview Header Card
+                BrandCard(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
+                            child: Text(
+                              lesson.title,
+                              style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 22),
+                            ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold500,
+                              borderRadius: BorderRadius.circular(AppRadius.chip),
+                              border: Border.all(color: AppColors.gold700),
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
                               children: [
+                                const Icon(Icons.bolt, size: 16, color: AppColors.forest900),
+                                const SizedBox(width: 4),
                                 Text(
-                                  card.mansaka,
-                                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16),
+                                  '+${lesson.xpReward} XP',
+                                  style: AppTypography.labelBold.copyWith(color: AppColors.forest900),
                                 ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  card.english,
-                                  style: TextStyle(fontSize: 14, color: AppColors.subtitleColor(context)),
-                                ),
-                                if (card.pronunciation != null) ...[
-                                  const SizedBox(height: 2),
-                                  Text(
-                                    '[ ${card.pronunciation} ]',
-                                    style: TextStyle(fontSize: 12, fontStyle: FontStyle.italic, color: AppColors.forestGreen),
-                                  ),
-                                ],
                               ],
                             ),
                           ),
-                          IconButton(
-                            icon: const Icon(Icons.volume_up, color: AppColors.forestGreen),
-                            onPressed: () => _playAudio(card.audioPath),
-                          ),
                         ],
                       ),
-                    );
+                      const SizedBox(height: 8),
+                      Text(
+                        lesson.description,
+                        style: AppTypography.body.copyWith(color: AppColors.creamBorder),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      Row(
+                        children: [
+                          const Icon(Icons.style, size: 16, color: AppColors.gold500),
+                          const SizedBox(width: 6),
+                          Text('${lesson.flashcards.length} Flashcards', style: AppTypography.caption.copyWith(color: Colors.white)),
+                          const SizedBox(width: 16),
+                          const Icon(Icons.quiz, size: 16, color: AppColors.gold500),
+                          const SizedBox(width: 6),
+                          Text('Interactive Drills', style: AppTypography.caption.copyWith(color: Colors.white)),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Action CTAs
+                BrandButton(
+                  text: lesson.flashcards.isNotEmpty ? 'Start Flashcard Warm-up' : 'Start Lesson Activities',
+                  type: BrandButtonType.gold,
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    if (lesson.flashcards.isNotEmpty) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => FlashcardWarmupScreen(lesson: lesson),
+                        ),
+                      );
+                    } else {
+                      context.push('/lesson/${lesson.id}/drills');
+                    }
                   },
                 ),
+                const SizedBox(height: AppSpacing.md),
+                BrandButton(
+                  text: 'Skip to Activities (Practice Now)',
+                  type: BrandButtonType.secondary,
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/lesson/${lesson.id}/drills');
+                  },
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                // Vocabulary Preview List
+                if (lesson.flashcards.isNotEmpty) ...[
+                  Text(
+                    'Vocabulary Preview',
+                    style: AppTypography.h3,
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: lesson.flashcards.length,
+                    separatorBuilder: (_, index) => const SizedBox(height: 8),
+                    itemBuilder: (context, index) {
+                      final card = lesson.flashcards[index];
+                      return BrandCard(
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    card.mansaka,
+                                    style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 18),
+                                  ),
+                                  const SizedBox(height: 2),
+                                  Text(
+                                    card.english,
+                                    style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
+                                  ),
+                                  if (card.pronunciation != null) ...[
+                                    const SizedBox(height: 2),
+                                    Text(
+                                      '[ ${card.pronunciation} ]',
+                                      style: AppTypography.phoneticGuide.copyWith(color: AppColors.gold400, fontSize: 13),
+                                    ),
+                                  ],
+                                ],
+                              ),
+                            ),
+                            GestureDetector(
+                              onTap: () {
+                                HapticFeedback.lightImpact();
+                                _playAudio(card.audioPath);
+                              },
+                              child: Container(
+                                padding: const EdgeInsets.all(10),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold100,
+                                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                                  border: Border.all(color: AppColors.gold300),
+                                ),
+                                child: const Icon(Icons.volume_up_rounded, color: AppColors.gold800, size: 24),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

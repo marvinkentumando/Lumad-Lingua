@@ -24,7 +24,7 @@ class StreakIndicator extends StatelessWidget {
             const Icon(Icons.local_fire_department, color: AppColors.coralRed, size: 18),
             const SizedBox(width: 4),
             Text(
-              '$streakDays Days',
+              '$streakDays ${streakDays == 1 ? 'Day' : 'Days'}',
               style: const TextStyle(
                 fontWeight: FontWeight.bold,
                 fontSize: 14,

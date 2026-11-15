@@ -7,6 +7,37 @@ final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return FirebaseAuthRepository();
 });
 
+class LevelHelper {
+  static int calculateLevel(int totalXp) {
+    int level = 1;
+    int xpForNext = 100;
+    int accumulated = 0;
+    while (totalXp >= accumulated + xpForNext) {
+      accumulated += xpForNext;
+      level++;
+      xpForNext += 50; // Increases requirement by 50 XP per level
+    }
+    return level;
+  }
+
+  static Map<String, int> getLevelProgress(int totalXp) {
+    int level = 1;
+    int xpForNext = 100;
+    int accumulated = 0;
+    while (totalXp >= accumulated + xpForNext) {
+      accumulated += xpForNext;
+      level++;
+      xpForNext += 50;
+    }
+    int currentLevelXp = totalXp - accumulated;
+    return {
+      'level': level,
+      'currentLevelXp': currentLevelXp,
+      'xpNeededForNextLevel': xpForNext,
+    };
+  }
+}
+
 class AuthNotifier extends AsyncNotifier<UserModel?> {
   late final AuthRepository _repository;
 
@@ -66,7 +97,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     if (state.value != null) {
       final current = state.value!;
       final newXp = current.totalXp + xp;
-      final newLevel = (newXp / 100).floor() + 1;
+      final newLevel = LevelHelper.calculateLevel(newXp);
       state = AsyncValue.data(current.copyWith(
         totalXp: newXp,
         level: newLevel,

@@ -20,19 +20,20 @@ class RecordingButton extends StatelessWidget {
         width: isRecording ? 80 : 70,
         height: isRecording ? 80 : 70,
         decoration: BoxDecoration(
-          color: isRecording ? AppColors.error : AppColors.blue,
+          color: isRecording ? AppColors.semanticRed : AppColors.gold500,
           shape: BoxShape.circle,
+          border: Border.all(color: isRecording ? AppColors.semanticRed : AppColors.gold700, width: 3),
           boxShadow: [
             BoxShadow(
-              color: (isRecording ? AppColors.error : AppColors.blue).withValues(alpha: 0.4),
+              color: (isRecording ? AppColors.semanticRed : AppColors.gold500).withValues(alpha: 0.4),
               blurRadius: isRecording ? 16 : 8,
               spreadRadius: isRecording ? 4 : 2,
             ),
           ],
         ),
         child: Icon(
-          isRecording ? Icons.stop : Icons.mic,
-          color: Colors.white,
+          isRecording ? Icons.stop_rounded : Icons.mic_rounded,
+          color: isRecording ? Colors.white : AppColors.forest900,
           size: isRecording ? 36 : 32,
         ),
       ),

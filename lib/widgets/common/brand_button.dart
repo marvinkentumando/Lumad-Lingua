@@ -65,7 +65,8 @@ class _BrandButtonState extends State<BrandButton> {
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
 
-    Color bgColor;
+    Color? bgColor;
+    Gradient? bgGradient;
     Color fgColor;
     Color lipColor;
     double lipHeight = 3.0;
@@ -78,9 +79,14 @@ class _BrandButtonState extends State<BrandButton> {
         lipColor = AppColors.forest700;
         break;
       case BrandButtonType.gold:
-        bgColor = AppColors.gold500;
-        fgColor = AppColors.creamText;
-        lipColor = AppColors.gold700;
+        bgGradient = const LinearGradient(
+          colors: [Color(0xFFFFD54F), AppColors.gold500, Color(0xFFFFA000)],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        );
+        fgColor = AppColors.forest900;
+        lipColor = const Color(0xFFC78C00);
+        border = Border.all(color: AppColors.gold700, width: 1.0);
         break;
       case BrandButtonType.secondary:
         bgColor = AppColors.creamSurface;
@@ -114,6 +120,7 @@ class _BrandButtonState extends State<BrandButton> {
 
     if (widget.onPressed == null) {
       bgColor = AppColors.disabled;
+      bgGradient = null;
       lipColor = AppColors.creamBorder;
     }
 
@@ -133,7 +140,8 @@ class _BrandButtonState extends State<BrandButton> {
         transform: Matrix4.translationValues(0, translateY, 0),
         height: buttonHeight,
         decoration: BoxDecoration(
-          color: bgColor,
+          color: bgGradient == null ? bgColor : null,
+          gradient: bgGradient,
           borderRadius: borderRadius,
           border: border,
           boxShadow: widget.type == BrandButtonType.text || widget.onPressed == null

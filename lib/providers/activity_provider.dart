@@ -12,6 +12,7 @@ class LessonSessionState {
   final bool isFinished;
   final int earnedXp;
   final int stars;
+  final int hearts;
 
   const LessonSessionState({
     required this.lessonId,
@@ -21,6 +22,7 @@ class LessonSessionState {
     this.isFinished = false,
     this.earnedXp = 0,
     this.stars = 0,
+    this.hearts = 5,
   });
 
   ActivityModel? get currentActivity =>
@@ -32,6 +34,7 @@ class LessonSessionState {
     bool? isFinished,
     int? earnedXp,
     int? stars,
+    int? hearts,
   }) {
     return LessonSessionState(
       lessonId: lessonId,
@@ -41,6 +44,7 @@ class LessonSessionState {
       isFinished: isFinished ?? this.isFinished,
       earnedXp: earnedXp ?? this.earnedXp,
       stars: stars ?? this.stars,
+      hearts: hearts ?? this.hearts,
     );
   }
 }
@@ -67,11 +71,25 @@ class LessonSessionNotifier extends AsyncNotifier<LessonSessionState> {
     }
   }
 
+  void refillHearts() {
+    if (state.value != null) {
+      state = AsyncValue.data(state.value!.copyWith(hearts: 5));
+    }
+  }
+
   void answerCurrentActivity(bool isCorrect, int activityXp) {
     if (state.value == null) return;
     final session = state.value!;
     final newScore = session.score + (isCorrect ? 1 : 0);
+    final newHearts = isCorrect ? session.hearts : (session.hearts - 1).clamp(0, 5);
     final nextIndex = session.currentIndex + 1;
+
+    if (newHearts == 0) {
+      state = AsyncValue.data(session.copyWith(
+        hearts: 0,
+      ));
+      return;
+    }
 
     if (nextIndex >= session.activities.length) {
       final total = session.activities.length;
@@ -94,11 +112,13 @@ class LessonSessionNotifier extends AsyncNotifier<LessonSessionState> {
         isFinished: true,
         earnedXp: earnedXp,
         stars: stars,
+        hearts: newHearts,
       ));
     } else {
       state = AsyncValue.data(session.copyWith(
         currentIndex: nextIndex,
         score: newScore,
+        hearts: newHearts,
       ));
     }
   }

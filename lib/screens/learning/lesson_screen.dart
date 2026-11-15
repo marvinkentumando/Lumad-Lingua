@@ -4,12 +4,15 @@ import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../models/activity_model.dart';
 import '../../providers/activity_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/app_button.dart';
+import '../../widgets/common/brand_button.dart';
 import '../../widgets/learning/lesson_progress_bar.dart';
 import '../../widgets/learning/answer_option.dart';
 import '../../widgets/audio/audio_player_widget.dart';
+import '../../widgets/audio/recording_button.dart';
 
 class LessonScreen extends ConsumerStatefulWidget {
   final String lessonId;
@@ -24,6 +27,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
   int? _selectedOptionIndex;
   bool? _isAnswerChecked;
   bool _isCorrect = false;
+  bool _isRecording = false;
 
   final List<String> _selectedArrangement = [];
 
@@ -40,6 +44,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
       _selectedOptionIndex = null;
       _isAnswerChecked = null;
       _isCorrect = false;
+      _isRecording = false;
       _selectedArrangement.clear();
     });
   }
@@ -77,7 +82,27 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Interactive Lesson'),
+        title: sessionAsync.when(
+          data: (session) => Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Text('Interactive Lesson'),
+              const Spacer(),
+              Row(
+                children: List.generate(
+                  5,
+                  (index) => Icon(
+                    index < session.hearts ? Icons.favorite : Icons.favorite_border,
+                    color: AppColors.semanticRed,
+                    size: 18,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          loading: () => const Text('Interactive Lesson'),
+          error: (_, __) => const Text('Interactive Lesson'),
+        ),
         leading: IconButton(
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
@@ -85,6 +110,45 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
       ),
       body: sessionAsync.when(
         data: (session) {
+          if (session.hearts == 0) {
+            WidgetsBinding.instance.addPostFrameCallback((_) {
+              showDialog(
+                context: context,
+                barrierDismissible: false,
+                builder: (context) => AlertDialog(
+                  title: Text('Out of Hearts! 💔', style: AppTypography.h3),
+                  content: Text('You have lost all 5 hearts due to mistakes. Refill your hearts with 30 crystals or exit the lesson.', style: AppTypography.body),
+                  actions: [
+                    TextButton(
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                        context.pop();
+                      },
+                      child: const Text('Exit Lesson'),
+                    ),
+                    BrandButton(
+                      text: 'Refill Hearts (-30 Crystals)',
+                      type: BrandButtonType.gold,
+                      onPressed: () {
+                        final user = ref.read(authStateProvider).value;
+                        if (user != null && user.crystals >= 30) {
+                          ref.read(authStateProvider.notifier).updateCrystals(user.crystals - 30);
+                          ref.read(lessonSessionProvider.notifier).refillHearts();
+                          Navigator.of(context).pop();
+                        } else {
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Not enough crystals for heart refill!')),
+                          );
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            });
+            return const Center(child: Text('Out of hearts.'));
+          }
+
           if (session.isFinished) {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go(
@@ -150,7 +214,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                         ] else if (activity.type == ActivityType.listeningExercise) ...[
                           AudioPlayerWidget(
                             audioUrl: activity.audioAssetPath,
-                            title: activity.targetMansaka ?? 'Mansaka Phrase',
+                            title: 'Listen to Audio',
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           if (activity.options != null)
@@ -169,12 +233,11 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                             ),
                         ] else if (activity.type == ActivityType.wordArrangement) ...[
                           Container(
+                            padding: const EdgeInsets.all(AppSpacing.md),
                             constraints: const BoxConstraints(minHeight: 60),
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
                             decoration: BoxDecoration(
-                              color: AppColors.softGray,
-                              borderRadius: BorderRadius.circular(12),
+                              color: Colors.grey[100],
+                              borderRadius: BorderRadius.circular(AppRadius.button),
                               border: Border.all(color: AppColors.borderGray),
                             ),
                             child: Wrap(
@@ -223,10 +286,24 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           Center(
-                            child: ElevatedButton.icon(
-                              icon: const Icon(Icons.mic),
-                              label: const Text('Open Pronunciation Lab'),
-                              onPressed: () => context.push('/pronunciation'),
+                            child: Column(
+                              children: [
+                                RecordingButton(
+                                  isRecording: _isRecording,
+                                  onTap: () {
+                                    setState(() => _isRecording = !_isRecording);
+                                  },
+                                ),
+                                const SizedBox(height: 12),
+                                Text(
+                                  _isRecording ? 'Listening to your speech...' : 'Tap mic to record pronunciation',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.bold,
+                                    color: _isRecording ? AppColors.semanticRed : AppColors.forestGreen,
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ] else ...[

@@ -55,7 +55,56 @@ class DuelService {
     ),
   ];
 
-  /// Enters matchmaking queue or creates a new waiting session
+  /// Fetches dynamic questions from Firebase (learning_activities / vocabulary) with fallback to sample
+  Future<List<DuelQuestion>> _fetchFirebaseQuestions() async {
+    try {
+      final activitiesSnapshot = await _firestore.collection('learning_activities').limit(5).get();
+      if (activitiesSnapshot.docs.isNotEmpty) {
+        List<DuelQuestion> questions = [];
+        for (var doc in activitiesSnapshot.docs) {
+          final data = doc.data();
+          final options = List<String>.from(data['options'] ?? ['Option A', 'Option B', 'Option C', 'Option D']);
+          final correctIdx = data['correctOptionIndex'] ?? 0;
+          questions.add(DuelQuestion(
+            id: doc.id,
+            questionText: data['questionText'] ?? 'Translate the Mansaka term:',
+            targetMansaka: options.isNotEmpty && correctIdx < options.length ? options[correctIdx] : 'Mansaka',
+            targetEnglish: data['questionText'] ?? '',
+            options: options,
+            correctOptionIndex: correctIdx,
+          ));
+        }
+        if (questions.isNotEmpty) return questions;
+      }
+
+      final vocabSnapshot = await _firestore.collection('vocabulary').limit(5).get();
+      if (vocabSnapshot.docs.isNotEmpty) {
+        List<DuelQuestion> questions = [];
+        for (var doc in vocabSnapshot.docs) {
+          final data = doc.data();
+          final headword = data['headword'] ?? 'Salita';
+          final translation = data['translation'] ?? 'Translation';
+
+          List<String> opts = [translation, 'Alternative 1', 'Alternative 2', 'Alternative 3'];
+          opts.shuffle();
+          final correctIdx = opts.indexOf(translation);
+
+          questions.add(DuelQuestion(
+            id: doc.id,
+            questionText: 'What is the English meaning of "$headword"?',
+            targetMansaka: headword,
+            targetEnglish: translation,
+            options: opts,
+            correctOptionIndex: correctIdx >= 0 ? correctIdx : 0,
+          ));
+        }
+        if (questions.isNotEmpty) return questions;
+      }
+    } catch (_) {}
+    return _sampleDuelQuestions;
+  }
+
+  /// Enters matchmaking queue or creates a new waiting session with questions from Firebase
   Future<String> findOrCreateMatch({required String userName}) async {
     final user = _auth.currentUser;
     final uid = user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
@@ -82,6 +131,9 @@ class DuelService {
         }
       }
 
+      // Fetch questions dynamically from Firebase
+      final duelQuestions = await _fetchFirebaseQuestions();
+
       // 2. Create a new waiting session
       final newDoc = _firestore.collection('duel_sessions').doc();
       final session = DuelSessionModel(
@@ -94,7 +146,7 @@ class DuelService {
         player2Hp: 100,
         status: 'waiting',
         currentRound: 0,
-        questions: _sampleDuelQuestions,
+        questions: duelQuestions,
         createdAt: DateTime.now(),
       );
 

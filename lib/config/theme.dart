@@ -132,6 +132,7 @@ class AppTheme {
         backgroundColor: AppColors.forestDarkCard,
         shape: RoundedRectangleBorder(
           borderRadius: BorderRadius.circular(AppRadius.modal),
+          side: const BorderSide(color: AppColors.gold500, width: 1.5),
         ),
       ),
       bottomSheetTheme: BottomSheetThemeData(

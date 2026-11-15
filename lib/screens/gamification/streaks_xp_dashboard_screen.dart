@@ -17,12 +17,13 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
 
     final streak = user?.streakDays ?? 3;
     final xp = user?.totalXp ?? 250;
-    final level = user?.level ?? 3;
     final crystals = user?.crystals ?? 150;
 
-    // Level calculation helper: 100 XP per level
-    final xpInCurrentLevel = xp % 100;
-    final xpNeededForNextLevel = 100;
+    // Progressive level calculation using LevelHelper
+    final levelProgress = LevelHelper.getLevelProgress(xp);
+    final level = levelProgress['level'] ?? 3;
+    final xpInCurrentLevel = levelProgress['currentLevelXp'] ?? 50;
+    final xpNeededForNextLevel = levelProgress['xpNeededForNextLevel'] ?? 150;
     final progress = xpInCurrentLevel / xpNeededForNextLevel;
 
     return Scaffold(
@@ -143,7 +144,7 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Level Progress', style: AppTypography.body.copyWith(color: AppColors.creamBorder)),
+                        Text('Level Progress (Progressive Curve)', style: AppTypography.body.copyWith(color: AppColors.creamBorder)),
                         Text('$xpInCurrentLevel / $xpNeededForNextLevel XP', style: AppTypography.xpValue.copyWith(color: AppColors.gold400)),
                       ],
                     ),

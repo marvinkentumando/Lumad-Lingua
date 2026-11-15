@@ -1,9 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/common/app_card.dart';
+import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/brand_filter_chip.dart';
+import '../../widgets/common/lumad_top_navbar.dart';
+import '../../widgets/common/screen_header.dart';
+import '../../widgets/common/lumad_background.dart';
 
 class ShopItem {
   final String id;
@@ -33,6 +38,9 @@ class ShopScreen extends ConsumerStatefulWidget {
 }
 
 class _ShopScreenState extends ConsumerState<ShopScreen> {
+  String _selectedCategory = 'All';
+  final List<String> _categories = ['All', 'Power-ups', 'Learning Pass', 'Customization'];
+
   final List<ShopItem> _items = const [
     ShopItem(
       id: 'streak_freeze',
@@ -126,7 +134,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     ),
   ];
 
-  Future<void> _buyItem(ShopItem item, int currentCrystals, List<String> inventory) async {
+  void _confirmPurchase(ShopItem item, int currentCrystals, List<String> inventory) {
     final isAlreadyOwned = !item.isConsumable && inventory.contains(item.id);
     if (isAlreadyOwned) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -142,6 +150,45 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       return;
     }
 
+    HapticFeedback.mediumImpact();
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: Row(
+          children: [
+            const Icon(Icons.diamond, color: AppColors.gold500, size: 28),
+            const SizedBox(width: 8),
+            Text('Confirm Purchase', style: AppTypography.h3),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Do you want to purchase "${item.title}" for ${item.cost} crystals?', style: AppTypography.body),
+            const SizedBox(height: 8),
+            Text('Remaining balance after purchase: ${currentCrystals - item.cost} Crystals', style: AppTypography.caption.copyWith(color: AppColors.forest700)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Cancel'),
+          ),
+          BrandButton(
+            text: 'Confirm Purchase',
+            type: BrandButtonType.gold,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              _buyItem(item, currentCrystals, inventory);
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _buyItem(ShopItem item, int currentCrystals, List<String> inventory) async {
     final authNotifier = ref.read(authStateProvider.notifier);
     final user = ref.read(authStateProvider).value;
 
@@ -149,7 +196,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     final updatedCrystals = currentCrystals - item.cost;
     final updatedInventory = List<String>.from(inventory);
-    if (!item.isConsumable && !updatedInventory.contains(item.id)) {
+    if (!updatedInventory.contains(item.id)) {
       updatedInventory.add(item.id);
     }
 
@@ -161,14 +208,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     await authNotifier.updateUser(updatedUser);
 
     if (mounted) {
+      HapticFeedback.heavyImpact();
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Purchase Successful!'),
-          content: Text('You have successfully acquired "${item.title}".'),
+          title: Text('Purchase Successful! 🎉', style: AppTypography.h3),
+          content: Text('You have successfully acquired "${item.title}". It is now active in your profile inventory!', style: AppTypography.body),
           actions: [
             BrandButton(
               text: 'Awesome',
+              type: BrandButtonType.gold,
               onPressed: () => Navigator.of(context).pop(),
             ),
           ],
@@ -184,129 +233,187 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final crystals = user?.crystals ?? 150;
     final inventory = user?.inventory ?? [];
 
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text('Crystal Shop'),
-        actions: [
-          Padding(
-            padding: const EdgeInsets.only(right: 16.0),
-            child: Center(
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                decoration: BoxDecoration(
-                  color: AppColors.gold500.withValues(alpha: 0.2),
-                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                  border: Border.all(color: AppColors.gold500),
-                ),
-                child: Row(
-                  children: [
-                    const Icon(Icons.diamond, color: AppColors.gold500, size: 18),
-                    const SizedBox(width: 6),
-                    Text(
-                      '$crystals',
-                      style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SafeArea(
-        child: ListView.separated(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          itemCount: _items.length,
-          separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.md),
-          itemBuilder: (context, index) {
-            final item = _items[index];
-            final isOwned = !item.isConsumable && inventory.contains(item.id);
-            final canAfford = crystals >= item.cost;
+    final filteredItems = _selectedCategory == 'All'
+        ? _items
+        : _items.where((item) => item.category.toLowerCase().contains(_selectedCategory.toLowerCase())).toList();
 
-            return AppCard(
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(14),
-                    decoration: BoxDecoration(
-                      color: AppColors.gold500.withValues(alpha: 0.2),
-                      shape: BoxShape.circle,
-                    ),
-                    child: Icon(item.icon, color: AppColors.gold500, size: 32),
-                  ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                              decoration: BoxDecoration(
-                                color: AppColors.forestGreen.withValues(alpha: 0.1),
-                                borderRadius: BorderRadius.circular(AppRadius.chip),
-                              ),
-                              child: Text(
-                                item.category.toUpperCase(),
-                                style: const TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.forestGreen),
-                              ),
-                            ),
-                            if (isOwned) ...[
-                              const SizedBox(width: 6),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                                decoration: BoxDecoration(
-                                  color: AppColors.semanticGreen.withValues(alpha: 0.2),
-                                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                                ),
-                                child: const Text(
-                                  'OWNED',
-                                  style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: AppColors.semanticGreen),
-                                ),
-                              ),
-                            ],
-                          ],
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.title,
-                          style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: AppColors.textColor(context)),
-                        ),
-                        const SizedBox(height: 4),
-                        Text(
-                          item.description,
-                          style: TextStyle(fontSize: 12, color: AppColors.subtitleColor(context)),
-                        ),
-                        const SizedBox(height: 8),
-                        Row(
-                          children: [
-                            const Icon(Icons.diamond, color: AppColors.gold500, size: 14),
-                            const SizedBox(width: 4),
-                            Text(
-                              '${item.cost} Crystals',
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: AppColors.gold500, fontSize: 13),
+    return Scaffold(
+      appBar: const LumadTopNavbar(),
+      body: LumadBackground(
+        child: SafeArea(
+          child: CustomScrollView(
+            slivers: [
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const ScreenHeader(
+                        title: 'Crystal Shop',
+                        subtitle: 'Spend crystals on power-ups, passes & customization',
+                      ),
+                      const SizedBox(height: AppSpacing.sm),
+                      // Crystal Balance Banner
+                      Container(
+                        padding: const EdgeInsets.all(AppSpacing.md),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFD54F), AppColors.gold500, Color(0xFFFFA000)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          border: Border.all(color: AppColors.gold700, width: 2.0),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0xFFC78C00),
+                              offset: Offset(0, 4),
+                              blurRadius: 0,
                             ),
                           ],
                         ),
-                      ],
-                    ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.diamond, color: AppColors.forest900, size: 28),
+                            const SizedBox(width: 8),
+                            Text('$crystals Crystals Available', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
+                          ],
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      // Category Filter Pills
+                      SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: Row(
+                          children: _categories.map((cat) {
+                            final isSelected = _selectedCategory == cat;
+                            return Padding(
+                              padding: const EdgeInsets.only(right: 8.0),
+                              child: BrandFilterChip(
+                                label: cat,
+                                isSelected: isSelected,
+                                onSelected: (_) {
+                                  setState(() => _selectedCategory = cat);
+                                },
+                              ),
+                            );
+                          }).toList(),
+                        ),
+                      ),
+                    ],
                   ),
-                  const SizedBox(width: AppSpacing.sm),
-                  SizedBox(
-                    width: 90,
-                    child: BrandButton(
-                      text: isOwned ? 'Active' : 'Buy',
-                      type: isOwned
-                          ? BrandButtonType.secondary
-                          : (canAfford ? BrandButtonType.primary : BrandButtonType.secondary),
-                      onPressed: isOwned ? null : () => _buyItem(item, crystals, inventory),
-                    ),
-                  ),
-                ],
+                ),
               ),
-            );
-          },
+              SliverPadding(
+                padding: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                sliver: SliverGrid(
+                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+                    crossAxisCount: 2,
+                    childAspectRatio: 0.72,
+                    crossAxisSpacing: AppSpacing.md,
+                    mainAxisSpacing: AppSpacing.md,
+                  ),
+                  delegate: SliverChildBuilderDelegate(
+                    (context, index) {
+                      final item = filteredItems[index];
+                      final isOwned = !item.isConsumable && inventory.contains(item.id);
+                      final canAfford = crystals >= item.cost;
+
+                      return BrandCard(
+                        padding: const EdgeInsets.all(AppSpacing.sm),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.gold100,
+                                    borderRadius: BorderRadius.circular(AppRadius.chip),
+                                  ),
+                                  child: Text(
+                                    item.category.toUpperCase(),
+                                    style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 9),
+                                  ),
+                                ),
+                                if (isOwned)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.semanticGreen,
+                                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                                    ),
+                                    child: Text('OWNED', style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 9)),
+                                  ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            Center(
+                              child: Container(
+                                padding: const EdgeInsets.all(12),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold500.withValues(alpha: 0.2),
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(item.icon, color: AppColors.gold500, size: 32),
+                              ),
+                            ),
+                            const SizedBox(height: 8),
+                            Text(
+                              item.title,
+                              style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 14),
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                            const SizedBox(height: 2),
+                            Expanded(
+                              child: Text(
+                                item.description,
+                                style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 11),
+                                maxLines: 2,
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(height: 6),
+                            Row(
+                              children: [
+                                const Icon(Icons.diamond, color: AppColors.gold500, size: 14),
+                                const SizedBox(width: 4),
+                                Text(
+                                  '${item.cost}',
+                                  style: AppTypography.xpValue.copyWith(color: AppColors.gold400),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 8),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 36,
+                              child: BrandButton(
+                                text: isOwned ? 'Active' : 'Buy',
+                                type: isOwned
+                                    ? BrandButtonType.secondary
+                                    : (canAfford ? BrandButtonType.gold : BrandButtonType.secondary),
+                                onPressed: isOwned ? null : () => _confirmPurchase(item, crystals, inventory),
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                    childCount: filteredItems.length,
+                  ),
+                ),
+              ),
+              const SliverToBoxAdapter(
+                child: SizedBox(height: AppSpacing.xxl),
+              ),
+            ],
+          ),
         ),
       ),
     );

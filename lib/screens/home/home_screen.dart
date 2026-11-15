@@ -5,9 +5,8 @@ import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_button.dart';
-import '../../widgets/common/lumad_logo_emblem.dart';
-import '../../widgets/gamification/xp_badge.dart';
-import '../../widgets/gamification/streak_indicator.dart';
+import '../../widgets/common/lumad_top_navbar.dart';
+import '../../widgets/common/lumad_background.dart';
 import '../../widgets/gamification/daily_quests_widget.dart';
 import '../../widgets/dictionary/word_of_the_day_card.dart';
 
@@ -16,311 +15,292 @@ class HomeScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final authState = ref.watch(authStateProvider);
-    final user = authState.value;
+    final user = ref.watch(authStateProvider).value;
 
     return Scaffold(
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.md),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Top Bar Header
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Row(
+      appBar: const LumadTopNavbar(),
+      body: LumadBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.md),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Madyaw na allaw Greeting Banner Card with Clean Forest Gradient & 3D Lip
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.forest700, width: 1.0),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0xFF0A140B),
+                        offset: Offset(0, 5),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Row(
                     children: [
-                      const LumadLogoEmblem(size: 44, borderRadius: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(
+                              'Madyaw na allaw,',
+                              style: AppTypography.bodyLarge.copyWith(color: AppColors.gold400),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              user?.name ?? 'Lumad Learner',
+                              style: AppTypography.h1ExtraBold.copyWith(color: Colors.white, fontSize: 24),
+                            ),
+                            const SizedBox(height: 4),
+                            Text(
+                              'Level ${user?.level ?? 3} Learner',
+                              style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                            ),
+                          ],
+                        ),
+                      ),
                       const SizedBox(width: AppSpacing.sm),
-                      Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(AppRadius.chip),
+                        child: SizedBox(
+                          width: 64,
+                          height: 64,
+                          child: Image.asset(
+                            'assets/lumad_waves.gif',
+                            fit: BoxFit.cover,
+                            errorBuilder: (context, error, stackTrace) => const Icon(
+                              Icons.waving_hand,
+                              color: AppColors.gold500,
+                              size: 40,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Word of the Day
+                const WordOfTheDayCard(),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Enhanced Continue Learning Section Card
+                Text('Continue Learning', style: AppTypography.h3),
+                const SizedBox(height: AppSpacing.sm),
+                Container(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+                      begin: Alignment.topLeft,
+                      end: Alignment.bottomRight,
+                    ),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(color: AppColors.forest700, width: 1.0),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0xFF0A140B),
+                        offset: Offset(0, 5),
+                        blurRadius: 0,
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Text(
-                            'Madyaw na masurom!',
-                            style: AppTypography.caption.copyWith(color: AppColors.creamText2),
+                            'UNIT 1: MANSAKA FUNDAMENTALS',
+                            style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 11),
                           ),
-                          Text(
-                            user?.name ?? 'Lumad Learner',
-                            style: AppTypography.h3.copyWith(fontSize: 16),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold500,
+                              borderRadius: BorderRadius.circular(AppRadius.chip),
+                            ),
+                            child: Text(
+                              'Lesson 2 of 3',
+                              style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
+                            ),
                           ),
                         ],
                       ),
-                    ],
-                  ),
-                  Row(
-                    children: [
-                      StreakIndicator(streakDays: user?.streakDays ?? 3),
-                      const SizedBox(width: 8),
-                      XPBadge(xp: user?.totalXp ?? 250),
-                    ],
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Level Banner
-              Container(
-                padding: const EdgeInsets.all(AppSpacing.md),
-                decoration: BoxDecoration(
-                  gradient: const LinearGradient(
-                    colors: [AppColors.forest500, AppColors.forest300],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
-                  borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppColors.gold500, width: 1.5),
-                  boxShadow: const [
-                    BoxShadow(
-                      color: AppColors.forest700,
-                      offset: Offset(0, 3),
-                      blurRadius: 0,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: Colors.white24,
-                        borderRadius: BorderRadius.circular(AppRadius.chip),
+                      const SizedBox(height: AppSpacing.xs),
+                      Text(
+                        'Lesson 2: Basic Expressions',
+                        style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 20),
                       ),
-                      child: const Icon(Icons.school, color: AppColors.gold500, size: 32),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Express gratitude, courtesy, and daily phrases.',
+                        style: AppTypography.body.copyWith(color: AppColors.creamBorder),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      // Metadata Row (Time & Vocabulary count)
+                      Row(
+                        children: [
+                          const Icon(Icons.timer_outlined, size: 16, color: AppColors.gold400),
+                          const SizedBox(width: 4),
+                          Text('~3 mins', style: AppTypography.caption.copyWith(color: AppColors.gold300)),
+                          const SizedBox(width: 16),
+                          const Icon(Icons.style_outlined, size: 16, color: AppColors.gold400),
+                          const SizedBox(width: 4),
+                          Text('4 Key Words', style: AppTypography.caption.copyWith(color: AppColors.gold300)),
+                        ],
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      // Progress Bar (66%)
+                      Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Text('Unit Progress', style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 10)),
+                          Text('66% Complete', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 10)),
+                        ],
+                      ),
+                      const SizedBox(height: 4),
+                      ClipRRect(
+                        borderRadius: BorderRadius.circular(4),
+                        child: const LinearProgressIndicator(
+                          value: 0.66,
+                          backgroundColor: AppColors.forest700,
+                          color: AppColors.gold500,
+                          minHeight: 6,
+                        ),
+                      ),
+                      const SizedBox(height: AppSpacing.md),
+                      BrandButton(
+                        text: 'Continue Lesson',
+                        icon: Icons.play_arrow_rounded,
+                        type: BrandButtonType.gold,
+                        onPressed: () {
+                          context.push('/lesson/lesson_1_2');
+                        },
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Quick Practice & Tools
+                Text('Quick Practice & Tools', style: AppTypography.h3),
+                const SizedBox(height: AppSpacing.sm),
+                Row(
+                  children: [
+                    Expanded(
+                      child: AppCard(
+                        onTap: () => context.push('/pronunciation'),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.mic, size: 36, color: AppColors.gold500),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Pronunciation',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 14),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Audio Practice',
+                              style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                            ),
+                          ],
+                        ),
+                      ),
                     ),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(
-                            'Level ${user?.level ?? 3} Learner',
-                            style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 20),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Keep practicing daily to unlock new Mansaka units!',
-                            style: AppTypography.body.copyWith(color: AppColors.creamBorder),
-                          ),
-                        ],
+                      child: AppCard(
+                        onTap: () => context.push('/sentiment'),
+                        child: Column(
+                          children: [
+                            const Icon(Icons.analytics_outlined, size: 36, color: AppColors.gold500),
+                            const SizedBox(height: 8),
+                            Text(
+                              'Sentiment Lab',
+                              textAlign: TextAlign.center,
+                              style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 14),
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              'Research Tool',
+                              style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                            ),
+                          ],
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
-              // Continue Learning Section
-              Text('Continue Learning', style: AppTypography.h3),
-              const SizedBox(height: AppSpacing.sm),
-              AppCard(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'UNIT 1: MANSAKA FUNDAMENTALS',
-                          style: AppTypography.labelBold.copyWith(color: AppColors.gold500, fontSize: 11),
-                        ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold100,
-                            borderRadius: BorderRadius.circular(AppRadius.chip),
-                          ),
-                          child: Text(
-                            'Lesson 2 of 3',
-                            style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 10),
-                          ),
+                // Lingua Duels Arena Card (With Dual-Tone Gold Gradient & 3D Shadow Lip)
+                GestureDetector(
+                  onTap: () => context.push('/arena'),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [Color(0xFFFFD54F), AppColors.gold500, Color(0xFFFFA000)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                      ),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: Border.all(color: AppColors.gold700, width: 2),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Color(0xFFC78C00),
+                          offset: Offset(0, 5),
+                          blurRadius: 0,
                         ),
                       ],
                     ),
-                    const SizedBox(height: AppSpacing.xs),
-                    Text(
-                      'Lesson 2: Basic Expressions',
-                      style: AppTypography.lessonTitle.copyWith(color: Colors.white),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      'Express gratitude, courtesy, and daily phrases.',
-                      style: AppTypography.body.copyWith(color: AppColors.creamBorder),
-                    ),
-                    const SizedBox(height: AppSpacing.md),
-                    BrandButton(
-                      text: 'Continue Lesson',
-                      icon: Icons.play_arrow,
-                      type: BrandButtonType.primary,
-                      onPressed: () {
-                        context.push('/lesson/lesson_1_2');
-                      },
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Daily Quests & Challenges
-              const DailyQuestsWidget(),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Quick Practice & Tools
-              Text('Quick Practice & Tools', style: AppTypography.h3),
-              const SizedBox(height: AppSpacing.sm),
-              Row(
-                children: [
-                  Expanded(
-                    child: AppCard(
-                      onTap: () => context.push('/pronunciation'),
-                      child: Column(
+                    child: DefaultTextStyle(
+                      style: const TextStyle(color: AppColors.forest900),
+                      child: Row(
                         children: [
-                          const Icon(Icons.mic, size: 36, color: AppColors.gold500),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Pronunciation',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 14),
+                          const Icon(Icons.flash_on, size: 40, color: AppColors.forest900),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Lingua Duels Arena (PvP)',
+                                  style: AppTypography.h3.copyWith(color: AppColors.forest900),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  'Compete in rapid-fire trivia duels & win +150 XP +25 Crystals!',
+                                  style: AppTypography.body.copyWith(color: AppColors.forest800),
+                                ),
+                              ],
+                            ),
                           ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Audio Practice',
-                            style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
-                          ),
+                          const Icon(Icons.chevron_right, color: AppColors.forest900),
                         ],
                       ),
                     ),
                   ),
-                  const SizedBox(width: AppSpacing.md),
-                  Expanded(
-                    child: AppCard(
-                      onTap: () => context.push('/sentiment'),
-                      child: Column(
-                        children: [
-                          const Icon(Icons.analytics_outlined, size: 36, color: AppColors.gold500),
-                          const SizedBox(height: 8),
-                          Text(
-                            'Sentiment Lab',
-                            textAlign: TextAlign.center,
-                            style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 14),
-                          ),
-                          const SizedBox(height: 2),
-                          Text(
-                            'Research Tool',
-                            style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Crystal Shop Card
-              AppCard(
-                onTap: () => context.push('/shop'),
-                backgroundColor: AppColors.gold500,
-                border: Border.all(color: AppColors.gold700, width: 1.5),
-                child: DefaultTextStyle(
-                  style: const TextStyle(color: AppColors.forest900),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.storefront_rounded, size: 40, color: AppColors.forest900),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Crystal Shop',
-                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Spend crystals on streak freezes, boosters, and avatars!',
-                              style: AppTypography.body.copyWith(color: AppColors.forest800),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.chevron_right, color: AppColors.forest900),
-                    ],
-                  ),
                 ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
+                const SizedBox(height: AppSpacing.lg),
 
-              // Lingua Duels Arena Card
-              AppCard(
-                onTap: () => context.push('/arena'),
-                backgroundColor: AppColors.gold500,
-                border: Border.all(color: AppColors.gold700, width: 1.5),
-                child: DefaultTextStyle(
-                  style: const TextStyle(color: AppColors.forest900),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.flash_on, size: 40, color: AppColors.forest900),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Lingua Duels Arena (PvP)',
-                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Compete in rapid-fire trivia duels & win +150 XP +25 Crystals!',
-                              style: AppTypography.body.copyWith(color: AppColors.forest800),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const Icon(Icons.chevron_right, color: AppColors.forest900),
-                    ],
-                  ),
-                ),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Word of the Day
-              const WordOfTheDayCard(),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Daily Challenge Card
-              AppCard(
-                backgroundColor: AppColors.gold100,
-                border: Border.all(color: AppColors.gold300, width: 1.5),
-                child: DefaultTextStyle(
-                  style: const TextStyle(color: AppColors.forest900),
-                  child: Row(
-                    children: [
-                      const Icon(Icons.stars, size: 40, color: AppColors.gold800),
-                      const SizedBox(width: AppSpacing.md),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Daily Challenge',
-                              style: AppTypography.h3.copyWith(color: AppColors.forest900),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              'Review 5 Mansaka greetings to earn 20 Bonus XP.',
-                              style: AppTypography.body.copyWith(color: AppColors.forest800),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+                // Daily Quests & Challenges
+                const DailyQuestsWidget(),
+              ],
+            ),
           ),
         ),
       ),

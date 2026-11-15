@@ -10,6 +10,17 @@ class ThemeModeNotifier extends Notifier<ThemeMode> {
   }
 }
 
+class CustomThemeAccentNotifier extends Notifier<bool> {
+  @override
+  bool build() => false;
+
+  void setAccent(bool value) => state = value;
+}
+
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(() {
   return ThemeModeNotifier();
+});
+
+final customThemeAccentProvider = NotifierProvider<CustomThemeAccentNotifier, bool>(() {
+  return CustomThemeAccentNotifier();
 });

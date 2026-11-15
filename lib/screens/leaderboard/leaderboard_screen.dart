@@ -6,6 +6,8 @@ import '../../models/user_model.dart';
 import '../../data/mock_users.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/brand_card.dart';
+import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
 
@@ -17,9 +19,7 @@ class LeaderboardScreen extends ConsumerWidget {
     final currentUser = ref.watch(authStateProvider).value;
 
     return Scaffold(
-      appBar: AppBar(
-        title: const Text('Global Leaderboard'),
-      ),
+      appBar: const LumadTopNavbar(title: 'Global Leaderboard'),
       body: StreamBuilder<QuerySnapshot<Map<String, dynamic>>>(
         stream: FirebaseFirestore.instance
             .collection('users')
@@ -41,7 +41,7 @@ class LeaderboardScreen extends ConsumerWidget {
           }
 
           if (learners.isEmpty) {
-            return const Center(child: Text('No learners found on the leaderboard yet.'));
+            return Center(child: Text('No learners found on the leaderboard yet.', style: AppTypography.bodyLarge));
           }
 
           final top1 = learners.isNotEmpty ? learners[0] : null;
@@ -65,45 +65,43 @@ class LeaderboardScreen extends ConsumerWidget {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         // Top 3 Podium Card
-                        AppCard(
-                          backgroundColor: AppColors.gold500.withValues(alpha: 0.15),
-                          border: Border.all(color: AppColors.gold500, width: 1.5),
-                          child: Column(
-                            children: [
-                              const Text(
-                                'GLOBAL TOP LEARNERS',
-                                style: TextStyle(
-                                  fontSize: 12,
-                                  fontWeight: FontWeight.bold,
-                                  letterSpacing: 1.2,
-                                  color: AppColors.gold500,
+                        BrandCard(
+                          backgroundColor: AppColors.gold500,
+                          border: Border.all(color: AppColors.gold700, width: 1.5),
+                          child: DefaultTextStyle(
+                            style: const TextStyle(color: AppColors.forest900),
+                            child: Column(
+                              children: [
+                                Text(
+                                  'GLOBAL TOP LEARNERS',
+                                  style: AppTypography.labelBold.copyWith(
+                                    color: AppColors.forest900,
+                                    letterSpacing: 1.2,
+                                  ),
                                 ),
-                              ),
-                              const SizedBox(height: AppSpacing.md),
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                                crossAxisAlignment: CrossAxisAlignment.end,
-                                children: [
-                                  // Rank 2 (Silver)
-                                  if (top2 != null) _buildPodiumUser(context, top2, 2, Colors.grey[400]!, 70),
+                                const SizedBox(height: AppSpacing.md),
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                                  crossAxisAlignment: CrossAxisAlignment.end,
+                                  children: [
+                                    // Rank 2 (Silver)
+                                    if (top2 != null) _buildPodiumUser(context, top2, 2, AppColors.forest700),
 
-                                  // Rank 1 (Gold)
-                                  if (top1 != null) _buildPodiumUser(context, top1, 1, AppColors.gold500, 90),
+                                    // Rank 1 (Gold)
+                                    if (top1 != null) _buildPodiumUser(context, top1, 1, AppColors.forest900),
 
-                                  // Rank 3 (Bronze)
-                                  if (top3 != null) _buildPodiumUser(context, top3, 3, Colors.brown[300]!, 65),
-                                ],
-                              ),
-                            ],
+                                    // Rank 3 (Bronze)
+                                    if (top3 != null) _buildPodiumUser(context, top3, 3, AppColors.forest700),
+                                  ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         const SizedBox(height: AppSpacing.lg),
 
                         // Leaderboard Roster Header
-                        const Text(
-                          'Rankings',
-                          style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
-                        ),
+                        Text('Rankings', style: AppTypography.h3),
                         const SizedBox(height: AppSpacing.sm),
 
                         // List for Ranks #4 and beyond
@@ -118,15 +116,25 @@ class LeaderboardScreen extends ConsumerWidget {
                             final isMe = currentUser != null && (user.id == currentUser.id || user.email == currentUser.email);
 
                             return AppCard(
-                              backgroundColor: isMe ? AppColors.forestGreen.withValues(alpha: 0.15) : AppColors.cardColor(context),
-                              border: isMe ? Border.all(color: AppColors.forestGreen, width: 1.5) : null,
+                              backgroundColor: isMe ? AppColors.forest500 : AppColors.creamSurface,
+                              border: isMe ? Border.all(color: AppColors.gold500, width: 2.0) : null,
                               child: Row(
                                 children: [
-                                  CircleAvatar(
-                                    backgroundColor: AppColors.forestGreen,
-                                    child: Text(
-                                      '#$rank',
-                                      style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                                  Container(
+                                    width: 36,
+                                    height: 36,
+                                    decoration: BoxDecoration(
+                                      color: isMe ? AppColors.gold500 : AppColors.forest700,
+                                      shape: BoxShape.circle,
+                                    ),
+                                    child: Center(
+                                      child: Text(
+                                        '#$rank',
+                                        style: AppTypography.mono.copyWith(
+                                          color: isMe ? AppColors.forest900 : Colors.white,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
                                     ),
                                   ),
                                   const SizedBox(width: AppSpacing.md),
@@ -136,10 +144,9 @@ class LeaderboardScreen extends ConsumerWidget {
                                       children: [
                                         Text(
                                           user.name + (isMe ? ' (You)' : ''),
-                                          style: TextStyle(
-                                            fontWeight: FontWeight.bold,
+                                          style: AppTypography.lessonTitle.copyWith(
+                                            color: isMe ? Colors.white : AppColors.creamText,
                                             fontSize: 16,
-                                            color: AppColors.textColor(context),
                                           ),
                                         ),
                                         const SizedBox(height: 4),
@@ -168,7 +175,7 @@ class LeaderboardScreen extends ConsumerWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
                     decoration: BoxDecoration(
-                      color: AppColors.forest500,
+                      color: AppColors.forest700,
                       boxShadow: const [
                         BoxShadow(
                           color: Colors.black26,
@@ -183,7 +190,7 @@ class LeaderboardScreen extends ConsumerWidget {
                           backgroundColor: AppColors.gold500,
                           child: Text(
                             myRank > 0 ? '#$myRank' : '-',
-                            style: const TextStyle(color: AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 13),
+                            style: AppTypography.mono.copyWith(color: AppColors.forest900, fontWeight: FontWeight.bold),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -194,11 +201,11 @@ class LeaderboardScreen extends ConsumerWidget {
                             children: [
                               Text(
                                 '${currentUser.name} (Your Rank)',
-                                style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 15),
                               ),
                               Text(
                                 '${currentUser.totalXp} Total XP • ${currentUser.streakDays} Day Streak',
-                                style: const TextStyle(color: Colors.white70, fontSize: 12),
+                                style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                               ),
                             ],
                           ),
@@ -215,7 +222,7 @@ class LeaderboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPodiumUser(BuildContext context, UserModel user, int rank, Color badgeColor, double height) {
+  Widget _buildPodiumUser(BuildContext context, UserModel user, int rank, Color badgeColor) {
     final medalEmoji = rank == 1 ? '🥇' : (rank == 2 ? '🥈' : '🥉');
 
     return Column(
@@ -228,7 +235,7 @@ class LeaderboardScreen extends ConsumerWidget {
           backgroundColor: badgeColor,
           child: Text(
             user.name.substring(0, 1).toUpperCase(),
-            style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 18),
+            style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
           ),
         ),
         const SizedBox(height: 6),
@@ -236,11 +243,7 @@ class LeaderboardScreen extends ConsumerWidget {
           width: 80,
           child: Text(
             user.name,
-            style: TextStyle(
-              fontWeight: FontWeight.bold,
-              fontSize: 12,
-              color: AppColors.textColor(context),
-            ),
+            style: AppTypography.lessonTitle.copyWith(color: AppColors.forest900, fontSize: 13),
             textAlign: TextAlign.center,
             maxLines: 1,
             overflow: TextOverflow.ellipsis,
@@ -249,7 +252,7 @@ class LeaderboardScreen extends ConsumerWidget {
         const SizedBox(height: 2),
         Text(
           '${user.totalXp} XP',
-          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 11, color: AppColors.gold500),
+          style: AppTypography.xpValue.copyWith(color: AppColors.forest900),
         ),
       ],
     );

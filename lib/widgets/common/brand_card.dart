@@ -27,18 +27,33 @@ class BrandCard extends StatelessWidget {
     final r = borderRadius ?? AppRadius.card;
 
     final bg = backgroundColor ?? (isDark ? AppColors.gold500 : AppColors.forest500);
-    final lipColor = isDark ? AppColors.gold700 : AppColors.forest700;
-    final cardBorder = border ?? Border.all(color: lipColor, width: 1.0);
+    final isGoldCard = bg == AppColors.gold500 || bg.toARGB32() == AppColors.gold500.toARGB32() || (backgroundColor != null && backgroundColor == AppColors.gold500);
+
+    final lipColor = isGoldCard ? const Color(0xFFC78C00) : const Color(0xFF0A140B);
+    final cardBorder = border ?? Border.all(color: isGoldCard ? AppColors.gold700 : AppColors.forest700, width: isGoldCard ? 1.5 : 1.0);
 
     final container = Container(
       decoration: BoxDecoration(
-        color: bg,
+        color: isGoldCard ? null : (backgroundColor != null ? backgroundColor : null),
+        gradient: isGoldCard
+            ? const LinearGradient(
+                colors: [Color(0xFFFFD54F), AppColors.gold500, Color(0xFFFFA000)],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              )
+            : (backgroundColor != null
+                ? null
+                : const LinearGradient(
+                    colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )),
         borderRadius: BorderRadius.circular(r),
         border: cardBorder,
         boxShadow: [
           BoxShadow(
             color: lipColor,
-            offset: const Offset(0, 3),
+            offset: const Offset(0, 4),
             blurRadius: 0,
             spreadRadius: 0,
           ),
@@ -48,15 +63,9 @@ class BrandCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(r),
         child: Material(
           color: Colors.transparent,
-          child: DefaultTextStyle(
-            style: const TextStyle(color: Colors.white),
-            child: IconTheme(
-              data: const IconThemeData(color: Colors.white),
-              child: Padding(
-                padding: padding,
-                child: child,
-              ),
-            ),
+          child: Padding(
+            padding: padding,
+            child: child,
           ),
         ),
       ),

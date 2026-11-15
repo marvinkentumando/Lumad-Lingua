@@ -8,10 +8,12 @@ import '../../utils/constants.dart';
 import '../../providers/pronunciation_provider.dart';
 import '../../services/local_ml_service.dart';
 import '../../services/admin_config_service.dart';
-import '../../widgets/common/app_button.dart';
-import '../../widgets/common/app_card.dart';
+import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/brand_card.dart';
+import '../../widgets/common/lumad_background.dart';
 import '../../widgets/audio/recording_button.dart';
 import '../../widgets/audio/audio_player_widget.dart';
+import '../../widgets/audio/audio_waveform_widget.dart';
 
 class PronunciationScreen extends ConsumerStatefulWidget {
   const PronunciationScreen({super.key});
@@ -105,28 +107,29 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
       showDialog(
         context: context,
         builder: (context) => AlertDialog(
-          title: const Text('Pronunciation Assessment'),
+          title: Text('Pronunciation Assessment', style: AppTypography.h3),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Text(
                 'Accuracy Score: ${finalScore.toStringAsFixed(1)}%',
-                style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: AppColors.blue),
+                style: AppTypography.displayNumber.copyWith(color: AppColors.forest500, fontSize: 24),
               ),
               const SizedBox(height: 12),
               Text(
                 finalScore >= 85
                     ? 'Fantastic job! Your pronunciation and pacing sound natural and clear.'
                     : 'Good effort! Try focusing slightly more on vowel length and tone.',
-                style: TextStyle(fontSize: 15, color: AppColors.textColor(context)),
+                style: AppTypography.body,
               ),
             ],
           ),
           actions: [
-            TextButton(
+            BrandButton(
+              text: 'OK',
+              type: BrandButtonType.primary,
               onPressed: () => Navigator.of(context).pop(),
-              child: const Text('OK'),
             ),
           ],
         ),
@@ -139,89 +142,89 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
     final state = ref.watch(pronunciationProvider);
 
     return Scaffold(
+      backgroundColor: AppColors.creamBg,
       appBar: AppBar(
-        title: const Text('Pronunciation Lab'),
+        title: Text('Pronunciation Lab', style: AppTypography.h2.copyWith(color: Colors.white)),
+        backgroundColor: AppColors.forest700,
       ),
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.all(AppSpacing.lg),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const Text(
-                'Target Phrase',
-                style: TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.blue,
+      body: LumadBackground(
+        child: SafeArea(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpacing.lg),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.center,
+              children: [
+                Text(
+                  'TARGET PHRASE',
+                  style: AppTypography.labelBold.copyWith(color: AppColors.gold500, letterSpacing: 1.2),
                 ),
-              ),
-              const SizedBox(height: 8),
-              Text(
-                'Madyaw na masurom',
-                style: TextStyle(
-                  fontSize: 28,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textColor(context),
+                const SizedBox(height: 8),
+                Text(
+                  'Madyaw na masurom',
+                  style: AppTypography.flashcard.copyWith(color: AppColors.creamText, fontSize: 32),
                 ),
-              ),
-              Text(
-                'Meaning: "Good morning"',
-                style: TextStyle(fontSize: 16, color: AppColors.subtitleColor(context)),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              const AudioPlayerWidget(
-                audioUrl: null,
-                title: 'Reference Recording (Mansaka Speaker)',
-              ),
-              const SizedBox(height: AppSpacing.xl),
-
-              RecordingButton(
-                isRecording: state.isRecording,
-                onTap: _toggleRecording,
-              ),
-              const SizedBox(height: AppSpacing.md),
-              Text(
-                state.isRecording
-                    ? 'Recording... Tap to stop'
-                    : (state.hasRecording ? 'Recording Saved' : 'Tap microphone to start recording'),
-                style: const TextStyle(fontWeight: FontWeight.bold),
-              ),
-              if (state.hasRecording) ...[
+                Text(
+                  'Meaning: "Good morning"',
+                  style: AppTypography.bodyLarge.copyWith(color: AppColors.creamText2),
+                ),
                 const SizedBox(height: AppSpacing.lg),
-                AppCard(
-                  child: Row(
-                    children: [
-                      IconButton(
-                        icon: Icon(
-                          _isPlayingRecorded ? Icons.pause_circle : Icons.play_circle,
-                          size: 36,
-                          color: AppColors.blue,
+
+                const AudioPlayerWidget(
+                  audioUrl: null,
+                  title: 'Reference Recording (Mansaka Speaker)',
+                ),
+                const SizedBox(height: AppSpacing.xl),
+
+                AudioWaveformWidget(isRecording: state.isRecording),
+                const SizedBox(height: AppSpacing.md),
+
+                RecordingButton(
+                  isRecording: state.isRecording,
+                  onTap: _toggleRecording,
+                ),
+                const SizedBox(height: AppSpacing.md),
+                Text(
+                  state.isRecording
+                      ? 'Recording... Tap to stop'
+                      : (state.hasRecording ? 'Recording Saved' : 'Tap microphone to start recording'),
+                  style: AppTypography.labelBold.copyWith(color: AppColors.creamText),
+                ),
+                if (state.hasRecording) ...[
+                  const SizedBox(height: AppSpacing.lg),
+                  BrandCard(
+                    child: Row(
+                      children: [
+                        IconButton(
+                          icon: Icon(
+                            _isPlayingRecorded ? Icons.pause_circle_filled : Icons.play_circle_fill,
+                            size: 36,
+                            color: AppColors.gold500,
+                          ),
+                          onPressed: _playRecordedAudio,
                         ),
-                        onPressed: _playRecordedAudio,
-                      ),
-                      const SizedBox(width: 8),
-                      const Expanded(
-                        child: Text(
-                          'Your Recording',
-                          style: TextStyle(fontWeight: FontWeight.bold),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: Text(
+                            'Your Recording',
+                            style: AppTypography.labelBold.copyWith(color: Colors.white),
+                          ),
                         ),
-                      ),
-                      IconButton(
-                        icon: const Icon(Icons.delete_outline, color: AppColors.error),
-                        onPressed: () => ref.read(pronunciationProvider.notifier).reset(),
-                      ),
-                    ],
+                        IconButton(
+                          icon: const Icon(Icons.delete_outline, color: AppColors.semanticRed),
+                          onPressed: () => ref.read(pronunciationProvider.notifier).reset(),
+                        ),
+                      ],
+                    ),
                   ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-                AppButton(
-                  text: 'Submit for Assessment',
-                  onPressed: _submitAssessment,
-                ),
+                  const SizedBox(height: AppSpacing.lg),
+                  BrandButton(
+                    text: 'Submit for Assessment',
+                    type: BrandButtonType.gold,
+                    onPressed: _submitAssessment,
+                  ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ),

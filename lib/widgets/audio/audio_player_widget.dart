@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../utils/constants.dart';
 import '../../utils/audio_helper.dart';
+import '../common/brand_card.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
   final String? audioUrl;
@@ -41,7 +42,6 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text('Reference audio is currently unavailable for this item.'),
-          backgroundColor: AppColors.textPrimary,
         ),
       );
       return;
@@ -68,41 +68,46 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        color: AppColors.blue.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(AppRadius.md),
-        border: Border.all(color: AppColors.blue.withValues(alpha: 0.3)),
-      ),
+    return BrandCard(
+      padding: const EdgeInsets.all(AppSpacing.md),
       child: Row(
         children: [
-          IconButton(
-            icon: Icon(
-              _isPlaying ? Icons.pause_circle_filled : Icons.play_circle_fill,
-              size: 40,
-              color: AppColors.blue,
+          GestureDetector(
+            onTap: _playAudio,
+            child: Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.gold500,
+                shape: BoxShape.circle,
+                border: Border.all(color: AppColors.gold700, width: 2),
+                boxShadow: const [
+                  BoxShadow(
+                    color: AppColors.gold700,
+                    offset: Offset(0, 3),
+                    blurRadius: 0,
+                  ),
+                ],
+              ),
+              child: Icon(
+                _isPlaying ? Icons.pause_rounded : Icons.play_arrow_rounded,
+                size: 28,
+                color: AppColors.forest900,
+              ),
             ),
-            onPressed: _playAudio,
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpacing.md),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   widget.title,
-                  style: const TextStyle(
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                  ),
+                  style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 16),
                 ),
+                const SizedBox(height: 2),
                 Text(
-                  widget.audioUrl != null ? 'Tap to listen' : 'Audio unavailable (Linguistic review pending)',
-                  style: const TextStyle(
-                    fontSize: 12,
-                    color: AppColors.textSecondary,
-                  ),
+                  widget.audioUrl != null ? 'Tap play to listen to native speaker' : 'Audio reference pending linguistic review',
+                  style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                 ),
               ],
             ),

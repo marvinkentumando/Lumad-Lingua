@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/constants.dart';
 import '../../widgets/common/app_button.dart';
+import '../../widgets/common/brand_card.dart';
 
 class OnboardingScreen extends StatefulWidget {
   const OnboardingScreen({super.key});
@@ -14,23 +16,43 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  final List<Map<String, String>> _pages = [
+  final List<Map<String, dynamic>> _pages = [
     {
       'title': 'Learn Mansaka Language',
       'description': 'Gamified interactive lessons designed to preserve and celebrate indigenous Mansaka culture.',
       'icon': 'school',
+      'isFlashcard': false,
     },
     {
       'title': 'Practice Pronunciation',
       'description': 'Listen to reference audio and practice speaking with real-time feedback.',
       'icon': 'record_voice_over',
+      'isFlashcard': false,
+    },
+    {
+      'title': 'First Mansaka Word',
+      'description': 'Preview how vocabulary flashcards teach you authentic expressions:',
+      'icon': 'translate',
+      'isFlashcard': true,
+      'mansaka': 'Madyaw na masurom',
+      'pronunciation': 'Mad-yaw na ma-su-rom',
+      'translation': 'Good morning',
     },
     {
       'title': 'Earn Rewards & Streaks',
       'description': 'Track your daily progress, earn XP, unlock achievements, and climb learning levels.',
       'icon': 'emoji_events',
+      'isFlashcard': false,
     },
   ];
+
+  Future<void> _completeOnboarding() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool('has_completed_onboarding', true);
+    if (mounted) {
+      context.go('/home');
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -43,8 +65,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               Align(
                 alignment: Alignment.topRight,
                 child: TextButton(
-                  onPressed: () => context.go('/home'),
-                  child: const Text('Skip', style: TextStyle(color: AppColors.forestGreen)),
+                  onPressed: _completeOnboarding,
+                  child: const Text('Skip', style: TextStyle(color: AppColors.forestGreen, fontWeight: FontWeight.bold)),
                 ),
               ),
               Expanded(
@@ -54,37 +76,71 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   itemCount: _pages.length,
                   itemBuilder: (context, index) {
                     final item = _pages[index];
+                    final isFlashcard = item['isFlashcard'] == true;
+
                     return Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(32),
-                          decoration: const BoxDecoration(
-                            color: AppColors.lightGreenBackground,
-                            shape: BoxShape.circle,
+                        if (!isFlashcard) ...[
+                          Container(
+                            padding: const EdgeInsets.all(32),
+                            decoration: const BoxDecoration(
+                              color: AppColors.lightGreenBackground,
+                              shape: BoxShape.circle,
+                            ),
+                            child: Icon(
+                              _getIcon(item['icon']!),
+                              size: 80,
+                              color: AppColors.forestGreen,
+                            ),
                           ),
-                          child: Icon(
-                            _getIcon(item['icon']!),
-                            size: 80,
-                            color: AppColors.forestGreen,
+                          const SizedBox(height: AppSpacing.xl),
+                        ] else ...[
+                          BrandCard(
+                            backgroundColor: AppColors.gold100,
+                            border: Border.all(color: AppColors.gold500, width: 2),
+                            child: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.center,
+                                  children: [
+                                    const Icon(Icons.volume_up_rounded, color: AppColors.gold800, size: 28),
+                                    const SizedBox(width: 8),
+                                    Text('Mansaka Flashcard', style: AppTypography.labelBold.copyWith(color: AppColors.gold800)),
+                                  ],
+                                ),
+                                const SizedBox(height: AppSpacing.md),
+                                Text(
+                                  item['mansaka']!,
+                                  style: AppTypography.flashcard.copyWith(color: AppColors.forest900, fontSize: 26),
+                                  textAlign: TextAlign.center,
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '[ ${item['pronunciation']} ]',
+                                  style: AppTypography.phoneticGuide.copyWith(color: AppColors.forest700),
+                                ),
+                                const SizedBox(height: AppSpacing.sm),
+                                Text(
+                                  '"${item['translation']}"',
+                                  style: AppTypography.h3.copyWith(color: AppColors.forest800),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.xl),
+                          const SizedBox(height: AppSpacing.lg),
+                        ],
                         Text(
                           item['title']!,
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            fontSize: 24,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkCharcoal,
-                          ),
+                          style: AppTypography.h1.copyWith(color: AppColors.darkCharcoal),
                         ),
                         const SizedBox(height: AppSpacing.md),
                         Text(
                           item['description']!,
                           textAlign: TextAlign.center,
                           style: TextStyle(
-                            fontSize: 15,
+                            fontSize: 16,
                             color: AppColors.darkCharcoal.withValues(alpha: 0.8),
                             height: 1.4,
                           ),
@@ -122,7 +178,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       curve: Curves.easeInOut,
                     );
                   } else {
-                    context.go('/home');
+                    _completeOnboarding();
                   }
                 },
               ),
@@ -141,6 +197,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
         return Icons.record_voice_over;
       case 'emoji_events':
         return Icons.emoji_events;
+      case 'translate':
+        return Icons.translate;
       default:
         return Icons.star;
     }

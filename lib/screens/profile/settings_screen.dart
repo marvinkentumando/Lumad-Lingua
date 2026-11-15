@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/auth_provider.dart';
+import '../../services/notification_service.dart';
 import '../../widgets/common/app_card.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
@@ -14,12 +16,15 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _soundEffects = true;
   bool _hapticFeedback = true;
-  bool _dailyReminder = true;
+  bool _dailyReminder = NotificationService().isDailyReminderEnabled;
 
   @override
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark;
+    final user = ref.watch(authStateProvider).value;
+    final hasCustomThemePass = user?.inventory.contains('custom_theme_pass') ?? false;
+    final isCustomAccentActive = ref.watch(customThemeAccentProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -65,6 +70,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               ],
             ),
           ),
+
+          // Custom Theme Pass Section (Unlocked via Shop)
+          if (hasCustomThemePass) ...[
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Custom Theme Pass (Unlocked)',
+              style: AppTypography.labelBold.copyWith(color: AppColors.gold500, fontSize: 13),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              child: SwitchListTile(
+                title: Text('Royal Crimson & Gold Accent', style: AppTypography.h3.copyWith(color: Colors.white)),
+                subtitle: Text('Apply special seasonal UI palette unlocked via Crystal Shop pass', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                value: isCustomAccentActive,
+                activeThumbColor: AppColors.gold500,
+                onChanged: (val) {
+                  ref.read(customThemeAccentProvider.notifier).setAccent(val);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(val ? 'Royal Crimson & Gold theme accent activated! 🎨' : 'Standard theme restored.')),
+                  );
+                },
+              ),
+            ),
+          ],
+
           const SizedBox(height: AppSpacing.lg),
           Text(
             'Notifications',
@@ -77,7 +107,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
               subtitle: Text('Remind me to maintain my streak at 8:00 PM', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
               value: _dailyReminder,
               activeThumbColor: AppColors.gold500,
-              onChanged: (val) => setState(() => _dailyReminder = val),
+              onChanged: (val) async {
+                setState(() => _dailyReminder = val);
+                await NotificationService().setDailyReminderEnabled(val);
+              },
             ),
           ),
           const SizedBox(height: AppSpacing.lg),
@@ -95,7 +128,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                 ),
                 const Divider(color: AppColors.forest700),
                 ListTile(
-                  title: Text('Preserving Mansaka Language', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  title: Text('Preserving Mansaka Language', style: AppTypography.bodyLarge.copyWith(color: AppColors.gold500, fontWeight: FontWeight.bold)),
                   subtitle: Text('Built for cultural heritage and learning', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                 ),
               ],

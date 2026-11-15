@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/achievement_model.dart';
 import '../../providers/auth_provider.dart';
 import '../../utils/constants.dart';
+import '../common/brand_card.dart';
 
 class AchievementBadgeWidget extends ConsumerWidget {
   final AchievementModel achievement;
@@ -21,28 +22,26 @@ class AchievementBadgeWidget extends ConsumerWidget {
         : (totalXp / achievement.xpRequirement).clamp(0.0, 1.0);
 
     return Opacity(
-      opacity: isUnlocked ? 1.0 : 0.45,
-      child: Container(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        decoration: BoxDecoration(
-          color: isUnlocked ? AppColors.cardColor(context) : AppColors.softGray,
-          borderRadius: BorderRadius.circular(AppRadius.card),
-          border: Border.all(
-            color: isUnlocked ? AppColors.gold500 : AppColors.border,
-            width: 2,
-          ),
+      opacity: isUnlocked ? 1.0 : 0.65,
+      child: BrandCard(
+        backgroundColor: isUnlocked ? AppColors.gold500 : AppColors.forest100,
+        border: Border.all(
+          color: isUnlocked ? AppColors.gold700 : AppColors.creamBorder,
+          width: isUnlocked ? 1.5 : 1.0,
         ),
-        child: Row(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             // Emoji Medallion Container
             Container(
-              width: 64,
-              height: 64,
+              width: 56,
+              height: 56,
               decoration: BoxDecoration(
-                color: isUnlocked ? AppColors.gold500.withValues(alpha: 0.2) : AppColors.lockedGray.withValues(alpha: 0.3),
+                color: isUnlocked ? AppColors.forest900.withValues(alpha: 0.1) : AppColors.forest300.withValues(alpha: 0.3),
                 shape: BoxShape.circle,
                 border: Border.all(
-                  color: isUnlocked ? AppColors.gold500 : AppColors.disabled,
+                  color: isUnlocked ? AppColors.forest900 : AppColors.creamBorder,
                   width: 2,
                 ),
               ),
@@ -51,7 +50,7 @@ class AchievementBadgeWidget extends ConsumerWidget {
                 children: [
                   Text(
                     achievement.resolvedEmoji,
-                    style: const TextStyle(fontSize: 30),
+                    style: const TextStyle(fontSize: 28),
                   ),
                   if (!isUnlocked)
                     Positioned(
@@ -60,84 +59,68 @@ class AchievementBadgeWidget extends ConsumerWidget {
                       child: Container(
                         padding: const EdgeInsets.all(2),
                         decoration: const BoxDecoration(
-                          color: AppColors.creamText,
+                          color: AppColors.forest700,
                           shape: BoxShape.circle,
                         ),
-                        child: const Icon(Icons.lock, color: Colors.white, size: 12),
+                        child: const Icon(Icons.lock, color: Colors.white, size: 10),
                       ),
                     ),
                 ],
               ),
             ),
-            const SizedBox(width: AppSpacing.md),
+            const SizedBox(height: AppSpacing.sm),
+            Text(
+              achievement.title,
+              style: AppTypography.lessonTitle.copyWith(
+                color: isUnlocked ? AppColors.forest900 : AppColors.creamText2,
+                fontSize: 14,
+              ),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+            const SizedBox(height: 2),
             Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Expanded(
-                        child: Text(
-                          achievement.title,
-                          style: TextStyle(
-                            fontSize: 16,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.textColor(context),
-                          ),
-                        ),
-                      ),
-                      if (isUnlocked)
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: AppColors.semanticGreen.withValues(alpha: 0.2),
-                            borderRadius: BorderRadius.circular(AppRadius.chip),
-                          ),
-                          child: const Text(
-                            'Unlocked',
-                            style: TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: AppColors.semanticGreen),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    achievement.description,
-                    style: TextStyle(
-                      fontSize: 12,
-                      color: AppColors.subtitleColor(context),
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  if (!isUnlocked) ...[
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          '$xpNeeded XP needed',
-                          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.gold500),
-                        ),
-                        Text(
-                          '${(progress * 100).toInt()}%',
-                          style: TextStyle(fontSize: 11, color: AppColors.subtitleColor(context)),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    ClipRRect(
-                      borderRadius: BorderRadius.circular(4),
-                      child: LinearProgressIndicator(
-                        value: progress,
-                        backgroundColor: AppColors.progressTrack,
-                        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold500),
-                        minHeight: 6,
-                      ),
-                    ),
-                  ],
-                ],
+              child: Text(
+                achievement.description,
+                style: AppTypography.caption.copyWith(
+                  color: isUnlocked ? AppColors.forest800 : AppColors.creamText2,
+                  fontSize: 11,
+                ),
+                textAlign: TextAlign.center,
+                maxLines: 2,
+                overflow: TextOverflow.ellipsis,
               ),
             ),
+            const SizedBox(height: 6),
+            if (isUnlocked)
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                decoration: BoxDecoration(
+                  color: AppColors.forest900,
+                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                ),
+                child: Text('UNLOCKED', style: AppTypography.labelBold.copyWith(color: AppColors.gold500, fontSize: 9)),
+              )
+            else ...[
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text('$xpNeeded XP needed', style: AppTypography.xpValue.copyWith(fontSize: 10, color: AppColors.gold800)),
+                  Text('${(progress * 100).toInt()}%', style: AppTypography.caption.copyWith(fontSize: 10)),
+                ],
+              ),
+              const SizedBox(height: 4),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: progress,
+                  backgroundColor: AppColors.creamBorder,
+                  valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold500),
+                  minHeight: 6,
+                ),
+              ),
+            ],
           ],
         ),
       ),

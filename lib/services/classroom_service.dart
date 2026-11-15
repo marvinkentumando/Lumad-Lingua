@@ -60,7 +60,9 @@ class ClassroomService {
   /// Stream the classrooms the current learner belongs to (for assignedUnitIds).
   Stream<QuerySnapshot<Map<String, dynamic>>> watchMyClassrooms() {
     final uid = _auth.currentUser?.uid;
-    if (uid == null) return const Stream.empty();
+    if (uid == null) {
+      return _firestore.collection('classrooms').where('studentIds', isEqualTo: 'NONE').snapshots();
+    }
     return _firestore
         .collection('classrooms')
         .where('studentIds', arrayContains: uid)
