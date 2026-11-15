@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../providers/classroom_provider.dart';
+import '../../providers/progress_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
@@ -66,6 +67,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
     final educator = classroomData['educatorEmail'] ?? 'Educator';
     final joinCode = classroomData['joinCode'] ?? 'CODE';
     final studentIds = List<String>.from(classroomData['studentIds'] ?? []);
+    final progressAsync = ref.watch(userProgressProvider);
 
     return Scaffold(
       appBar: AppBar(
@@ -130,6 +132,50 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: AppSpacing.lg),
+
+              // Learning Statistics Section (Lessons Done & Mastery Rate)
+              Text('My Classroom Progress', style: AppTypography.h3),
+              const SizedBox(height: AppSpacing.sm),
+              progressAsync.when(
+                data: (progress) => Row(
+                  children: [
+                    Expanded(
+                      child: AppCard(
+                        child: Column(
+                          children: [
+                            const Icon(Icons.check_circle_outline, color: AppColors.gold500, size: 32),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${progress.totalLessonsCompleted}',
+                              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
+                            ),
+                            Text('Lessons Done', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: AppCard(
+                        child: Column(
+                          children: [
+                            const Icon(Icons.star_outline, color: AppColors.gold500, size: 32),
+                            const SizedBox(height: 8),
+                            Text(
+                              '${(progress.overallMasteryPercentage * 100).toInt()}%',
+                              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
+                            ),
+                            Text('Mastery Rate', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
+                error: (e, _) => Text('Error loading stats: $e', style: const TextStyle(color: AppColors.semanticRed)),
               ),
               const SizedBox(height: AppSpacing.lg),
 

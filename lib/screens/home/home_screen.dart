@@ -26,9 +26,8 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Madyaw na allaw Greeting Banner Card with Clean Forest Gradient & 3D Lip
+                // Madyaw na allaw Greeting Banner Card with Full-Height Uncropped GIF on Right
                 Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
                     gradient: const LinearGradient(
                       colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
@@ -45,47 +44,52 @@ class HomeScreen extends ConsumerWidget {
                       ),
                     ],
                   ),
-                  child: Row(
-                    children: [
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Madyaw na allaw,',
-                              style: AppTypography.bodyLarge.copyWith(color: AppColors.gold400),
-                            ),
-                            const SizedBox(height: 2),
-                            Text(
-                              user?.name ?? 'Lumad Learner',
-                              style: AppTypography.h1ExtraBold.copyWith(color: Colors.white, fontSize: 24),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Level ${user?.level ?? 3} Learner',
-                              style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(width: AppSpacing.sm),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(AppRadius.chip),
-                        child: SizedBox(
-                          width: 64,
-                          height: 64,
-                          child: Image.asset(
-                            'assets/lumad_waves.gif',
-                            fit: BoxFit.cover,
-                            errorBuilder: (context, error, stackTrace) => const Icon(
-                              Icons.waving_hand,
-                              color: AppColors.gold500,
-                              size: 40,
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(AppSpacing.md),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Madyaw na allaw,',
+                                  style: AppTypography.bodyLarge.copyWith(color: AppColors.gold400),
+                                ),
+                                const SizedBox(height: 2),
+                                Text(
+                                  user?.name ?? 'Lumad Learner',
+                                  style: AppTypography.h1ExtraBold.copyWith(color: Colors.white, fontSize: 24),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Level ${user?.level ?? 3} Learner',
+                                  style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                                ),
+                              ],
                             ),
                           ),
                         ),
-                      ),
-                    ],
+                        SizedBox(
+                          width: 140,
+                          height: 130,
+                          child: Image.asset(
+                            'assets/images/lumad_waves.gif',
+                            fit: BoxFit.contain,
+                            alignment: Alignment.centerRight,
+                            errorBuilder: (context, error, stackTrace) => const Center(
+                              child: Icon(
+                                Icons.waving_hand,
+                                color: AppColors.gold500,
+                                size: 56,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: AppSpacing.lg),

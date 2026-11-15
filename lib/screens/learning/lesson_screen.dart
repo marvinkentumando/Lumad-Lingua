@@ -101,7 +101,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
             ],
           ),
           loading: () => const Text('Interactive Lesson'),
-          error: (_, __) => const Text('Interactive Lesson'),
+          error: (err, stack) => const Text('Interactive Lesson'),
         ),
         leading: IconButton(
           icon: const Icon(Icons.close),

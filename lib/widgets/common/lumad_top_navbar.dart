@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import 'lumad_logo_emblem.dart';
 import '../gamification/xp_badge.dart';
 import '../gamification/streak_indicator.dart';
@@ -29,9 +30,11 @@ class LumadTopNavbar extends ConsumerWidget implements PreferredSizeWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
+    final isCustomActive = ref.watch(customThemeAccentProvider);
+    final navbarBg = isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700;
 
     return AppBar(
-      backgroundColor: AppColors.forest700,
+      backgroundColor: navbarBg,
       elevation: 0,
       automaticallyImplyLeading: false,
       titleSpacing: AppSpacing.md,

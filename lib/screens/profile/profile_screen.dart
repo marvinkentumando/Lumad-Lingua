@@ -10,8 +10,6 @@ import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_logo_emblem.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
-import '../../widgets/gamification/xp_badge.dart';
-import '../../widgets/gamification/streak_indicator.dart';
 
 ImageProvider? getAvatarImage(String? url) {
   if (url == null || url.isEmpty) return null;
@@ -115,44 +113,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
-  Future<void> _leaveClassroom(String classId, String className) async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Leave Classroom', style: AppTypography.h3),
-        content: Text('Are you sure you want to leave "$className"? You will be able to join another classroom afterward.', style: AppTypography.body),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.of(context).pop(true),
-            child: const Text('Leave Class', style: TextStyle(color: AppColors.semanticRed, fontWeight: FontWeight.bold)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm == true) {
-      try {
-        final service = ref.read(classroomServiceProvider);
-        await service.leaveClassroom(classId);
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(content: Text('Successfully left the classroom.')),
-          );
-        }
-      } catch (e) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Error leaving classroom: $e')),
-          );
-        }
-      }
-    }
-  }
-
   void _showEditProfileDialog(String currentName) {
     final nameController = TextEditingController(text: currentName);
     showDialog(
@@ -182,57 +142,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               }
               if (context.mounted) Navigator.of(context).pop();
             },
-          ),
-        ],
-      ),
-    );
-  }
-
-  void _showCulturalAffiliationDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Row(
-          children: [
-            const Icon(Icons.eco, color: AppColors.gold500, size: 28),
-            const SizedBox(width: 8),
-            Text('Cultural Affiliation', style: AppTypography.h3),
-          ],
-        ),
-        content: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              'You are registered as a cultural preservation learner within the Mansaka indigenous community ecosystem.',
-              style: AppTypography.body,
-            ),
-            const SizedBox(height: AppSpacing.md),
-            Container(
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: AppColors.gold100,
-                borderRadius: BorderRadius.circular(AppRadius.card),
-                border: Border.all(color: AppColors.gold500),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text('Community: Mansaka Tribe', style: AppTypography.labelBold.copyWith(color: AppColors.forest900)),
-                  const SizedBox(height: 2),
-                  Text('Region: Compostela Valley / Davao de Oro', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
-                  const SizedBox(height: 2),
-                  Text('Status: Active Cultural Heritage Learner', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
-                ],
-              ),
-            ),
-          ],
-        ),
-        actions: [
-          BrandButton(
-            text: 'Close',
-            type: BrandButtonType.primary,
-            onPressed: () => Navigator.of(context).pop(),
           ),
         ],
       ),
@@ -344,7 +253,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     final authState = ref.watch(authStateProvider);
     final user = authState.value;
     final isGuest = user == null;
-    final progressAsync = ref.watch(userProgressProvider);
     final achievementsAsync = ref.watch(achievementsProvider);
     final classroomsAsync = ref.watch(myClassroomsStreamProvider);
     final inventory = user?.inventory ?? [];
@@ -386,7 +294,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: AppSpacing.md),
               ],
 
-              // Flush User Header (Larger Avatar Circle)
+              // Flush User Header (Larger Avatar Circle & Clean Stats Readout)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: Column(
@@ -442,33 +350,54 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       user?.email ?? 'learner@lumadlingua.com',
                       style: AppTypography.mono.copyWith(color: AppColors.creamText2),
                     ),
-                    const SizedBox(height: 6),
-                    GestureDetector(
-                      onTap: _showCulturalAffiliationDialog,
-                      child: Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
-                        child: Text(
-                          'Mansaka Tribe',
-                          style: AppTypography.labelBold.copyWith(
-                            color: AppColors.gold500,
-                            fontSize: 12,
-                            decoration: TextDecoration.underline,
-                          ),
-                        ),
-                      ),
-                    ),
                     const SizedBox(height: AppSpacing.md),
+                    // Statistical Readout Row (Streak & Total XP)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        StreakIndicator(
-                          streakDays: user?.streakDays ?? 3,
+                        GestureDetector(
                           onTap: () => context.push('/streaks-xp'),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.local_fire_department, color: AppColors.terracotta, size: 22),
+                              const SizedBox(width: 4),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${user?.streakDays ?? 3} Days',
+                                    style: AppTypography.mono.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  Text('Streak', style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 10)),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
-                        const SizedBox(width: 12),
+                        Container(
+                          height: 28,
+                          width: 1,
+                          color: AppColors.creamBorder.withValues(alpha: 0.4),
+                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                        ),
                         GestureDetector(
                           onTap: () => context.push('/shop'),
-                          child: XPBadge(xp: user?.totalXp ?? 250),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.bolt, color: AppColors.gold500, size: 22),
+                              const SizedBox(width: 4),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${user?.totalXp ?? 250} XP',
+                                    style: AppTypography.mono.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  Text('Total XP', style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 10)),
+                                ],
+                              ),
+                            ],
+                          ),
                         ),
                       ],
                     ),
@@ -598,30 +527,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                             ],
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: BrandButton(
-                                  text: 'View Class Dashboard',
-                                  type: BrandButtonType.gold,
-                                  onPressed: () {
-                                    context.push('/classroom/dashboard', extra: {
-                                      'classId': doc.id,
-                                      'classroomData': data,
-                                    });
-                                  },
-                                ),
-                              ),
-                              const SizedBox(width: 8),
-                              SizedBox(
-                                width: 90,
-                                child: BrandButton(
-                                  text: 'Leave',
-                                  type: BrandButtonType.danger,
-                                  onPressed: () => _leaveClassroom(doc.id, className),
-                                ),
-                              ),
-                            ],
+                          SizedBox(
+                            width: double.infinity,
+                            child: BrandButton(
+                              text: 'View Class Dashboard',
+                              type: BrandButtonType.gold,
+                              onPressed: () {
+                                context.push('/classroom/dashboard', extra: {
+                                  'classId': doc.id,
+                                  'classroomData': data,
+                                });
+                              },
+                            ),
                           ),
                         ],
                       ),
@@ -659,50 +576,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 },
                 loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
                 error: (e, _) => Text('Error loading classroom: $e', style: const TextStyle(color: AppColors.semanticRed)),
-              ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Statistics Section
-              Text('Learning Statistics', style: AppTypography.h3),
-              const SizedBox(height: AppSpacing.sm),
-              progressAsync.when(
-                data: (progress) => Row(
-                  children: [
-                    Expanded(
-                      child: AppCard(
-                        child: Column(
-                          children: [
-                            const Icon(Icons.check_circle_outline, color: AppColors.gold500, size: 32),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${progress.totalLessonsCompleted}',
-                              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
-                            ),
-                            Text('Lessons Done', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                          ],
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: AppCard(
-                        child: Column(
-                          children: [
-                            const Icon(Icons.star_outline, color: AppColors.gold500, size: 32),
-                            const SizedBox(height: 8),
-                            Text(
-                              '${(progress.overallMasteryPercentage * 100).toInt()}%',
-                              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
-                            ),
-                            Text('Mastery Rate', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                          ],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
-                error: (e, _) => Text('Error loading stats: $e', style: const TextStyle(color: AppColors.semanticRed)),
               ),
               const SizedBox(height: AppSpacing.lg),
 
