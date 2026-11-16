@@ -6,12 +6,14 @@ class ScreenHeader extends StatelessWidget {
   final String title;
   final String? subtitle;
   final Widget? trailing;
+  final bool centerTitle;
 
   const ScreenHeader({
     super.key,
     required this.title,
     this.subtitle,
     this.trailing,
+    this.centerTitle = false,
   });
 
   @override
@@ -38,12 +40,13 @@ class ScreenHeader extends StatelessWidget {
                 ],
                 Expanded(
                   child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
+                    crossAxisAlignment: centerTitle ? CrossAxisAlignment.center : CrossAxisAlignment.start,
                     children: [
                       Text(
                         title,
+                        textAlign: centerTitle ? TextAlign.center : TextAlign.start,
                         style: AppTypography.h1ExtraBold.copyWith(
-                          color: AppColors.textColor(context),
+                          color: AppColors.headerColor(context),
                           fontSize: 28,
                         ),
                       ),
@@ -51,6 +54,7 @@ class ScreenHeader extends StatelessWidget {
                         const SizedBox(height: 2),
                         Text(
                           subtitle!,
+                          textAlign: centerTitle ? TextAlign.center : TextAlign.start,
                           style: AppTypography.bodyLarge.copyWith(
                             color: AppColors.subtitleColor(context),
                           ),

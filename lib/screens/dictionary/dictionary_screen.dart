@@ -42,7 +42,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
             children: [
               const ScreenHeader(
                 title: 'Mansaka Dictionary',
-                subtitle: 'Explore words, pronunciations, and translations',
+                centerTitle: true,
               ),
               const SizedBox(height: AppSpacing.xs),
               TextField(

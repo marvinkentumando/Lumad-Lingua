@@ -9,13 +9,14 @@ final lessonRepositoryProvider = Provider<LessonRepository>((ref) {
   return FirestoreLessonRepository();
 });
 
-final unitsProvider = FutureProvider<List<LearningUnitModel>>((ref) async {
-  final repo = ref.watch(lessonRepositoryProvider);
-  return repo.getUnits();
-});
-
-final unitLessonsProvider = FutureProvider.family<List<LessonModel>, String>((ref, unitId) async {
+final unitsProvider = StreamProvider<List<LearningUnitModel>>((ref) {
   final repo = ref.watch(lessonRepositoryProvider);
   final user = ref.watch(authStateProvider).value;
-  return repo.getLessonsForUnit(unitId, userId: user?.id);
+  return repo.watchUnits(userId: user?.id);
+});
+
+final unitLessonsProvider = StreamProvider.family<List<LessonModel>, String>((ref, unitId) {
+  final repo = ref.watch(lessonRepositoryProvider);
+  final user = ref.watch(authStateProvider).value;
+  return repo.watchLessonsForUnit(unitId, userId: user?.id);
 });

@@ -17,12 +17,20 @@ class LessonProgressBar extends StatelessWidget {
 
     return ClipRRect(
       borderRadius: BorderRadius.circular(8),
-      child: LinearProgressIndicator(
-        value: progress,
-        minHeight: 10,
-        backgroundColor: AppColors.softGray,
-        valueColor: const AlwaysStoppedAnimation<Color>(AppColors.brightGreen),
+      child: TweenAnimationBuilder<double>(
+        tween: Tween<double>(begin: 0.0, end: progress),
+        duration: const Duration(milliseconds: 400),
+        curve: Curves.easeOutCubic,
+        builder: (context, animatedValue, child) {
+          return LinearProgressIndicator(
+            value: animatedValue,
+            minHeight: 10,
+            backgroundColor: AppColors.softGray,
+            valueColor: const AlwaysStoppedAnimation<Color>(AppColors.brightGreen),
+          );
+        },
       ),
     );
   }
 }
+

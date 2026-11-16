@@ -6,7 +6,7 @@ import 'package:just_audio/just_audio.dart';
 import '../../utils/constants.dart';
 import '../../utils/audio_helper.dart';
 import '../../models/lesson_model.dart';
-import '../../data/mock_lessons.dart';
+import '../../services/firestore_service.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/loading_widget.dart';
@@ -45,22 +45,25 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
 
   Future<void> _loadLesson() async {
     try {
-      final found = mockLessons.firstWhere(
-        (l) => l.id == widget.lessonId,
-        orElse: () => LessonModel(
-          id: widget.lessonId,
-          unitId: 'unit_1',
-          title: 'Lesson Overview',
-          description: 'Practice vocabulary and interactive drills.',
-          lessonOrder: 1,
-          flashcards: [],
-        ),
-      );
+      final firestoreService = FirestoreService();
+      final units = await firestoreService.getUnits();
+      LessonModel? found;
+
+      for (final unit in units) {
+        final unitLessons = await firestoreService.getLessonsForUnitInternal(unit.id);
+        try {
+          found = unitLessons.firstWhere((l) => l.id == widget.lessonId);
+          break;
+        } catch (_) {}
+      }
 
       if (mounted) {
         setState(() {
           _lesson = found;
           _isLoading = false;
+          if (found == null) {
+            _error = 'Lesson not found in Firebase.';
+          }
         });
       }
     } catch (e) {

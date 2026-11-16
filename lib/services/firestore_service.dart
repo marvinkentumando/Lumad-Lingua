@@ -6,10 +6,9 @@ import '../models/activity_model.dart';
 import '../models/progress_model.dart';
 import '../models/achievement_model.dart';
 import '../models/vocabulary_model.dart';
-import '../data/mock_lessons.dart';
 import '../data/mock_vocabulary.dart';
 import '../data/mock_achievements.dart';
-import '../data/mock_progress.dart';
+import '../utils/level_helper.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore;
@@ -54,43 +53,43 @@ class FirestoreService {
     }
   }
 
-  // --- Units & Lessons ---
-  Future<List<LearningUnitModel>> getUnits() async {
+  // --- Units & Lessons (Directly from Firebase) ---
+  Future<List<LearningUnitModel>> getUnits({String? userId}) async {
     try {
-      final snapshot = await _unitsCol.orderBy('unitNumber').get();
-      if (snapshot.docs.isEmpty) {
-        await seedCurriculumIfEmpty();
-        final reFetch = await _unitsCol.orderBy('unitNumber').get();
-        return reFetch.docs.map((d) => LearningUnitModel.fromJson(d.data())).toList();
+      final snapshot = await _unitsCol.get();
+      var units = snapshot.docs.map((d) => LearningUnitModel.fromJson(d.data(), documentId: d.id)).toList();
+      units.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+
+      if (userId == null || userId.isEmpty) return units;
+
+      List<LearningUnitModel> evaluated = [];
+      for (int i = 0; i < units.length; i++) {
+        final unit = units[i];
+        bool unlocked = unit.unitNumber == 1;
+        if (!unlocked && i > 0) {
+          final prevUnit = units[i - 1];
+          final prevLessons = await getLessonsForUnitInternal(prevUnit.id, userId: userId);
+          unlocked = prevLessons.isNotEmpty && prevLessons.every((l) => l.status == LessonStatus.completed);
+        }
+        evaluated.add(unit.copyWith(isUnlocked: unlocked));
       }
-      return snapshot.docs.map((d) => LearningUnitModel.fromJson(d.data())).toList();
+      return evaluated;
     } catch (e) {
-      return mockUnits;
+      return [];
     }
   }
 
-  Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId}) async {
+  Future<List<LessonModel>> getLessonsForUnitInternal(String unitId, {String? userId}) async {
     try {
       final altUnitId = unitId.contains('_') && !unitId.contains('_0')
           ? unitId.replaceFirst('unit_', 'unit_0')
           : (unitId.contains('_0') ? unitId.replaceFirst('unit_0', 'unit_') : unitId);
 
-      var snapshot = await _lessonsCol
-          .where('unitId', isEqualTo: unitId)
-          .get();
-
-      if (snapshot.docs.isEmpty) {
-        snapshot = await _lessonsCol
-            .where('unitId', isEqualTo: altUnitId)
-            .get();
-      }
-
-      List<LessonModel> baseLessons = [];
-      if (snapshot.docs.isEmpty) {
-        baseLessons = mockLessons.where((l) => l.unitId == unitId || l.unitId == altUnitId).toList();
-      } else {
-        baseLessons = snapshot.docs.map((d) => LessonModel.fromJson(d.data())).toList();
-      }
+      final snapshot = await _lessonsCol.get();
+      List<LessonModel> baseLessons = snapshot.docs
+          .map((d) => LessonModel.fromJson(d.data(), documentId: d.id))
+          .where((l) => l.unitId == unitId || l.unitId == altUnitId || l.unitId == unitId.replaceAll('unit_', 'unit_0'))
+          .toList();
 
       // Sort by lessonOrder
       baseLessons.sort((a, b) => a.lessonOrder.compareTo(b.lessonOrder));
@@ -107,6 +106,7 @@ class FirestoreService {
       final currentLessonId = userModel?.currentLessonId;
 
       return baseLessons.map((lesson) {
+        final lessonIndex = baseLessons.indexOf(lesson);
         if (completedIds.contains(lesson.id)) {
           return lesson.copyWith(
             status: LessonStatus.completed,
@@ -114,15 +114,32 @@ class FirestoreService {
           );
         } else if (lesson.id == currentLessonId) {
           return lesson.copyWith(status: LessonStatus.inProgress);
-        } else if (lesson.lessonOrder == 1 || completedIds.isNotEmpty) {
+        } else if (lessonIndex == 0) {
           return lesson.copyWith(status: LessonStatus.available);
         } else {
-          return lesson.copyWith(status: LessonStatus.locked);
+          final prevLesson = baseLessons[lessonIndex - 1];
+          if (completedIds.contains(prevLesson.id)) {
+            return lesson.copyWith(status: LessonStatus.available);
+          } else {
+            return lesson.copyWith(status: LessonStatus.locked);
+          }
         }
       }).toList();
     } catch (e) {
-      return mockLessons.where((l) => l.unitId == unitId).toList();
+      return [];
     }
+  }
+
+  Future<List<LessonModel>> getLessonsForUnit(String unitId, {String? userId}) async {
+    if (userId != null && userId.isNotEmpty) {
+      final units = await getUnits(userId: userId);
+      final unit = units.firstWhere((u) => u.id == unitId || u.unitNumber.toString() == unitId.replaceAll('unit_', ''), orElse: () => units.first);
+      if (!unit.isUnlocked) {
+        final base = await getLessonsForUnitInternal(unitId, userId: userId);
+        return base.map((l) => l.copyWith(status: LessonStatus.locked)).toList();
+      }
+    }
+    return await getLessonsForUnitInternal(unitId, userId: userId);
   }
 
   Future<List<ActivityModel>> getActivitiesForLesson(String lessonId) async {
@@ -130,12 +147,50 @@ class FirestoreService {
       final snapshot = await _activitiesCol
           .where('lessonId', isEqualTo: lessonId)
           .get();
-      if (snapshot.docs.isEmpty) {
-        return mockLesson1Activities;
-      }
-      return snapshot.docs.map((d) => ActivityModel.fromJson(d.data())).toList();
+      return snapshot.docs.map((d) => ActivityModel.fromJson(d.data(), documentId: d.id)).toList();
     } catch (e) {
-      return mockLesson1Activities;
+      return [];
+    }
+  }
+
+  // --- Real-Time Streams for Units, Lessons, and Activities (.snapshots()) ---
+  Stream<List<LearningUnitModel>> watchUnits({String? userId}) async* {
+    yield* _unitsCol.snapshots().asyncMap((snapshot) async {
+      var units = snapshot.docs.map((d) => LearningUnitModel.fromJson(d.data(), documentId: d.id)).toList();
+      units.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
+
+      if (userId == null || userId.isEmpty) {
+        return units;
+      }
+
+      List<LearningUnitModel> evaluated = [];
+      for (int i = 0; i < units.length; i++) {
+        final unit = units[i];
+        bool unlocked = unit.unitNumber == 1;
+        if (!unlocked && i > 0) {
+          final prevUnit = units[i - 1];
+          final prevLessons = await getLessonsForUnitInternal(prevUnit.id, userId: userId);
+          unlocked = prevLessons.isNotEmpty && prevLessons.every((l) => l.status == LessonStatus.completed);
+        }
+        evaluated.add(unit.copyWith(isUnlocked: unlocked));
+      }
+      return evaluated;
+    });
+  }
+
+  Stream<List<LessonModel>> watchLessonsForUnit(String unitId, {String? userId}) async* {
+    yield* _lessonsCol.snapshots().asyncMap((snapshot) async {
+      return await getLessonsForUnit(unitId, userId: userId);
+    });
+  }
+
+  Stream<List<ActivityModel>> watchActivitiesForLesson(String lessonId) {
+    try {
+      return _activitiesCol.where('lessonId', isEqualTo: lessonId).snapshots().map((snapshot) {
+        return snapshot.docs.map((d) => ActivityModel.fromJson(d.data(), documentId: d.id)).toList();
+      });
+    } catch (_) {
+      return Stream.value([]);
     }
   }
 
@@ -165,7 +220,19 @@ class FirestoreService {
         overallMasteryPercentage: overallMastery.toDouble(),
       );
 
-      await saveUserProgress(updatedProgress);
+      await _progressCol.doc(userId).set(updatedProgress.toJson(), SetOptions(merge: true));
+
+      // Also check achievements & update user total XP
+      final user = await getUser(userId);
+      if (user != null) {
+        final totalXp = user.totalXp + 30; // standard lesson XP reward
+        final newLevel = LevelHelper.calculateLevel(totalXp);
+        final updatedUser = user.copyWith(
+          totalXp: totalXp,
+          level: newLevel,
+        );
+        await saveUser(updatedUser);
+      }
     } catch (e) {
       // Ignore offline errors
     }
@@ -175,129 +242,89 @@ class FirestoreService {
   Future<UserProgressModel?> getUserProgress(String userId) async {
     try {
       final doc = await _progressCol.doc(userId).get();
-      if (!doc.exists || doc.data() == null) return mockUserProgress.copyWith(userId: userId);
-      final data = doc.data()!;
-      data['userId'] = userId;
-      return UserProgressModel.fromJson(data);
+      if (!doc.exists || doc.data() == null) return null;
+      return UserProgressModel.fromJson(doc.data()!);
     } catch (e) {
-      return mockUserProgress.copyWith(userId: userId);
+      return null;
     }
   }
 
-  Future<void> saveUserProgress(UserProgressModel progress) async {
+  Stream<UserProgressModel?> watchUserProgress(String userId) {
     try {
-      await _progressCol.doc(progress.userId).set(progress.toJson(), SetOptions(merge: true));
-    } catch (e) {
-      // Ignore offline errors
+      return _progressCol.doc(userId).snapshots().map((doc) {
+        if (!doc.exists || doc.data() == null) return null;
+        return UserProgressModel.fromJson(doc.data()!);
+      });
+    } catch (_) {
+      return Stream.value(null);
     }
   }
 
   // --- Achievements ---
-  Future<List<AchievementModel>> getAchievements(String userId) async {
+  Future<List<AchievementModel>> getAchievements([String? userId]) async {
     try {
       final snapshot = await _achievementsCol.get();
-
-      List<AchievementModel> baseAchievements = [];
-      if (snapshot.docs.length < mockAchievementsList.length) {
-        baseAchievements = mockAchievementsList;
-        for (final ach in mockAchievementsList) {
-          try {
-            await _achievementsCol.doc(ach.id).set(ach.toJson(), SetOptions(merge: true));
-          } catch (_) {}
-        }
-      } else {
-        baseAchievements = snapshot.docs.map((d) => AchievementModel.fromJson(d.data())).toList();
+      if (snapshot.docs.isEmpty) {
+        return mockAchievementsList;
       }
-
-      // Compute local unlocked and progressRatio without overwriting global docs
-      return baseAchievements.map((ach) {
-        return ach;
-      }).toList();
+      return snapshot.docs.map((d) => AchievementModel.fromJson(d.data())).toList();
     } catch (e) {
       return mockAchievementsList;
     }
   }
 
-  // --- Vocabulary / Dictionary ---
+  Stream<List<AchievementModel>> watchAchievements() {
+    try {
+      return _achievementsCol.snapshots().map((snapshot) {
+        if (snapshot.docs.isEmpty) {
+          return mockAchievementsList;
+        }
+        return snapshot.docs.map((d) => AchievementModel.fromJson(d.data())).toList();
+      });
+    } catch (_) {
+      return Stream.value(mockAchievementsList);
+    }
+  }
+
+  // --- Vocabulary ---
+  Future<List<VocabularyModel>> getVocabulary() async {
+    try {
+      final snapshot = await _vocabularyCol.get();
+      return snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
+    } catch (e) {
+      return mockVocabularyList;
+    }
+  }
+
   Future<List<VocabularyModel>> searchVocabulary(String query) async {
     try {
       final snapshot = await _vocabularyCol.get();
-      if (snapshot.docs.isEmpty) {
-        await seedVocabularyIfEmpty();
-        final q = query.trim().toLowerCase();
-        if (q.isEmpty) return mockVocabularyList;
-        return mockVocabularyList
-            .where((w) =>
-                w.headword.toLowerCase().contains(q) ||
-                w.translation.toLowerCase().contains(q) ||
-                w.category.toLowerCase().contains(q))
-            .toList();
-      }
-      final docs = snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
-      final q = query.trim().toLowerCase();
-      if (q.isEmpty) return docs;
-      return docs
-          .where((w) =>
-              w.headword.toLowerCase().contains(q) ||
-              w.translation.toLowerCase().contains(q) ||
-              w.category.toLowerCase().contains(q))
-          .toList();
+      var list = snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
+      if (query.isEmpty) return list;
+      final q = query.toLowerCase();
+      return list.where((w) => w.headword.toLowerCase().contains(q) || w.translation.toLowerCase().contains(q)).toList();
     } catch (e) {
-      final q = query.trim().toLowerCase();
-      if (q.isEmpty) return mockVocabularyList;
-      return mockVocabularyList
-          .where((w) =>
-              w.headword.toLowerCase().contains(q) ||
-              w.translation.toLowerCase().contains(q) ||
-              w.category.toLowerCase().contains(q))
-          .toList();
+      return mockVocabularyList.where((w) => w.headword.toLowerCase().contains(query.toLowerCase()) || w.translation.toLowerCase().contains(query.toLowerCase())).toList();
+    }
+  }
+
+  Stream<List<VocabularyModel>> watchLessonsVocabulary() {
+    try {
+      return _vocabularyCol.snapshots().map((snapshot) {
+        return snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
+      });
+    } catch (_) {
+      return Stream.value(mockVocabularyList);
     }
   }
 
   Future<VocabularyModel?> getWordById(String id) async {
     try {
       final doc = await _vocabularyCol.doc(id).get();
-      if (doc.exists && doc.data() != null) {
-        return VocabularyModel.fromJson(doc.data()!);
-      }
-    } catch (_) {}
-    try {
-      return mockVocabularyList.firstWhere((w) => w.id == id);
-    } catch (_) {
+      if (!doc.exists || doc.data() == null) return null;
+      return VocabularyModel.fromJson(doc.data()!);
+    } catch (e) {
       return null;
     }
-  }
-
-  // --- Database Seeding ---
-  Future<void> seedCurriculumIfEmpty() async {
-    try {
-      final unitsCheck = await _unitsCol.limit(1).get();
-      if (unitsCheck.docs.isEmpty) {
-        final batch = _firestore.batch();
-        for (final unit in mockUnits) {
-          batch.set(_unitsCol.doc(unit.id), unit.toJson());
-        }
-        for (final lesson in mockLessons) {
-          batch.set(_lessonsCol.doc(lesson.id), lesson.toJson());
-        }
-        for (final activity in mockLesson1Activities) {
-          batch.set(_activitiesCol.doc(activity.id), activity.toJson());
-        }
-        await batch.commit();
-      }
-    } catch (_) {}
-  }
-
-  Future<void> seedVocabularyIfEmpty() async {
-    try {
-      final vocabCheck = await _vocabularyCol.limit(1).get();
-      if (vocabCheck.docs.isEmpty) {
-        final batch = _firestore.batch();
-        for (final word in mockVocabularyList) {
-          batch.set(_vocabularyCol.doc(word.id), word.toJson());
-        }
-        await batch.commit();
-      }
-    } catch (_) {}
   }
 }

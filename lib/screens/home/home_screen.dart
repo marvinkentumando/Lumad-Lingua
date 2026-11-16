@@ -10,6 +10,8 @@ import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/lumad_background.dart';
 import '../../widgets/gamification/daily_quests_widget.dart';
 import '../../widgets/dictionary/word_of_the_day_card.dart';
+import '../../providers/lesson_provider.dart';
+import '../../models/lesson_model.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -46,28 +48,53 @@ class HomeScreen extends ConsumerWidget {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Madyaw na allaw Greeting Banner Card with Dynamic Theme Accent Support
-                Container(
-                  decoration: BoxDecoration(
-                    gradient: cardGradient,
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: cardBorder,
-                    boxShadow: [cardShadow],
-                  ),
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    child: Row(
-                      children: [
-                        Expanded(
-                          child: Padding(
-                            padding: const EdgeInsets.all(AppSpacing.md),
+                SizedBox(
+                  width: double.infinity,
+                  height: 165,
+                  child: Container(
+                    decoration: BoxDecoration(
+                      gradient: cardGradient,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: cardBorder,
+                      boxShadow: [cardShadow],
+                    ),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      child: Stack(
+                        children: [
+                          Positioned(
+                            right: 18,
+                            bottom: 0,
+                            top: 0,
+                            child: SizedBox(
+                              width: 170,
+                              child: Image.asset(
+                                'assets/images/lumad_waves.gif',
+                                fit: BoxFit.contain,
+                                alignment: Alignment.centerRight,
+                                errorBuilder: (context, error, stackTrace) => const Center(
+                                  child: Icon(
+                                    Icons.waving_hand,
+                                    color: AppColors.gold500,
+                                    size: 64,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(AppSpacing.md, AppSpacing.md, 145, AppSpacing.md),
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
                                   'Madyaw na allaw,',
                                   style: AppTypography.bodyLarge.copyWith(color: AppColors.gold400),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.visible,
                                 ),
-                                const SizedBox(height: 2),
+                                const SizedBox(height: 4),
                                 Text(
                                   user?.name ?? 'Lumad Learner',
                                   style: AppTypography.h1ExtraBold.copyWith(color: Colors.white, fontSize: 24),
@@ -80,24 +107,8 @@ class HomeScreen extends ConsumerWidget {
                               ],
                             ),
                           ),
-                        ),
-                        SizedBox(
-                          width: 140,
-                          height: 130,
-                          child: Image.asset(
-                            'assets/images/lumad_waves.gif',
-                            fit: BoxFit.contain,
-                            alignment: Alignment.centerRight,
-                            errorBuilder: (context, error, stackTrace) => const Center(
-                              child: Icon(
-                                Icons.waving_hand,
-                                color: AppColors.gold500,
-                                size: 56,
-                              ),
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -110,90 +121,11 @@ class HomeScreen extends ConsumerWidget {
                 // Enhanced Continue Learning Section Card with Dynamic Theme Accent Support
                 Text('Continue Learning', style: AppTypography.h3),
                 const SizedBox(height: AppSpacing.sm),
-                Container(
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    gradient: cardGradient,
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: cardBorder,
-                    boxShadow: [cardShadow],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text(
-                            'UNIT 1: MANSAKA FUNDAMENTALS',
-                            style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 11),
-                          ),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: AppColors.gold500,
-                              borderRadius: BorderRadius.circular(AppRadius.chip),
-                            ),
-                            child: Text(
-                              'Lesson 2 of 3',
-                              style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.xs),
-                      Text(
-                        'Lesson 2: Basic Expressions',
-                        style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 20),
-                      ),
-                      const SizedBox(height: 4),
-                      Text(
-                        'Express gratitude, courtesy, and daily phrases.',
-                        style: AppTypography.body.copyWith(color: AppColors.creamBorder),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      // Metadata Row (Time & Vocabulary count)
-                      Row(
-                        children: [
-                          const Icon(Icons.timer_outlined, size: 16, color: AppColors.gold400),
-                          const SizedBox(width: 4),
-                          Text('~3 mins', style: AppTypography.caption.copyWith(color: AppColors.gold300)),
-                          const SizedBox(width: 16),
-                          const Icon(Icons.style_outlined, size: 16, color: AppColors.gold400),
-                          const SizedBox(width: 4),
-                          Text('4 Key Words', style: AppTypography.caption.copyWith(color: AppColors.gold300)),
-                        ],
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      // Progress Bar (66%)
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Unit Progress', style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 10)),
-                          Text('66% Complete', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 10)),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: 0.66,
-                          backgroundColor: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
-                          color: AppColors.gold500,
-                          minHeight: 6,
-                        ),
-                      ),
-                      const SizedBox(height: AppSpacing.md),
-                      BrandButton(
-                        text: 'Continue Lesson',
-                        icon: Icons.play_arrow_rounded,
-                        type: BrandButtonType.gold,
-                        onPressed: () {
-                          context.push('/lesson/lesson_1_2');
-                        },
-                      ),
-                    ],
-                  ),
+                _ContinueLearningCard(
+                  cardGradient: cardGradient,
+                  cardBorder: cardBorder,
+                  cardShadow: cardShadow,
+                  isCustomActive: isCustomActive,
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
@@ -307,6 +239,130 @@ class HomeScreen extends ConsumerWidget {
           ),
         ),
       ),
+    );
+  }
+}
+
+class _ContinueLearningCard extends ConsumerWidget {
+  final Gradient cardGradient;
+  final Border cardBorder;
+  final BoxShadow cardShadow;
+  final bool isCustomActive;
+
+  const _ContinueLearningCard({
+    required this.cardGradient,
+    required this.cardBorder,
+    required this.cardShadow,
+    required this.isCustomActive,
+  });
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final unitsAsync = ref.watch(unitsProvider);
+
+    return unitsAsync.when(
+      data: (units) {
+        if (units.isEmpty) {
+          return const SizedBox.shrink();
+        }
+        final activeUnit = units.first;
+        final lessonsAsync = ref.watch(unitLessonsProvider(activeUnit.id));
+
+        return lessonsAsync.when(
+          data: (lessons) {
+            if (lessons.isEmpty) {
+              return const SizedBox.shrink();
+            }
+            final activeLesson = lessons.firstWhere(
+              (l) => l.status == LessonStatus.inProgress || l.status == LessonStatus.available,
+              orElse: () => lessons.first,
+            );
+            final completedCount = lessons.where((l) => l.status == LessonStatus.completed).length;
+            final progressRatio = lessons.isNotEmpty ? completedCount / lessons.length : 0.0;
+
+            return Container(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              decoration: BoxDecoration(
+                gradient: cardGradient,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: cardBorder,
+                boxShadow: [cardShadow],
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Expanded(
+                        child: Text(
+                          activeUnit.title.toUpperCase(),
+                          style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 11),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: AppColors.gold500,
+                          borderRadius: BorderRadius.circular(AppRadius.chip),
+                        ),
+                        child: Text(
+                          'Lesson ${activeLesson.lessonOrder} of ${lessons.length}',
+                          style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: AppSpacing.sm),
+                  Text(
+                    activeLesson.title,
+                    style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 20),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: progressRatio,
+                      backgroundColor: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
+                      color: AppColors.gold500,
+                      minHeight: 6,
+                    ),
+                  ),
+                  const SizedBox(height: AppSpacing.md),
+                  BrandButton(
+                    text: 'Continue Lesson',
+                    icon: Icons.play_arrow_rounded,
+                    type: BrandButtonType.gold,
+                    onPressed: () {
+                      context.push('/lesson/${activeLesson.id}');
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
+          loading: () => Container(
+            height: 140,
+            decoration: BoxDecoration(
+              gradient: cardGradient,
+              borderRadius: BorderRadius.circular(AppRadius.card),
+            ),
+            child: const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
+          ),
+          error: (err, stack) => const SizedBox.shrink(),
+        );
+      },
+      loading: () => Container(
+        height: 140,
+        decoration: BoxDecoration(
+          gradient: cardGradient,
+          borderRadius: BorderRadius.circular(AppRadius.card),
+        ),
+        child: const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
+      ),
+      error: (err, stack) => const SizedBox.shrink(),
     );
   }
 }

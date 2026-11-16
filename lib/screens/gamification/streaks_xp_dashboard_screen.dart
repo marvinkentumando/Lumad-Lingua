@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
+import '../../utils/level_helper.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_button.dart';
@@ -15,9 +16,9 @@ class StreaksXpDashboardScreen extends ConsumerWidget {
     final authState = ref.watch(authStateProvider);
     final user = authState.value;
 
-    final streak = user?.streakDays ?? 3;
-    final xp = user?.totalXp ?? 250;
-    final crystals = user?.crystals ?? 150;
+    final streak = user?.streakDays ?? 0;
+    final xp = user?.totalXp ?? 0;
+    final crystals = user?.crystals ?? 0;
 
     // Progressive level calculation using LevelHelper
     final levelProgress = LevelHelper.getLevelProgress(xp);

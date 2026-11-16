@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../utils/constants.dart';
-import '../../providers/auth_provider.dart';
+import '../../utils/level_helper.dart';
 import '../common/brand_card.dart';
 import 'xp_badge.dart';
 

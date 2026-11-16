@@ -27,17 +27,33 @@ class LearningPathScreen extends ConsumerWidget {
       appBar: const LumadTopNavbar(),
       body: LumadBackground(
         child: unitsAsync.when(
-          data: (units) => ListView(
-            padding: const EdgeInsets.all(AppSpacing.md),
-            children: [
-              const ScreenHeader(
-                title: 'Learn Mansaka',
-                subtitle: 'Master indigenous vocabulary along the winding path',
-              ),
-              const SizedBox(height: AppSpacing.md),
-              ...units.map((unit) => _UnitPathSection(unit: unit)),
-            ],
-          ),
+          data: (units) => units.isEmpty
+              ? Center(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpacing.lg),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.school_outlined, size: 64, color: AppColors.gold500),
+                        const SizedBox(height: AppSpacing.md),
+                        Text('No units available', style: AppTypography.h3.copyWith(color: AppColors.textColor(context))),
+                        const SizedBox(height: 4),
+                        Text('Curriculum units will appear here once added in Firebase.', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)), textAlign: TextAlign.center),
+                      ],
+                    ),
+                  ),
+                )
+              : ListView(
+                  padding: const EdgeInsets.all(AppSpacing.md),
+                  children: [
+                    const ScreenHeader(
+                      title: 'Learn Mansaka',
+                      centerTitle: true,
+                    ),
+                    const SizedBox(height: AppSpacing.md),
+                    ...units.map((unit) => _UnitPathSection(unit: unit)),
+                  ],
+                ),
           loading: () => const LoadingWidget(message: 'Loading learning path...'),
           error: (err, stack) => AppErrorWidget(
             message: 'Failed to load curriculum: $err',
@@ -49,12 +65,26 @@ class LearningPathScreen extends ConsumerWidget {
   }
 }
 
-class _UnitPathSection extends ConsumerWidget {
+class _UnitPathSection extends ConsumerStatefulWidget {
   final LearningUnitModel unit;
 
   const _UnitPathSection({required this.unit});
 
-  void _showUnitRewardDialog(BuildContext context, WidgetRef ref) {
+  @override
+  ConsumerState<_UnitPathSection> createState() => _UnitPathSectionState();
+}
+
+class _UnitPathSectionState extends ConsumerState<_UnitPathSection> {
+  late bool _isExpanded;
+
+  @override
+  void initState() {
+    super.initState();
+    _isExpanded = widget.unit.unitNumber == 1;
+  }
+
+  void _showUnitRewardDialog(BuildContext context, WidgetRef ref, List<LessonModel> lessons) {
+    final allCompleted = lessons.isNotEmpty && lessons.every((l) => l.status == LessonStatus.completed);
     HapticFeedback.heavyImpact();
     showDialog(
       context: context,
@@ -63,7 +93,7 @@ class _UnitPathSection extends ConsumerWidget {
           children: [
             const Icon(Icons.auto_awesome, color: AppColors.gold500, size: 28),
             const SizedBox(width: 8),
-            Text('Unit ${unit.unitNumber} Reward Chest', style: AppTypography.h3),
+            Text('Unit ${widget.unit.unitNumber} Reward Chest', style: AppTypography.h3),
           ],
         ),
         content: Column(
@@ -71,9 +101,9 @@ class _UnitPathSection extends ConsumerWidget {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              unit.isUnlocked
-                  ? 'Complete all lessons in "${unit.title}" to unlock the Ancestral Treasure Chest containing +100 Bonus XP and +50 Crystals!'
-                  : 'Unlock this unit to earn ancestral rewards!',
+              allCompleted
+                  ? 'Congratulations! You have completed all lessons in "${widget.unit.title}". Claim your Ancestral Treasure Chest containing +100 Bonus XP and +50 Crystals!'
+                  : 'Complete all lessons in "${widget.unit.title}" to unlock and claim the Ancestral Treasure Chest!',
               style: AppTypography.body,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -108,15 +138,19 @@ class _UnitPathSection extends ConsumerWidget {
         ),
         actions: [
           BrandButton(
-            text: unit.isUnlocked ? 'Claim Reward' : 'Got It',
-            type: unit.isUnlocked ? BrandButtonType.gold : BrandButtonType.primary,
+            text: allCompleted ? 'Claim Reward' : 'Complete All Lessons First',
+            type: allCompleted ? BrandButtonType.gold : BrandButtonType.primary,
             onPressed: () {
-              if (unit.isUnlocked) {
+              if (allCompleted) {
                 final user = ref.read(authStateProvider).value;
                 if (user != null) {
                   final notifier = ref.read(authStateProvider.notifier);
                   notifier.addXp(100);
                   notifier.updateCrystals(user.crystals + 50);
+
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Claimed Unit Reward Chest! +100 XP & +50 Crystals 🎉')),
+                  );
                 }
               }
               Navigator.of(dialogContext).pop();
@@ -128,8 +162,8 @@ class _UnitPathSection extends ConsumerWidget {
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
-    final lessonsAsync = ref.watch(unitLessonsProvider(unit.id));
+  Widget build(BuildContext context) {
+    final lessonsAsync = ref.watch(unitLessonsProvider(widget.unit.id));
     final isCustomActive = ref.watch(customThemeAccentProvider);
 
     return Column(
@@ -139,156 +173,176 @@ class _UnitPathSection extends ConsumerWidget {
           data: (lessons) {
             final completedCount = lessons.where((l) => l.status == LessonStatus.completed).length;
             final progressRatio = lessons.isNotEmpty ? (completedCount / lessons.length) : 0.0;
+            final allCompleted = lessons.isNotEmpty && lessons.every((l) => l.status == LessonStatus.completed);
 
             return Column(
               children: [
-                // Unit Checkpoint Banner with Dynamic Theme Accent Support
-                Container(
-                  margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
-                  padding: const EdgeInsets.all(AppSpacing.md),
-                  decoration: BoxDecoration(
-                    gradient: LinearGradient(
-                      colors: isCustomActive
-                          ? [const Color(0xFF7A1429), const Color(0xFFA91D3A), const Color(0xFF380912)]
-                          : [const Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
-                    borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(
-                      color: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
-                      width: 1.0,
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: isCustomActive ? const Color(0xFF1E0308) : const Color(0xFF0A140B),
-                        offset: const Offset(0, 5),
-                        blurRadius: 0,
+                // Unit Checkpoint Banner with Dynamic Theme Accent Support & Expand/Collapse Toggle
+                GestureDetector(
+                  onTap: () {
+                    HapticFeedback.selectionClick();
+                    setState(() => _isExpanded = !_isExpanded);
+                  },
+                  child: Container(
+                    margin: const EdgeInsets.symmetric(vertical: AppSpacing.xs),
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        colors: isCustomActive
+                            ? [const Color(0xFF7A1429), const Color(0xFFA91D3A), const Color(0xFF380912)]
+                            : [const Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
                       ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        unit.title.toUpperCase(),
-                        style: AppTypography.h2ExtraBold.copyWith(color: AppColors.gold400, fontSize: 19, fontWeight: FontWeight.w700),
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: Border.all(
+                        color: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
+                        width: 1.0,
                       ),
-                      const SizedBox(height: 4),
-                      Text(
-                        unit.description,
-                        style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder, fontSize: 14),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      const SizedBox(height: 12),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Text('Unit Mastery', style: AppTypography.labelBold.copyWith(color: AppColors.creamBorder, fontSize: 12)),
-                          Text('$completedCount / ${lessons.length} Completed', style: AppTypography.mono.copyWith(color: AppColors.gold400, fontSize: 12)),
-                        ],
-                      ),
-                      const SizedBox(height: 6),
-                      ClipRRect(
-                        borderRadius: BorderRadius.circular(4),
-                        child: LinearProgressIndicator(
-                          value: progressRatio,
-                          backgroundColor: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
-                          color: AppColors.gold500,
-                          minHeight: 8,
+                      boxShadow: [
+                        BoxShadow(
+                          color: isCustomActive ? const Color(0xFF1E0308) : const Color(0xFF0A140B),
+                          offset: const Offset(0, 5),
+                          blurRadius: 0,
                         ),
-                      ),
-                    ],
-                  ),
-                ),
-
-                // Winding Serpentine Path of Lessons
-                if (lessons.isEmpty)
-                  Padding(
-                    padding: const EdgeInsets.all(8.0),
-                    child: Text('No lessons in this unit yet.', style: AppTypography.body),
-                  )
-                else
-                  Padding(
-                    padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      ],
+                    ),
                     child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        ...List.generate(lessons.length, (index) {
-                          final lesson = lessons[index];
-                          // Centered serpentine offset pattern: [0.0, -40.0, 40.0, 0.0, -40.0, 40.0]
-                          final offsets = [0.0, -40.0, 40.0, 0.0, -40.0, 40.0];
-                          final horizontalOffset = offsets[index % offsets.length];
-
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
-                            child: Transform.translate(
-                              offset: Offset(horizontalOffset, 0),
-                              child: _LessonNode(
-                                lesson: lesson,
-                                index: index + 1,
-                                isCustomActive: isCustomActive,
-                                onTap: unit.isUnlocked && lesson.status != LessonStatus.locked
-                                    ? () {
-                                        HapticFeedback.mediumImpact();
-                                        context.push('/lesson/${lesson.id}');
-                                      }
-                                    : null,
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                widget.unit.title.toUpperCase(),
+                                style: AppTypography.h2ExtraBold.copyWith(color: AppColors.gold400, fontSize: 19, fontWeight: FontWeight.w700),
                               ),
                             ),
-                          );
-                        }),
-                        const SizedBox(height: AppSpacing.md),
-
-                        // Unit Reward Chest Node at the end of lessons
-                        Transform.translate(
-                          offset: const Offset(0, 0),
-                          child: Column(
-                            children: [
-                              GestureDetector(
-                                onTap: () => _showUnitRewardDialog(context, ref),
-                                child: Container(
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: unit.isUnlocked ? AppColors.gold500 : AppColors.creamBorder,
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: unit.isUnlocked ? AppColors.gold700 : AppColors.creamShadow,
-                                      width: 3.5,
-                                    ),
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: unit.isUnlocked ? AppColors.gold700 : AppColors.creamShadow,
-                                        offset: const Offset(0, 4),
-                                        blurRadius: 0,
-                                      ),
-                                    ],
-                                  ),
-                                  child: Icon(
-                                    Icons.card_giftcard,
-                                    color: unit.isUnlocked ? AppColors.forest900 : AppColors.creamText3,
-                                    size: 32,
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(height: 4),
-                              Text(
-                                'Unit ${unit.unitNumber} Chest',
-                                style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 11),
-                              ),
-                            ],
+                            Icon(
+                              _isExpanded ? Icons.expand_less : Icons.expand_more,
+                              color: AppColors.gold400,
+                              size: 24,
+                            ),
+                          ],
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          widget.unit.description,
+                          style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder, fontSize: 14),
+                          maxLines: 2,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 12),
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Text('Unit Mastery', style: AppTypography.labelBold.copyWith(color: AppColors.creamBorder, fontSize: 12)),
+                            Text('$completedCount / ${lessons.length} Completed', style: AppTypography.mono.copyWith(color: AppColors.gold400, fontSize: 12)),
+                          ],
+                        ),
+                        const SizedBox(height: 6),
+                        ClipRRect(
+                          borderRadius: BorderRadius.circular(4),
+                          child: LinearProgressIndicator(
+                            value: progressRatio,
+                            backgroundColor: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
+                            color: AppColors.gold500,
+                            minHeight: 8,
                           ),
                         ),
                       ],
                     ),
                   ),
+                ),
+
+                // Winding Serpentine Path of Lessons (Collapsible)
+                if (_isExpanded) ...[
+                  if (lessons.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Text('No lessons in this unit yet.', style: AppTypography.body),
+                    )
+                  else
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
+                      child: Column(
+                        children: [
+                          ...List.generate(lessons.length, (index) {
+                            final lesson = lessons[index];
+                            final offsets = [0.0, -40.0, 40.0, 0.0, -40.0, 40.0];
+                            final horizontalOffset = offsets[index % offsets.length];
+
+                            return Padding(
+                              padding: const EdgeInsets.symmetric(vertical: AppSpacing.sm),
+                              child: Transform.translate(
+                                offset: Offset(horizontalOffset, 0),
+                                child: _LessonNode(
+                                  lesson: lesson,
+                                  index: index + 1,
+                                  isCustomActive: isCustomActive,
+                                  onTap: widget.unit.isUnlocked && lesson.status != LessonStatus.locked
+                                      ? () {
+                                          HapticFeedback.mediumImpact();
+                                          context.push('/lesson/${lesson.id}');
+                                        }
+                                      : null,
+                                ),
+                              ),
+                            );
+                          }),
+                          const SizedBox(height: AppSpacing.md),
+
+                          // Unit Reward Chest Node at the end of lessons
+                          Transform.translate(
+                            offset: const Offset(0, 0),
+                            child: Column(
+                              children: [
+                                GestureDetector(
+                                  onTap: () => _showUnitRewardDialog(context, ref, lessons),
+                                  child: Container(
+                                    padding: const EdgeInsets.all(16),
+                                    decoration: BoxDecoration(
+                                      color: allCompleted ? AppColors.gold500 : AppColors.creamBorder,
+                                      shape: BoxShape.circle,
+                                      border: Border.all(
+                                        color: allCompleted ? AppColors.gold700 : AppColors.creamShadow,
+                                        width: 3.5,
+                                      ),
+                                      boxShadow: [
+                                        BoxShadow(
+                                          color: allCompleted ? AppColors.gold700 : AppColors.creamShadow,
+                                          offset: const Offset(0, 4),
+                                          blurRadius: 0,
+                                        ),
+                                      ],
+                                    ),
+                                    child: Icon(
+                                      Icons.card_giftcard,
+                                      color: allCompleted ? AppColors.forest900 : AppColors.creamText3,
+                                      size: 32,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Unit ${widget.unit.unitNumber} Chest',
+                                  style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                ],
               ],
             );
           },
           loading: () => const Center(child: Padding(padding: EdgeInsets.all(8.0), child: CircularProgressIndicator(color: AppColors.gold500))),
           error: (err, stack) => const SizedBox.shrink(),
         ),
-        const SizedBox(height: AppSpacing.lg),
+        const SizedBox(height: AppSpacing.sm),
       ],
     );
   }

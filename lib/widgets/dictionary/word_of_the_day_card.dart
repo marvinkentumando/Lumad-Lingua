@@ -96,18 +96,6 @@ class _WordOfTheDayCardState extends ConsumerState<WordOfTheDayCard> {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.forest900,
-                                    borderRadius: BorderRadius.circular(AppRadius.chip),
-                                  ),
-                                  child: Text(
-                                    word.partOfSpeech.toUpperCase(),
-                                    style: AppTypography.labelBold.copyWith(color: AppColors.gold500, fontSize: 10),
-                                  ),
-                                ),
                               ],
                             ),
                           ],

@@ -1,5 +1,5 @@
 # LUMAD LINGUA - Comprehensive Brand Identity & Design System
-**Version 2.0 | Flutter Mobile Application**
+**Version 2.5 | Flutter Mobile Application**
 
 ---
 
@@ -30,7 +30,7 @@
 * `gold800`: `#7A4F00`
 * `gold700`: `#B88500`
 * `gold600`: `#D4A000`
-* `gold500`: `#FFC200` (**Primary Accent CTA & Dark Theme Primary Color**)
+* `gold500`: `#FFC200` (**Primary Accent CTA & Hero Card Background Color**)
 * `gold400`: `#FFD03A`
 * `gold300`: `#FFE080`
 * `gold200`: `#FFF0B3`
@@ -97,3 +97,27 @@
 * **Micro-Interactions**:
   * Built-in haptic feedback (`HapticFeedback.lightImpact()`) on press.
   * 500ms tap debouncing to prevent double-submissions.
+
+---
+
+## 6. Micro-Interactions & Animation Guidelines
+* **Component-Level Micro-Interactions (80% of Animations)**:
+  * `RecordingButton`: Pulsing wave animation scaling (`1.0` to `1.15`) with an infinite `AnimationController` loop while audio recording is active.
+  * `LessonProgressBar`: Smooth `TweenAnimationBuilder` fill progress animation (`Curves.easeOutCubic`, 400ms duration).
+  * `AnswerOptionCard`: Spring scale transition (`1.0` to `1.02`) on option selection with elastic scale bounce-in (`Curves.elasticOut`) for result icons.
+* **Screen-Level Entrance Transitions (20% of Animations)**:
+  * `LoginScreen` & `RegisterScreen`: FadeTransition (`Curves.easeIn`, 800ms) on screen load.
+
+---
+
+## 7. Form & Authentication Standards
+* **Keyboard Action Flow**: Use `textInputAction: TextInputAction.next` for input fields and `TextInputAction.done` with `onFieldSubmitted` for final submission.
+* **Autofill Integration**: Always include native `autofillHints` (`AutofillHints.email`, `AutofillHints.password`, `AutofillHints.name`) for OS password manager compatibility.
+* **Feedback Notifications**: Use `ScaffoldMessenger` SnackBars with `semanticRed` or `semanticGreen` for instant validation feedback.
+
+---
+
+## 8. Hero Card & Dashboard Layout Rules
+* **Full-Width Cards**: Hero cards (e.g. Greeting Banner, Gamification Fire Pit Hero Card) expand across the full horizontal screen width (`SizedBox(width: double.infinity)`).
+* **Layering & Clipping**: Use `Stack` with text content padded in the foreground and decorative background images/GIFs positioned to the right inside a `ClipRRect`. Set explicit card height constraints (e.g. `165px`) to prevent vertical asset cropping.
+* **Grammatical Pluralization**: Text strings with dynamic counters must enforce singular labels for single values (e.g., `1 Day`, `1 Day Consecutive`) and plural labels for 2+ values (e.g., `2 Days`, `2 Days Consecutive`).

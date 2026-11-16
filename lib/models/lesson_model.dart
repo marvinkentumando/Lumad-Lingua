@@ -26,13 +26,13 @@ class LessonFlashcard {
   factory LessonFlashcard.fromJson(Map<String, dynamic> json) {
     return LessonFlashcard(
       id: json['id'] as String? ?? DateTime.now().millisecondsSinceEpoch.toString(),
-      mansaka: json['mansaka'] as String? ?? '',
-      english: json['english'] as String? ?? '',
+      mansaka: json['mansaka'] as String? ?? json['targetMansaka'] as String? ?? '',
+      english: json['english'] as String? ?? json['targetEnglish'] as String? ?? '',
       pronunciation: json['pronunciation'] as String?,
       partOfSpeech: json['partOfSpeech'] as String?,
       exampleMansaka: json['exampleMansaka'] as String?,
       exampleEnglish: json['exampleEnglish'] as String?,
-      audioPath: json['audioPath'] as String?,
+      audioPath: json['audioPath'] as String? ?? json['audioAssetPath'] as String?,
       vocabularyWordId: json['vocabularyWordId'] as String?,
     );
   }
@@ -116,18 +116,18 @@ class LessonModel {
     );
   }
 
-  factory LessonModel.fromJson(Map<String, dynamic> json) {
+  factory LessonModel.fromJson(Map<String, dynamic> json, {String? documentId}) {
     var rawFlashcards = json['flashcards'] as List<dynamic>? ?? [];
     List<LessonFlashcard> parsedFlashcards = rawFlashcards
         .map((f) => LessonFlashcard.fromJson(f as Map<String, dynamic>))
         .toList();
 
     return LessonModel(
-      id: json['id'] as String,
-      unitId: json['unitId'] as String,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      lessonOrder: json['lessonOrder'] as int,
+      id: documentId ?? json['id'] as String? ?? '',
+      unitId: json['unitId'] as String? ?? '',
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      lessonOrder: json['lessonOrder'] as int? ?? 1,
       xpReward: json['xpReward'] as int? ?? 30,
       status: LessonStatus.values.firstWhere(
         (e) => e.name == json['status'],

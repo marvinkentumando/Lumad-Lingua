@@ -80,6 +80,10 @@ class AppColors {
     return Theme.of(context).brightness == Brightness.dark ? Colors.white : creamText;
   }
 
+  static Color headerColor(BuildContext context) {
+    return Theme.of(context).brightness == Brightness.dark ? Colors.white : forest700;
+  }
+
   static Color subtitleColor(BuildContext context) {
     return Theme.of(context).brightness == Brightness.dark ? Colors.white70 : creamText2;
   }

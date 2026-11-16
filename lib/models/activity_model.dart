@@ -59,12 +59,12 @@ class ActivityModel {
     this.xpReward = 10,
   });
 
-  factory ActivityModel.fromJson(Map<String, dynamic> json) {
+  factory ActivityModel.fromJson(Map<String, dynamic> json, {String? documentId}) {
     final parsedOptions = (json['options'] as List<dynamic>?)?.map((e) => e as String).toList();
     final parsedWordsToArrange = (json['wordsToArrange'] as List<dynamic>?)?.map((e) => e as String).toList() ?? parsedOptions;
 
     return ActivityModel(
-      id: json['id'] as String? ?? '',
+      id: documentId ?? json['id'] as String? ?? '',
       lessonId: json['lessonId'] as String? ?? '',
       type: ActivityType.values.firstWhere(
         (e) => e.name == json['type'],

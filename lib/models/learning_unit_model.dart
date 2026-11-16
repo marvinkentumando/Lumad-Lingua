@@ -15,13 +15,31 @@ class LearningUnitModel {
     this.isUnlocked = true,
   });
 
-  factory LearningUnitModel.fromJson(Map<String, dynamic> json) {
+  LearningUnitModel copyWith({
+    String? id,
+    int? unitNumber,
+    String? title,
+    String? description,
+    String? category,
+    bool? isUnlocked,
+  }) {
     return LearningUnitModel(
-      id: json['id'] as String,
-      unitNumber: json['unitNumber'] as int,
-      title: json['title'] as String,
-      description: json['description'] as String,
-      category: json['category'] as String,
+      id: id ?? this.id,
+      unitNumber: unitNumber ?? this.unitNumber,
+      title: title ?? this.title,
+      description: description ?? this.description,
+      category: category ?? this.category,
+      isUnlocked: isUnlocked ?? this.isUnlocked,
+    );
+  }
+
+  factory LearningUnitModel.fromJson(Map<String, dynamic> json, {String? documentId}) {
+    return LearningUnitModel(
+      id: documentId ?? json['id'] as String? ?? '',
+      unitNumber: json['unitNumber'] as int? ?? 1,
+      title: json['title'] as String? ?? '',
+      description: json['description'] as String? ?? '',
+      category: json['category'] as String? ?? '',
       isUnlocked: json['isUnlocked'] as bool? ?? true,
     );
   }

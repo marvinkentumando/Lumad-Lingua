@@ -35,6 +35,30 @@ final List<LearningUnitModel> mockUnits = [
     category: 'Communication',
     isUnlocked: false,
   ),
+  const LearningUnitModel(
+    id: 'unit_5',
+    unitNumber: 5,
+    title: 'Unit 5: Community & Culture',
+    description: 'Explore traditional customs, gatherings, and community life.',
+    category: 'Culture',
+    isUnlocked: false,
+  ),
+  const LearningUnitModel(
+    id: 'unit_6',
+    unitNumber: 6,
+    title: 'Unit 6: Nature & Environment',
+    description: 'Learn flora, fauna, and geographical terms in Mansaka.',
+    category: 'Nature',
+    isUnlocked: false,
+  ),
+  const LearningUnitModel(
+    id: 'unit_7',
+    unitNumber: 7,
+    title: 'Unit 7: Advanced Fluency & Storytelling',
+    description: 'Master complex narratives, idioms, and advanced conversation.',
+    category: 'Advanced',
+    isUnlocked: false,
+  ),
 ];
 
 final List<LessonModel> mockLessons = [
