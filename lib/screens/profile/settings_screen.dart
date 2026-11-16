@@ -5,6 +5,7 @@ import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/common/app_card.dart';
+import '../../widgets/common/lumad_background.dart';
 
 class SettingsScreen extends ConsumerStatefulWidget {
   const SettingsScreen({super.key});
@@ -16,6 +17,7 @@ class SettingsScreen extends ConsumerStatefulWidget {
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   bool _soundEffects = true;
   bool _hapticFeedback = true;
+  bool _offlineDictionary = true;
   bool _dailyReminder = NotificationService().isDailyReminderEnabled;
 
   @override
@@ -31,9 +33,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
         title: Text('App Settings', style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
       ),
-      body: ListView(
-        padding: const EdgeInsets.all(AppSpacing.md),
-        children: [
+      body: LumadBackground(
+        child: ListView(
+          padding: const EdgeInsets.all(AppSpacing.md),
+          children: [
           Text(
             'Preferences',
             style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
@@ -65,6 +68,19 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   activeThumbColor: AppColors.gold500,
                   onChanged: (val) {
                     ref.read(themeModeProvider.notifier).toggleTheme(val);
+                  },
+                ),
+                const Divider(color: AppColors.forest700),
+                SwitchListTile(
+                  title: Text('Offline Dictionary Mode', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                  subtitle: Text('Cache full Mansaka dictionary and audio for offline study', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                  value: _offlineDictionary,
+                  activeThumbColor: AppColors.gold500,
+                  onChanged: (val) {
+                    setState(() => _offlineDictionary = val);
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(content: Text(val ? 'Offline dictionary mode enabled! 📦' : 'Offline dictionary mode disabled.')),
+                    );
                   },
                 ),
               ],
@@ -136,6 +152,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           ),
         ],
       ),
-    );
+    ),
+  );
   }
 }

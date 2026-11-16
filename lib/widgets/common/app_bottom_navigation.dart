@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
+import 'lumad_background.dart';
 
 class AppBottomNavigation extends StatelessWidget {
   final StatefulNavigationShell navigationShell;
@@ -11,6 +13,10 @@ class AppBottomNavigation extends StatelessWidget {
   });
 
   void _onTap(int index) {
+    // Provide haptic feedback for tactile responsiveness
+    HapticFeedback.selectionClick();
+
+    // Navigate to the selected branch, resetting to initial location if re-tapping current tab
     navigationShell.goBranch(
       index,
       initialLocation: index == navigationShell.currentIndex,
@@ -19,46 +25,68 @@ class AppBottomNavigation extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: navigationShell,
-      bottomNavigationBar: Container(
-        decoration: const BoxDecoration(
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black12,
-              blurRadius: 8,
-              offset: Offset(0, -2),
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final activeColor = isDark ? AppColors.gold500 : AppColors.forestGreen;
+
+    return LumadBackground(
+      child: Scaffold(
+        backgroundColor: Colors.transparent,
+        body: navigationShell,
+        bottomNavigationBar: Container(
+          decoration: BoxDecoration(
+            color: AppColors.cardColor(context),
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            border: Border.all(
+              color: isDark ? AppColors.forest700 : AppColors.creamBorder,
+              width: 1.0,
             ),
-          ],
-        ),
-        child: NavigationBar(
-          selectedIndex: navigationShell.currentIndex,
-          onDestinationSelected: _onTap,
-          backgroundColor: AppColors.cardColor(context),
-          indicatorColor: AppColors.brightGreen.withValues(alpha: 0.3),
-          elevation: 0,
-          destinations: const [
-            NavigationDestination(
-              icon: Icon(Icons.home_outlined),
-              selectedIcon: Icon(Icons.home, color: AppColors.forestGreen),
-              label: 'Home',
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.12),
+                blurRadius: 12,
+                offset: const Offset(0, -4),
+              ),
+            ],
+          ),
+          child: ClipRRect(
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            child: SafeArea(
+              child: NavigationBar(
+                selectedIndex: navigationShell.currentIndex,
+                onDestinationSelected: _onTap,
+                backgroundColor: Colors.transparent,
+                indicatorColor: Colors.transparent,
+                labelBehavior: NavigationDestinationLabelBehavior.alwaysShow,
+                elevation: 0,
+                destinations: [
+                  NavigationDestination(
+                    icon: const Icon(Icons.home_outlined),
+                    selectedIcon: Icon(Icons.home, color: activeColor),
+                    label: 'Home',
+                    tooltip: 'Home Screen',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.school_outlined),
+                    selectedIcon: Icon(Icons.school, color: activeColor),
+                    label: 'Learn',
+                    tooltip: 'Learning Path',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.book_outlined),
+                    selectedIcon: Icon(Icons.book, color: activeColor),
+                    label: 'Dictionary',
+                    tooltip: 'Lumad Dictionary',
+                  ),
+                  NavigationDestination(
+                    icon: const Icon(Icons.person_outline),
+                    selectedIcon: Icon(Icons.person, color: activeColor),
+                    label: 'Profile',
+                    tooltip: 'User Profile',
+                  ),
+                ],
+              ),
             ),
-            NavigationDestination(
-              icon: Icon(Icons.school_outlined),
-              selectedIcon: Icon(Icons.school, color: AppColors.forestGreen),
-              label: 'Learn',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.book_outlined),
-              selectedIcon: Icon(Icons.book, color: AppColors.forestGreen),
-              label: 'Dictionary',
-            ),
-            NavigationDestination(
-              icon: Icon(Icons.person_outline),
-              selectedIcon: Icon(Icons.person, color: AppColors.forestGreen),
-              label: 'Profile',
-            ),
-          ],
+          ),
         ),
       ),
     );

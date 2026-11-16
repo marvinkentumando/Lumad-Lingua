@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
@@ -16,6 +17,24 @@ class HomeScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
+    final isCustomActive = ref.watch(customThemeAccentProvider);
+
+    final cardGradient = LinearGradient(
+      colors: isCustomActive
+          ? [const Color(0xFF7A1429), const Color(0xFFA91D3A), const Color(0xFF380912)]
+          : [const Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+      begin: Alignment.topLeft,
+      end: Alignment.bottomRight,
+    );
+    final cardBorder = Border.all(
+      color: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
+      width: 1.0,
+    );
+    final cardShadow = BoxShadow(
+      color: isCustomActive ? const Color(0xFF1E0308) : const Color(0xFF0A140B),
+      offset: const Offset(0, 5),
+      blurRadius: 0,
+    );
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
@@ -26,23 +45,13 @@ class HomeScreen extends ConsumerWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Madyaw na allaw Greeting Banner Card with Full-Height Uncropped GIF on Right
+                // Madyaw na allaw Greeting Banner Card with Dynamic Theme Accent Support
                 Container(
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: cardGradient,
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.forest700, width: 1.0),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0xFF0A140B),
-                        offset: Offset(0, 5),
-                        blurRadius: 0,
-                      ),
-                    ],
+                    border: cardBorder,
+                    boxShadow: [cardShadow],
                   ),
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(AppRadius.card),
@@ -98,26 +107,16 @@ class HomeScreen extends ConsumerWidget {
                 const WordOfTheDayCard(),
                 const SizedBox(height: AppSpacing.lg),
 
-                // Enhanced Continue Learning Section Card
+                // Enhanced Continue Learning Section Card with Dynamic Theme Accent Support
                 Text('Continue Learning', style: AppTypography.h3),
                 const SizedBox(height: AppSpacing.sm),
                 Container(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
-                      begin: Alignment.topLeft,
-                      end: Alignment.bottomRight,
-                    ),
+                    gradient: cardGradient,
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.forest700, width: 1.0),
-                    boxShadow: const [
-                      BoxShadow(
-                        color: Color(0xFF0A140B),
-                        offset: Offset(0, 5),
-                        blurRadius: 0,
-                      ),
-                    ],
+                    border: cardBorder,
+                    boxShadow: [cardShadow],
                   ),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
@@ -177,9 +176,9 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(height: 4),
                       ClipRRect(
                         borderRadius: BorderRadius.circular(4),
-                        child: const LinearProgressIndicator(
+                        child: LinearProgressIndicator(
                           value: 0.66,
-                          backgroundColor: AppColors.forest700,
+                          backgroundColor: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
                           color: AppColors.gold500,
                           minHeight: 6,
                         ),

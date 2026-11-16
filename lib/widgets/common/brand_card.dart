@@ -25,12 +25,10 @@ class BrandCard extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCustomActive = ref.watch(customThemeAccentProvider);
     final r = borderRadius ?? AppRadius.card;
 
-    final bg = backgroundColor ?? (isDark ? AppColors.gold500 : AppColors.forest500);
-    final isGoldCard = bg == AppColors.gold500 || bg.toARGB32() == AppColors.gold500.toARGB32() || (backgroundColor != null && backgroundColor == AppColors.gold500);
+    final isGoldCard = backgroundColor == AppColors.gold500;
 
     final lipColor = isGoldCard
         ? const Color(0xFFC78C00)

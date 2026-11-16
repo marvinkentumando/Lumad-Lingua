@@ -10,6 +10,7 @@ import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_logo_emblem.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
+import '../../widgets/common/lumad_background.dart';
 
 ImageProvider? getAvatarImage(String? url) {
   if (url == null || url.isEmpty) return null;
@@ -250,16 +251,17 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     final authState = ref.watch(authStateProvider);
     final user = authState.value;
     final isGuest = user == null;
     final achievementsAsync = ref.watch(achievementsProvider);
     final classroomsAsync = ref.watch(myClassroomsStreamProvider);
-    final inventory = user?.inventory ?? [];
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
-      body: SafeArea(
+      body: LumadBackground(
+        child: SafeArea(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(AppSpacing.md),
           child: Column(
@@ -356,7 +358,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         GestureDetector(
-                          onTap: () => context.push('/streaks-xp'),
+                          onTap: () => context.push('/streak'),
                           child: Row(
                             children: [
                               const Icon(Icons.local_fire_department, color: AppColors.terracotta, size: 22),
@@ -366,9 +368,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 children: [
                                   Text(
                                     '${user?.streakDays ?? 3} Days',
-                                    style: AppTypography.mono.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
                                   ),
-                                  Text('Streak', style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 10)),
+                                  Text('Streak', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
                                 ],
                               ),
                             ],
@@ -377,11 +379,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         Container(
                           height: 28,
                           width: 1,
-                          color: AppColors.creamBorder.withValues(alpha: 0.4),
+                          color: isDark ? AppColors.creamBorder.withValues(alpha: 0.4) : AppColors.forest700.withValues(alpha: 0.3),
                           margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
                         ),
                         GestureDetector(
-                          onTap: () => context.push('/shop'),
+                          onTap: () => context.push('/xp'),
                           child: Row(
                             children: [
                               const Icon(Icons.bolt, color: AppColors.gold500, size: 22),
@@ -391,9 +393,9 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 children: [
                                   Text(
                                     '${user?.totalXp ?? 250} XP',
-                                    style: AppTypography.mono.copyWith(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 15),
+                                    style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
                                   ),
-                                  Text('Total XP', style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 10)),
+                                  Text('Total XP', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
                                 ],
                               ),
                             ],
@@ -440,7 +442,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                   const SizedBox(height: 4),
                                   Text(
                                     ach.title,
-                                    style: AppTypography.labelBold.copyWith(fontSize: 11),
+                                    style: AppTypography.labelBold.copyWith(fontSize: 11, color: AppColors.forest900),
                                     textAlign: TextAlign.center,
                                     maxLines: 1,
                                     overflow: TextOverflow.ellipsis,
@@ -449,6 +451,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     ach.isUnlocked ? 'Unlocked' : '${(ach.progressRatio * 100).toInt()}%',
                                     style: AppTypography.caption.copyWith(
                                       fontSize: 10,
+                                      color: AppColors.forest800,
                                     ),
                                   ),
                                 ],
@@ -465,28 +468,8 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Active Inventory Passes Showcase
-              if (inventory.isNotEmpty) ...[
-                Text('Active Shop Passes & Inventory', style: AppTypography.h3),
-                const SizedBox(height: AppSpacing.sm),
-                AppCard(
-                  child: Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: inventory.map((item) {
-                      return Chip(
-                        avatar: const Icon(Icons.verified, color: AppColors.gold500, size: 16),
-                        label: Text(item.replaceAll('_', ' ').toUpperCase(), style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 11)),
-                        backgroundColor: AppColors.gold500,
-                      );
-                    }).toList(),
-                  ),
-                ),
-                const SizedBox(height: AppSpacing.lg),
-              ],
-
-              // Classroom Section (Single-Classroom Restricted Button Card)
-              Text('My Classroom', style: AppTypography.h3),
+              // Journey Management Section & Classroom Shortcut Button Card
+              Text('Journey Management', style: AppTypography.h3),
               const SizedBox(height: AppSpacing.sm),
               classroomsAsync.when(
                 data: (snapshot) {
@@ -499,77 +482,51 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     final className = data['name'] ?? 'Classroom';
                     final school = data['schoolOrCenter'] ?? 'School / Center';
 
-                    return AppCard(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                    return BrandCard(
+                      backgroundColor: AppColors.gold500,
+                      onTap: () {
+                        context.push('/classroom/dashboard', extra: {
+                          'classId': doc.id,
+                          'classroomData': data,
+                        });
+                      },
+                      child: Row(
                         children: [
-                          Row(
-                            children: [
-                              const Icon(Icons.school, color: AppColors.gold500, size: 28),
-                              const SizedBox(width: AppSpacing.md),
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(className, style: AppTypography.h3.copyWith(color: Colors.white)),
-                                    Text('School / Center: $school', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                                  ],
-                                ),
-                              ),
-                              Container(
-                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                decoration: BoxDecoration(
-                                  color: AppColors.gold500,
-                                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                                ),
-                                child: Text('ENROLLED', style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10)),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          SizedBox(
-                            width: double.infinity,
-                            child: BrandButton(
-                              text: 'View Class Dashboard',
-                              type: BrandButtonType.gold,
-                              onPressed: () {
-                                context.push('/classroom/dashboard', extra: {
-                                  'classId': doc.id,
-                                  'classroomData': data,
-                                });
-                              },
+                          const Icon(Icons.school, size: 32, color: AppColors.forest900),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(className, style: AppTypography.h3.copyWith(color: AppColors.forest900)),
+                                Text('School / Center: $school', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
+                              ],
                             ),
                           ),
+                          const Icon(Icons.chevron_right, color: AppColors.forest900),
                         ],
                       ),
                     );
                   }
 
-                  // Not Enrolled: Compact Join Classroom Button Card
-                  return AppCard(
+                  // Not Enrolled: Join Classroom Button Card
+                  return BrandCard(
+                    backgroundColor: AppColors.gold500,
                     onTap: isGuest ? () => context.push('/login') : () => _showJoinClassroomModal(context),
                     child: Row(
                       children: [
-                        Container(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold500.withValues(alpha: 0.2),
-                            shape: BoxShape.circle,
-                          ),
-                          child: const Icon(Icons.school, color: AppColors.gold500, size: 28),
-                        ),
+                        const Icon(Icons.school, size: 32, color: AppColors.forest900),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Join a Classroom', style: AppTypography.h3.copyWith(color: Colors.white)),
-                              const SizedBox(height: 2),
-                              Text('Enter your educator\'s join code to connect', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                              Text('Join a Classroom', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
+                              Text('Connect with your educator & classmates', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
                             ],
                           ),
                         ),
-                        const Icon(Icons.add_circle_outline, color: AppColors.gold500, size: 28),
+                        const Icon(Icons.chevron_right, color: AppColors.forest900),
                       ],
                     ),
                   );
@@ -577,49 +534,26 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 loading: () => const Center(child: CircularProgressIndicator(color: AppColors.gold500)),
                 error: (e, _) => Text('Error loading classroom: $e', style: const TextStyle(color: AppColors.semanticRed)),
               ),
-              const SizedBox(height: AppSpacing.lg),
-
-              // Achievements Shortcut
-              BrandCard(
-                backgroundColor: AppColors.gold500,
-                onTap: () => context.push('/achievements'),
-                child: Row(
-                  children: [
-                    const Icon(Icons.emoji_events, size: 32),
-                    const SizedBox(width: AppSpacing.md),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text('Achievements & Badges', style: AppTypography.h3),
-                          Text('View your earned badges and rewards', style: AppTypography.caption),
-                        ],
-                      ),
-                    ),
-                    const Icon(Icons.chevron_right),
-                  ],
-                ),
-              ),
               const SizedBox(height: AppSpacing.md),
 
-              // Crystal Shop & Passes Shortcut
+              // Crystal Shop Shortcut
               BrandCard(
                 backgroundColor: AppColors.gold500,
                 onTap: () => context.push('/shop'),
                 child: Row(
                   children: [
-                    const Icon(Icons.diamond, size: 32),
+                    const Icon(Icons.diamond, size: 32, color: AppColors.forest900),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Crystal Shop & Passes', style: AppTypography.h3),
-                          Text('Spend crystals on power-ups & inventory passes', style: AppTypography.caption),
+                          Text('Crystal Shop', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
+                          Text('Spend crystals on power-ups & avatar frames', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right),
+                    const Icon(Icons.chevron_right, color: AppColors.forest900),
                   ],
                 ),
               ),
@@ -688,6 +622,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
           ),
         ),
       ),
-    );
+    ),
+  );
   }
 }

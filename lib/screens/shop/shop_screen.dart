@@ -70,15 +70,6 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       isConsumable: false,
     ),
     ShopItem(
-      id: 'offline_dictionary_pass',
-      title: 'Dictionary Offline Access Pass',
-      description: 'Download full Mansaka-English dictionary and reference audio for offline study.',
-      cost: 120,
-      icon: Icons.download_for_offline,
-      category: 'Learning Pass',
-      isConsumable: false,
-    ),
-    ShopItem(
       id: 'custom_theme_pass',
       title: 'Custom Theme & Color Accents',
       description: 'Unlock alternate seasonal UI palettes (Gold Harvest & River Blue).',

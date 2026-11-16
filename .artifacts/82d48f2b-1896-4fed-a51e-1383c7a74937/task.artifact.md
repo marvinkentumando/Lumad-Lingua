@@ -1,0 +1,4 @@
+- [x] Update `LessonModel` with multi-stage progress tracking
+- [x] Update Learning Path nodes with circular progress rings
+- [x] Structure `LessonScreen` into segmented multi-part plays (core activities first, pronunciation final part)
+- [x] Verify lesson completion flow and progress updates

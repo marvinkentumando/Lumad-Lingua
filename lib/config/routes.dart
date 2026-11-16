@@ -20,7 +20,8 @@ import '../screens/achievements/achievements_screen.dart';
 import '../screens/profile/profile_screen.dart';
 import '../screens/profile/settings_screen.dart';
 import '../screens/classroom/classroom_dashboard_screen.dart';
-import '../screens/gamification/streaks_xp_dashboard_screen.dart';
+import '../screens/gamification/streak_dashboard_screen.dart';
+import '../screens/gamification/xp_dashboard_screen.dart';
 import '../screens/shop/shop_screen.dart';
 import '../screens/leaderboard/leaderboard_screen.dart';
 import '../screens/arena/duel_lobby_screen.dart';
@@ -112,8 +113,12 @@ final appRouter = GoRouter(
       },
     ),
     GoRoute(
-      path: '/streaks-xp',
-      builder: (context, state) => const StreaksXpDashboardScreen(),
+      path: '/streak',
+      builder: (context, state) => const StreakDashboardScreen(),
+    ),
+    GoRoute(
+      path: '/xp',
+      builder: (context, state) => const XpDashboardScreen(),
     ),
     GoRoute(
       path: '/shop',

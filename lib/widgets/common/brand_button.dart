@@ -1,13 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../config/theme/app_colors.dart';
 import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/app_typography.dart';
+import '../../providers/theme_provider.dart';
 
 enum BrandButtonType { primary, secondary, gold, success, danger, small, text }
 
-class BrandButton extends StatefulWidget {
+class BrandButton extends ConsumerStatefulWidget {
   final String text;
   final VoidCallback? onPressed;
   final BrandButtonType type;
@@ -24,10 +26,10 @@ class BrandButton extends StatefulWidget {
   });
 
   @override
-  State<BrandButton> createState() => _BrandButtonState();
+  ConsumerState<BrandButton> createState() => _BrandButtonState();
 }
 
-class _BrandButtonState extends State<BrandButton> {
+class _BrandButtonState extends ConsumerState<BrandButton> {
   bool _isPressed = false;
   bool _isDebouncing = false;
 
@@ -64,6 +66,7 @@ class _BrandButtonState extends State<BrandButton> {
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
+    final isCustomActive = ref.watch(customThemeAccentProvider);
 
     Color? bgColor;
     Gradient? bgGradient;
@@ -74,9 +77,10 @@ class _BrandButtonState extends State<BrandButton> {
 
     switch (widget.type) {
       case BrandButtonType.primary:
-        bgColor = AppColors.forest500;
+      case BrandButtonType.small:
+        bgColor = isCustomActive ? const Color(0xFFA91D3A) : AppColors.forest500;
         fgColor = Colors.white;
-        lipColor = AppColors.forest700;
+        lipColor = isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700;
         break;
       case BrandButtonType.gold:
         bgGradient = const LinearGradient(
@@ -105,14 +109,9 @@ class _BrandButtonState extends State<BrandButton> {
         fgColor = Colors.white;
         lipColor = AppColors.errorDark;
         break;
-      case BrandButtonType.small:
-        bgColor = AppColors.forest500;
-        fgColor = Colors.white;
-        lipColor = AppColors.forest700;
-        break;
       case BrandButtonType.text:
         bgColor = Colors.transparent;
-        fgColor = isDark ? AppColors.gold500 : AppColors.forest500;
+        fgColor = isDark ? AppColors.gold500 : (isCustomActive ? const Color(0xFFA91D3A) : AppColors.forest500);
         lipColor = Colors.transparent;
         lipHeight = 0.0;
         break;
@@ -168,7 +167,7 @@ class _BrandButtonState extends State<BrandButton> {
                     ),
                   )
                 : Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: EdgeInsets.symmetric(horizontal: widget.type == BrandButtonType.small ? 8 : 16),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       mainAxisSize: MainAxisSize.min,

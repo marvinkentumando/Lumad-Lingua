@@ -61,7 +61,15 @@ class LessonSessionNotifier extends AsyncNotifier<LessonSessionState> {
   Future<void> startLesson(String lessonId) async {
     state = const AsyncValue.loading();
     try {
-      final activities = await _repository.getActivitiesForLesson(lessonId);
+      final rawActivities = await _repository.getActivitiesForLesson(lessonId);
+      final activities = List<ActivityModel>.from(rawActivities);
+      // Ensure pronunciation practice comes last (as the final part)
+      activities.sort((a, b) {
+        if (a.type == ActivityType.pronunciationPractice) return 1;
+        if (b.type == ActivityType.pronunciationPractice) return -1;
+        return 0;
+      });
+
       state = AsyncValue.data(LessonSessionState(
         lessonId: lessonId,
         activities: activities,

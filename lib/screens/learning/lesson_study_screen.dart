@@ -126,7 +126,6 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
               children: [
                 ScreenHeader(
                   title: lesson.title,
-                  subtitle: 'Study vocabulary & preparation warm-up',
                 ),
                 const SizedBox(height: AppSpacing.sm),
 
@@ -187,34 +186,6 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                // Action CTAs
-                BrandButton(
-                  text: lesson.flashcards.isNotEmpty ? 'Start Flashcard Warm-up' : 'Start Lesson Activities',
-                  type: BrandButtonType.gold,
-                  onPressed: () {
-                    HapticFeedback.mediumImpact();
-                    if (lesson.flashcards.isNotEmpty) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => FlashcardWarmupScreen(lesson: lesson),
-                        ),
-                      );
-                    } else {
-                      context.push('/lesson/${lesson.id}/drills');
-                    }
-                  },
-                ),
-                const SizedBox(height: AppSpacing.md),
-                BrandButton(
-                  text: 'Skip to Activities (Practice Now)',
-                  type: BrandButtonType.secondary,
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/lesson/${lesson.id}/drills');
-                  },
-                ),
-                const SizedBox(height: AppSpacing.xl),
-
                 // Vocabulary Preview List
                 if (lesson.flashcards.isNotEmpty) ...[
                   Text(
@@ -245,13 +216,6 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                                     card.english,
                                     style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
                                   ),
-                                  if (card.pronunciation != null) ...[
-                                    const SizedBox(height: 2),
-                                    Text(
-                                      '[ ${card.pronunciation} ]',
-                                      style: AppTypography.phoneticGuide.copyWith(color: AppColors.gold400, fontSize: 13),
-                                    ),
-                                  ],
                                 ],
                               ),
                             ),
@@ -260,14 +224,13 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                                 HapticFeedback.lightImpact();
                                 _playAudio(card.audioPath);
                               },
-                              child: Container(
-                                padding: const EdgeInsets.all(10),
-                                decoration: BoxDecoration(
-                                  color: AppColors.gold100,
-                                  borderRadius: BorderRadius.circular(AppRadius.chip),
-                                  border: Border.all(color: AppColors.gold300),
+                              child: const Padding(
+                                padding: EdgeInsets.all(8.0),
+                                child: Icon(
+                                  Icons.volume_up_rounded,
+                                  color: AppColors.gold500,
+                                  size: 26,
                                 ),
-                                child: const Icon(Icons.volume_up_rounded, color: AppColors.gold800, size: 24),
                               ),
                             ),
                           ],
@@ -275,7 +238,35 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                       );
                     },
                   ),
+                  const SizedBox(height: AppSpacing.xl),
                 ],
+
+                // Action CTAs (Moved to lower part)
+                BrandButton(
+                  text: lesson.flashcards.isNotEmpty ? 'Start Flashcard Warm-up' : 'Start Lesson Activities',
+                  type: BrandButtonType.gold,
+                  onPressed: () {
+                    HapticFeedback.mediumImpact();
+                    if (lesson.flashcards.isNotEmpty) {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (context) => FlashcardWarmupScreen(lesson: lesson),
+                        ),
+                      );
+                    } else {
+                      context.push('/lesson/${lesson.id}/drills');
+                    }
+                  },
+                ),
+                const SizedBox(height: AppSpacing.md),
+                BrandButton(
+                  text: 'Skip to Activities (Practice Now)',
+                  type: BrandButtonType.secondary,
+                  onPressed: () {
+                    HapticFeedback.lightImpact();
+                    context.push('/lesson/${lesson.id}/drills');
+                  },
+                ),
               ],
             ),
           ),

@@ -114,6 +114,7 @@ class LeaderboardScreen extends ConsumerWidget {
                             final user = rest[index];
                             final rank = index + 4;
                             final isMe = currentUser != null && (user.id == currentUser.id || user.email == currentUser.email);
+                            final hasCustomBadge = user.inventory.contains('leaderboard_badge_customizer');
 
                             return AppCard(
                               backgroundColor: isMe ? AppColors.forest500 : AppColors.creamSurface,
@@ -142,12 +143,30 @@ class LeaderboardScreen extends ConsumerWidget {
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        Text(
-                                          user.name + (isMe ? ' (You)' : ''),
-                                          style: AppTypography.lessonTitle.copyWith(
-                                            color: isMe ? Colors.white : AppColors.creamText,
-                                            fontSize: 16,
-                                          ),
+                                        Row(
+                                          children: [
+                                            Flexible(
+                                              child: Text(
+                                                user.name + (isMe ? ' (You)' : ''),
+                                                style: AppTypography.lessonTitle.copyWith(
+                                                  color: isMe ? Colors.white : AppColors.creamText,
+                                                  fontSize: 16,
+                                                ),
+                                                overflow: TextOverflow.ellipsis,
+                                              ),
+                                            ),
+                                            if (hasCustomBadge) ...[
+                                              const SizedBox(width: 6),
+                                              Container(
+                                                padding: const EdgeInsets.all(2),
+                                                decoration: const BoxDecoration(
+                                                  color: AppColors.gold500,
+                                                  shape: BoxShape.circle,
+                                                ),
+                                                child: const Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
+                                              ),
+                                            ],
+                                          ],
                                         ),
                                         const SizedBox(height: 4),
                                         Row(
@@ -199,9 +218,27 @@ class LeaderboardScreen extends ConsumerWidget {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             mainAxisSize: MainAxisSize.min,
                             children: [
-                              Text(
-                                '${currentUser.name} (Your Rank)',
-                                style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 15),
+                              Row(
+                                children: [
+                                  Flexible(
+                                    child: Text(
+                                      '${currentUser.name} (Your Rank)',
+                                      style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 15),
+                                      overflow: TextOverflow.ellipsis,
+                                    ),
+                                  ),
+                                  if (currentUser.inventory.contains('leaderboard_badge_customizer')) ...[
+                                    const SizedBox(width: 6),
+                                    Container(
+                                      padding: const EdgeInsets.all(2),
+                                      decoration: const BoxDecoration(
+                                        color: AppColors.gold500,
+                                        shape: BoxShape.circle,
+                                      ),
+                                      child: const Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
+                                    ),
+                                  ],
+                                ],
                               ),
                               Text(
                                 '${currentUser.totalXp} Total XP • ${currentUser.streakDays} Day Streak',
@@ -224,11 +261,23 @@ class LeaderboardScreen extends ConsumerWidget {
 
   Widget _buildPodiumUser(BuildContext context, UserModel user, int rank, Color badgeColor) {
     final medalEmoji = rank == 1 ? '🥇' : (rank == 2 ? '🥈' : '🥉');
+    final hasCustomBadge = user.inventory.contains('leaderboard_badge_customizer');
 
     return Column(
       mainAxisAlignment: MainAxisAlignment.end,
       children: [
-        Text(medalEmoji, style: const TextStyle(fontSize: 24)),
+        Stack(
+          alignment: Alignment.topRight,
+          children: [
+            Text(medalEmoji, style: const TextStyle(fontSize: 24)),
+            if (hasCustomBadge)
+              const Positioned(
+                right: -2,
+                top: -2,
+                child: Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
+              ),
+          ],
+        ),
         const SizedBox(height: 4),
         CircleAvatar(
           radius: rank == 1 ? 28 : 22,

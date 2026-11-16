@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 
 class ScreenHeader extends StatelessWidget {
@@ -15,6 +16,8 @@ class ScreenHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final canPop = Navigator.canPop(context);
+
     return Padding(
       padding: const EdgeInsets.only(top: AppSpacing.sm, bottom: AppSpacing.md),
       child: Row(
@@ -22,25 +25,40 @@ class ScreenHeader extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                Text(
-                  title,
-                  style: AppTypography.h1ExtraBold.copyWith(
-                    color: AppColors.creamText,
-                    fontSize: 28,
+                if (canPop) ...[
+                  IconButton(
+                    icon: Icon(Icons.arrow_back, color: AppColors.textColor(context), size: 26),
+                    onPressed: () => context.pop(),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                ],
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        title,
+                        style: AppTypography.h1ExtraBold.copyWith(
+                          color: AppColors.textColor(context),
+                          fontSize: 28,
+                        ),
+                      ),
+                      if (subtitle != null) ...[
+                        const SizedBox(height: 2),
+                        Text(
+                          subtitle!,
+                          style: AppTypography.bodyLarge.copyWith(
+                            color: AppColors.subtitleColor(context),
+                          ),
+                        ),
+                      ],
+                    ],
                   ),
                 ),
-                if (subtitle != null) ...[
-                  const SizedBox(height: 2),
-                  Text(
-                    subtitle!,
-                    style: AppTypography.bodyLarge.copyWith(
-                      color: AppColors.creamText2,
-                    ),
-                  ),
-                ],
               ],
             ),
           ),

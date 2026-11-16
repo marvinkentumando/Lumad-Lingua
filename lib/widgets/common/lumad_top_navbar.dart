@@ -46,11 +46,11 @@ class LumadTopNavbar extends ConsumerWidget implements PreferredSizeWidget {
             children: [
               StreakIndicator(
                 streakDays: user?.streakDays ?? 3,
-                onTap: () => context.push('/streaks-xp'),
+                onTap: () => context.push('/streak'),
               ),
               const SizedBox(width: 8),
               GestureDetector(
-                onTap: () => context.push('/shop'),
+                onTap: () => context.push('/xp'),
                 child: XPBadge(xp: user?.totalXp ?? 250),
               ),
               const SizedBox(width: 8),

@@ -22,6 +22,14 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.creamBg,
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: AppColors.creamText),
+        bodyMedium: TextStyle(color: AppColors.creamText),
+        bodySmall: TextStyle(color: AppColors.creamText2),
+        titleLarge: TextStyle(color: AppColors.creamText),
+        titleMedium: TextStyle(color: AppColors.creamText),
+        titleSmall: TextStyle(color: AppColors.creamText2),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.forest700,
         foregroundColor: Colors.white,
@@ -113,6 +121,14 @@ class AppTheme {
         onError: Colors.white,
       ),
       scaffoldBackgroundColor: AppColors.forest900,
+      textTheme: const TextTheme(
+        bodyLarge: TextStyle(color: Colors.white),
+        bodyMedium: TextStyle(color: Colors.white),
+        bodySmall: TextStyle(color: Colors.white70),
+        titleLarge: TextStyle(color: Colors.white),
+        titleMedium: TextStyle(color: Colors.white),
+        titleSmall: TextStyle(color: Colors.white70),
+      ),
       appBarTheme: AppBarTheme(
         backgroundColor: AppColors.forest700,
         foregroundColor: Colors.white,

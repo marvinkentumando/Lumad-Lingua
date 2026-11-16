@@ -61,6 +61,8 @@ class LessonModel {
   final int xpReward;
   final LessonStatus status;
   final int starsEarned;
+  final int completedStages;
+  final int stagesCount;
   final List<LessonFlashcard> flashcards;
 
   const LessonModel({
@@ -72,8 +74,19 @@ class LessonModel {
     this.xpReward = 30,
     this.status = LessonStatus.locked,
     this.starsEarned = 0,
+    this.completedStages = 0,
+    this.stagesCount = 3,
     this.flashcards = const [],
   });
+
+  double get stageProgressRatio {
+    if (status == LessonStatus.completed) return 1.0;
+    if (status == LessonStatus.locked) return 0.0;
+    if (completedStages > 0 && stagesCount > 0) {
+      return (completedStages / stagesCount).clamp(0.0, 1.0);
+    }
+    return status == LessonStatus.inProgress ? 0.5 : 0.0;
+  }
 
   LessonModel copyWith({
     String? id,
@@ -84,6 +97,8 @@ class LessonModel {
     int? xpReward,
     LessonStatus? status,
     int? starsEarned,
+    int? completedStages,
+    int? stagesCount,
     List<LessonFlashcard>? flashcards,
   }) {
     return LessonModel(
@@ -95,6 +110,8 @@ class LessonModel {
       xpReward: xpReward ?? this.xpReward,
       status: status ?? this.status,
       starsEarned: starsEarned ?? this.starsEarned,
+      completedStages: completedStages ?? this.completedStages,
+      stagesCount: stagesCount ?? this.stagesCount,
       flashcards: flashcards ?? this.flashcards,
     );
   }
@@ -117,6 +134,8 @@ class LessonModel {
         orElse: () => LessonStatus.locked,
       ),
       starsEarned: json['starsEarned'] as int? ?? 0,
+      completedStages: json['completedStages'] as int? ?? 0,
+      stagesCount: json['stagesCount'] as int? ?? 3,
       flashcards: parsedFlashcards,
     );
   }
@@ -131,6 +150,8 @@ class LessonModel {
       'xpReward': xpReward,
       'status': status.name,
       'starsEarned': starsEarned,
+      'completedStages': completedStages,
+      'stagesCount': stagesCount,
       'flashcards': flashcards.map((f) => f.toJson()).toList(),
     };
   }

@@ -8,6 +8,7 @@ import '../../models/learning_unit_model.dart';
 import '../../models/lesson_model.dart';
 import '../../providers/lesson_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/brand_button.dart';
@@ -129,6 +130,7 @@ class _UnitPathSection extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final lessonsAsync = ref.watch(unitLessonsProvider(unit.id));
+    final isCustomActive = ref.watch(customThemeAccentProvider);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -140,22 +142,27 @@ class _UnitPathSection extends ConsumerWidget {
 
             return Column(
               children: [
-                // Unit Checkpoint Banner with Bold Heavy Fredoka Title
+                // Unit Checkpoint Banner with Dynamic Theme Accent Support
                 Container(
                   margin: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                   padding: const EdgeInsets.all(AppSpacing.md),
                   decoration: BoxDecoration(
-                    gradient: const LinearGradient(
-                      colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+                    gradient: LinearGradient(
+                      colors: isCustomActive
+                          ? [const Color(0xFF7A1429), const Color(0xFFA91D3A), const Color(0xFF380912)]
+                          : [const Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
                       begin: Alignment.topLeft,
                       end: Alignment.bottomRight,
                     ),
                     borderRadius: BorderRadius.circular(AppRadius.card),
-                    border: Border.all(color: AppColors.forest700, width: 1.0),
-                    boxShadow: const [
+                    border: Border.all(
+                      color: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
+                      width: 1.0,
+                    ),
+                    boxShadow: [
                       BoxShadow(
-                        color: Color(0xFF0A140B),
-                        offset: Offset(0, 5),
+                        color: isCustomActive ? const Color(0xFF1E0308) : const Color(0xFF0A140B),
+                        offset: const Offset(0, 5),
                         blurRadius: 0,
                       ),
                     ],
@@ -187,7 +194,7 @@ class _UnitPathSection extends ConsumerWidget {
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
                           value: progressRatio,
-                          backgroundColor: AppColors.forest700,
+                          backgroundColor: isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700,
                           color: AppColors.gold500,
                           minHeight: 8,
                         ),
@@ -220,6 +227,7 @@ class _UnitPathSection extends ConsumerWidget {
                               child: _LessonNode(
                                 lesson: lesson,
                                 index: index + 1,
+                                isCustomActive: isCustomActive,
                                 onTap: unit.isUnlocked && lesson.status != LessonStatus.locked
                                     ? () {
                                         HapticFeedback.mediumImpact();
@@ -289,11 +297,13 @@ class _UnitPathSection extends ConsumerWidget {
 class _LessonNode extends StatelessWidget {
   final LessonModel lesson;
   final int index;
+  final bool isCustomActive;
   final VoidCallback? onTap;
 
   const _LessonNode({
     required this.lesson,
     required this.index,
+    required this.isCustomActive,
     this.onTap,
   });
 
@@ -308,8 +318,8 @@ class _LessonNode extends StatelessWidget {
     IconData iconData = Icons.lock;
 
     if (isCompleted) {
-      nodeColor = AppColors.forest500;
-      borderColor = AppColors.forest700;
+      nodeColor = isCustomActive ? const Color(0xFFA91D3A) : AppColors.forest500;
+      borderColor = isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700;
       iconData = Icons.check;
     } else if (isInProgress || !isLocked) {
       nodeColor = AppColors.gold500;
@@ -355,28 +365,48 @@ class _LessonNode extends StatelessWidget {
                   ),
                 ).animate(onPlay: (controller) => controller.repeat(reverse: true))
                  .scale(begin: const Offset(0.9, 0.9), end: const Offset(1.18, 1.18), duration: 1200.ms),
-              // Main Circular Node
-              Container(
-                width: 68,
-                height: 68,
-                decoration: BoxDecoration(
-                  color: nodeColor,
-                  shape: BoxShape.circle,
-                  border: Border.all(color: borderColor, width: 3.5),
-                  boxShadow: [
-                    BoxShadow(
-                      color: borderColor,
-                      offset: const Offset(0, 4),
-                      blurRadius: 0,
+              // Main Circular Node with Stage Progress Ring
+              SizedBox(
+                width: 72,
+                height: 72,
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    if (!isCompleted && !isLocked && lesson.stageProgressRatio > 0)
+                      SizedBox(
+                        width: 72,
+                        height: 72,
+                        child: CircularProgressIndicator(
+                          value: lesson.stageProgressRatio,
+                          strokeWidth: 4.5,
+                          backgroundColor: AppColors.creamBorder.withValues(alpha: 0.5),
+                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold500),
+                        ),
+                      ),
+                    Container(
+                      width: 60,
+                      height: 60,
+                      decoration: BoxDecoration(
+                        color: nodeColor,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: borderColor, width: 3.0),
+                        boxShadow: [
+                          BoxShadow(
+                            color: borderColor,
+                            offset: const Offset(0, 3),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Center(
+                        child: Icon(
+                          isLocked ? Icons.lock : iconData,
+                          color: isLocked ? AppColors.creamText3 : (isCompleted ? Colors.white : AppColors.forest900),
+                          size: 26,
+                        ),
+                      ),
                     ),
                   ],
-                ),
-                child: Center(
-                  child: Icon(
-                    isLocked ? Icons.lock : iconData,
-                    color: isLocked ? AppColors.creamText3 : (isCompleted ? Colors.white : AppColors.forest900),
-                    size: 28,
-                  ),
                 ),
               ),
             ],

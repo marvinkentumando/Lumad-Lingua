@@ -196,24 +196,22 @@ class FirestoreService {
   Future<List<AchievementModel>> getAchievements(String userId) async {
     try {
       final snapshot = await _achievementsCol.get();
-      final user = await getUser(userId);
-      final userXp = user?.totalXp ?? 0;
 
       List<AchievementModel> baseAchievements = [];
-      if (snapshot.docs.isEmpty) {
+      if (snapshot.docs.length < mockAchievementsList.length) {
         baseAchievements = mockAchievementsList;
+        for (final ach in mockAchievementsList) {
+          try {
+            await _achievementsCol.doc(ach.id).set(ach.toJson(), SetOptions(merge: true));
+          } catch (_) {}
+        }
       } else {
         baseAchievements = snapshot.docs.map((d) => AchievementModel.fromJson(d.data())).toList();
       }
 
       // Compute local unlocked and progressRatio without overwriting global docs
       return baseAchievements.map((ach) {
-        final isUnlocked = userXp >= ach.xpRequirement;
-        final ratio = (userXp / (ach.xpRequirement > 0 ? ach.xpRequirement : 1)).clamp(0.0, 1.0);
-        return ach.copyWith(
-          isUnlocked: isUnlocked,
-          progressRatio: ratio,
-        );
+        return ach;
       }).toList();
     } catch (e) {
       return mockAchievementsList;

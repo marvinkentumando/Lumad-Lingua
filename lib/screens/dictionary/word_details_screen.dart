@@ -73,7 +73,7 @@ class WordDetailsScreen extends StatelessWidget {
 
               Text(
                 'Reference Audio',
-                style: AppTypography.h3.copyWith(color: AppColors.creamText),
+                style: AppTypography.h3.copyWith(color: AppColors.textColor(context)),
               ),
               const SizedBox(height: AppSpacing.xs),
               AudioPlayerWidget(
@@ -85,7 +85,7 @@ class WordDetailsScreen extends StatelessWidget {
               // Example Usage (Editorial Flush Layout without Boxy Card)
               Text(
                 'Example Usage',
-                style: AppTypography.h3.copyWith(color: AppColors.creamText),
+                style: AppTypography.h3.copyWith(color: AppColors.textColor(context)),
               ),
               const SizedBox(height: AppSpacing.sm),
               Container(
@@ -100,38 +100,16 @@ class WordDetailsScreen extends StatelessWidget {
                   children: [
                     Text(
                       '"${vocabulary.exampleSentence}"',
-                      style: AppTypography.bodyLarge.copyWith(color: AppColors.creamText, fontStyle: FontStyle.italic, fontSize: 16),
+                      style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context), fontStyle: FontStyle.italic, fontSize: 16),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       vocabulary.exampleTranslation,
-                      style: AppTypography.body.copyWith(color: AppColors.creamText2),
+                      style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                     ),
                   ],
                 ),
               ),
-
-              if (vocabulary.relatedWords.isNotEmpty) ...[
-                const SizedBox(height: AppSpacing.xl),
-                Text(
-                  'Related Vocabulary',
-                  style: AppTypography.h3.copyWith(color: AppColors.creamText),
-                ),
-                const SizedBox(height: AppSpacing.xs),
-                Wrap(
-                  spacing: 8,
-                  runSpacing: 8,
-                  children: vocabulary.relatedWords
-                      .map((word) => Chip(
-                            label: Text(word, style: AppTypography.labelBold.copyWith(color: AppColors.forest900)),
-                            backgroundColor: AppColors.gold500,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(AppRadius.chip),
-                            ),
-                          ))
-                      .toList(),
-                ),
-              ],
             ],
           ),
         ),

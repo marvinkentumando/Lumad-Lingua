@@ -50,7 +50,6 @@ class _AchievementsScreenState extends ConsumerState<AchievementsScreen> {
                         // Full-width Header occupying both columns
                         const ScreenHeader(
                           title: 'Trophy Room',
-                          subtitle: 'Milestones in preserving Mansaka culture',
                         ),
                         const SizedBox(height: AppSpacing.xs),
 

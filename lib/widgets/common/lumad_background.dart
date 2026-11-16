@@ -33,8 +33,43 @@ class LumadBackground extends ConsumerWidget {
             end: Alignment.bottomCenter,
           ),
         ),
-        child: child,
+        child: CustomPaint(
+          painter: MansakaPatternPainter(isDark: isDark),
+          child: child,
+        ),
       ),
     );
   }
+}
+
+class MansakaPatternPainter extends CustomPainter {
+  final bool isDark;
+
+  MansakaPatternPainter({required this.isDark});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final paint = Paint()
+      ..color = (isDark ? AppColors.gold500 : AppColors.forest700).withValues(alpha: isDark ? 0.05 : 0.04)
+      ..strokeWidth = 1.0
+      ..style = PaintingStyle.stroke;
+
+    const double spacing = 40.0;
+
+    for (double i = -size.height; i < size.width + size.height; i += spacing) {
+      canvas.drawLine(
+        Offset(i, 0),
+        Offset(i + size.height, size.height),
+        paint,
+      );
+      canvas.drawLine(
+        Offset(i, size.height),
+        Offset(i + size.height, 0),
+        paint,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
 }

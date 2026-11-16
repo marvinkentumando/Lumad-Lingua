@@ -9,6 +9,7 @@ import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/screen_header.dart';
+import '../../widgets/common/lumad_background.dart';
 import '../../utils/audio_helper.dart';
 
 class DictionaryScreen extends ConsumerStatefulWidget {
@@ -29,7 +30,8 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
-      body: searchResultsAsync.when(
+      body: LumadBackground(
+        child: searchResultsAsync.when(
         data: (words) {
           final filteredWords = _selectedCategory == 'All'
               ? words
@@ -47,13 +49,13 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                 onChanged: (val) {
                   ref.read(searchQueryProvider.notifier).updateQuery(val);
                 },
-                style: AppTypography.bodyLarge.copyWith(color: AppColors.creamText),
+                style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context)),
                 decoration: InputDecoration(
                   hintText: 'Search Mansaka or English words...',
-                  hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
+                  hintStyle: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                   prefixIcon: const Icon(Icons.search, color: AppColors.forest500),
                   suffixIcon: IconButton(
-                    icon: const Icon(Icons.clear, color: AppColors.creamText2),
+                    icon: Icon(Icons.clear, color: AppColors.subtitleColor(context)),
                     onPressed: () {
                       ref.read(searchQueryProvider.notifier).updateQuery('');
                     },
@@ -104,7 +106,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                     children: [
                       const Icon(Icons.search_off, size: 64, color: AppColors.creamText3),
                       const SizedBox(height: AppSpacing.md),
-                      Text('No dictionary entries match your search.', style: AppTypography.h3.copyWith(color: AppColors.creamText2), textAlign: TextAlign.center),
+                      Text('No dictionary entries match your search.', style: AppTypography.h3.copyWith(color: AppColors.subtitleColor(context)), textAlign: TextAlign.center),
                     ],
                   ),
                 )
@@ -183,6 +185,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
           onRetry: () => ref.invalidate(dictionarySearchResultsProvider),
         ),
       ),
-    );
+    ),
+  );
   }
 }
