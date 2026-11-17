@@ -138,19 +138,12 @@ class _StreakDashboardScreenState extends ConsumerState<StreakDashboardScreen> w
                               ),
                             ),
                             const SizedBox(height: AppSpacing.xs),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.forest900.withValues(alpha: 0.12),
-                                borderRadius: BorderRadius.circular(20),
-                              ),
-                              child: Text(
-                                'Personal Best: $longestStreak ${longestStreak == 1 ? 'Day' : 'Days'} Consecutive',
-                                style: AppTypography.caption.copyWith(
-                                  color: AppColors.gold900,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 11,
-                                ),
+                            Text(
+                              'Personal Best: $longestStreak ${longestStreak == 1 ? 'Day' : 'Days'} Consecutive',
+                              style: AppTypography.caption.copyWith(
+                                color: AppColors.forest900,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 11,
                               ),
                             ),
                           ],

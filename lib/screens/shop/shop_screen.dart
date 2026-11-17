@@ -187,7 +187,9 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     final updatedCrystals = currentCrystals - item.cost;
     final updatedInventory = List<String>.from(inventory);
-    if (!updatedInventory.contains(item.id)) {
+    if (item.isConsumable) {
+      updatedInventory.add(item.id);
+    } else if (!updatedInventory.contains(item.id)) {
       updatedInventory.add(item.id);
     }
 

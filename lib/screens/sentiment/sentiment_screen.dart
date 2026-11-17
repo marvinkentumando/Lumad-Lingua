@@ -48,12 +48,15 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
   }
 
   void _analyzeText() async {
-    if (_textController.text.trim().isEmpty) return;
+    final rawText = _textController.text.trim();
+    if (rawText.isEmpty) return;
+
+    final queryText = rawText.length > 500 ? rawText.substring(0, 500) : rawText;
 
     HapticFeedback.mediumImpact();
     setState(() => _isLoading = true);
     final repo = ref.read(sentimentRepositoryProvider);
-    final result = await repo.analyzeText(_textController.text.trim());
+    final result = await repo.analyzeText(queryText);
 
     if (mounted) {
       setState(() {

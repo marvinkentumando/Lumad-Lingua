@@ -30,13 +30,19 @@ class AudioHelper {
     return '$_supabaseBaseUrl/storage/v1/object/public/$_bucketName/$cleanPath';
   }
 
-  /// Plays audio from path or URL
+  /// Plays audio from path or URL (supports local asset paths starting with 'assets/' and remote Supabase URLs)
   static Future<void> playAudio(String audioPath) async {
     try {
-      final url = resolveSupabaseAudioUrl(audioPath);
-      if (url != null) {
-        await _player.setUrl(url);
+      final trimmed = audioPath.trim();
+      if (trimmed.startsWith('assets/')) {
+        await _player.setAsset(trimmed);
         await _player.play();
+      } else {
+        final url = resolveSupabaseAudioUrl(trimmed);
+        if (url != null) {
+          await _player.setUrl(url);
+          await _player.play();
+        }
       }
     } catch (_) {}
   }

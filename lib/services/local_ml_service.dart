@@ -29,6 +29,7 @@ class LocalMlService {
   static double calculateDTWFromMfcc(List<List<double>> mfccA, List<List<double>> mfccB) {
     int n = mfccA.length;
     int m = mfccB.length;
+    if (n == 0 || m == 0) return 85.0;
 
     List<List<double>> dtw = List.generate(n + 1, (_) => List.filled(m + 1, double.infinity));
     dtw[0][0] = 0.0;
@@ -45,6 +46,7 @@ class LocalMlService {
     }
 
     double maxPossibleCost = max(n, m) * 5.0;
+    if (maxPossibleCost == 0) return 85.0;
     double distance = dtw[n][m];
     double similarity = (1.0 - (distance / maxPossibleCost)).clamp(0.0, 1.0);
     return (similarity * 35.0) + 65.0; // Scaled 65-100%
@@ -55,6 +57,7 @@ class LocalMlService {
     if (mfccA.isEmpty || mfccB.isEmpty) return 85.0;
     double totalLogLikelihood = 0.0;
     int minFrames = min(mfccA.length, mfccB.length);
+    if (minFrames == 0) return 85.0;
 
     for (int i = 0; i < minFrames; i++) {
       double frameDiff = 0.0;
@@ -68,6 +71,16 @@ class LocalMlService {
     double avgLogLikelihood = totalLogLikelihood / minFrames;
     double score = 100.0 + (avgLogLikelihood * 10.0);
     return score.clamp(65.0, 100.0);
+  }
+
+  // Helper tokenization for Sentiment Classifiers
+  static Set<String> _tokenize(String text) {
+    return text
+        .toLowerCase()
+        .replaceAll(RegExp(r'[^\w\s]'), '')
+        .split(RegExp(r'\s+'))
+        .where((t) => t.isNotEmpty)
+        .toSet();
   }
 
   // Dynamic Pronunciation Evaluation from audio file path based on Admin Config
@@ -94,18 +107,18 @@ class LocalMlService {
 
   // 3. Naive Bayes Classifier for Sentiment
   static Map<String, dynamic> runNaiveBayes(String text) {
-    final lower = text.toLowerCase();
+    final tokens = _tokenize(text);
     double posScore = 0.1;
     double negScore = 0.1;
 
-    final positiveKeywords = ['madyaw', 'marayaw', 'salamat', 'maayo', 'gayod', 'tinuod', 'mauswagon'];
-    final negativeKeywords = ['samok', 'gubat', 'pait', 'buang', 'masakit', 'way'];
+    final positiveKeywords = {'madyaw', 'marayaw', 'salamat', 'maayo', 'gayod', 'tinuod', 'mauswagon'};
+    final negativeKeywords = {'samok', 'gubat', 'pait', 'buang', 'masakit', 'way'};
 
     for (var word in positiveKeywords) {
-      if (lower.contains(word)) posScore += 1.5;
+      if (tokens.contains(word)) posScore += 1.5;
     }
     for (var word in negativeKeywords) {
-      if (lower.contains(word)) negScore += 1.5;
+      if (tokens.contains(word)) negScore += 1.5;
     }
 
     double total = posScore + negScore;
@@ -118,10 +131,10 @@ class LocalMlService {
 
   // 4. Support Vector Machine (SVM) Decision Boundary Classifier
   static Map<String, dynamic> runSVM(String text) {
-    final lower = text.toLowerCase();
+    final tokens = _tokenize(text);
     double score = 0.0;
-    if (lower.contains('madyaw') || lower.contains('salamat')) score += 0.8;
-    if (lower.contains('samok') || lower.contains('gubat')) score -= 0.8;
+    if (tokens.contains('madyaw') || tokens.contains('salamat')) score += 0.8;
+    if (tokens.contains('samok') || tokens.contains('gubat')) score -= 0.8;
 
     SentimentLabel label = SentimentLabel.neutral;
     if (score > 0.2) label = SentimentLabel.positive;
@@ -135,8 +148,9 @@ class LocalMlService {
 
   // 5. Bidirectional LSTM (BiLSTM) Sequence Scoring Simulation
   static Map<String, dynamic> runBiLSTM(String text) {
+    final tokens = _tokenize(text);
     SentimentLabel label = SentimentLabel.positive;
-    if (text.toLowerCase().contains('samok') || text.toLowerCase().contains('gubat')) {
+    if (tokens.contains('samok') || tokens.contains('gubat')) {
       label = SentimentLabel.negative;
     }
     return {
@@ -162,10 +176,9 @@ class LocalMlService {
 
     double avgConfidence = (nb['confidence'] + svm['confidence'] + lstm['confidence']) / 3.0;
 
-    bool isMansaka = text.toLowerCase().contains('madyaw') ||
-                     text.toLowerCase().contains('masurom') ||
-                     text.toLowerCase().contains('banwa') ||
-                     text.toLowerCase().contains('salamat');
+    final tokens = _tokenize(text);
+    final mansakaKeywords = {'madyaw', 'masurom', 'banwa', 'salamat', 'marayaw', 'maudto', 'masawg'};
+    bool isMansaka = tokens.any((t) => mansakaKeywords.contains(t));
 
     return SentimentAnalysisResult(
       text: text,

@@ -109,7 +109,7 @@ class LessonResultScreen extends StatelessWidget {
                   text: 'Review Drills',
                   icon: Icons.replay_rounded,
                   type: BrandButtonType.secondary,
-                  onPressed: () => context.pop(),
+                  onPressed: () => context.go('/learn'),
                 ),
               ],
             ),

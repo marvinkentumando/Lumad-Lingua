@@ -91,7 +91,8 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
 
     if (!mounted) return;
 
-    if (currentRound + 1 >= (session?.questions.length ?? 5)) {
+    final totalQuestions = session?.questions.length ?? 5;
+    if (currentRound + 1 >= totalQuestions) {
       _finishMatch(session, isPlayer1);
     } else {
       _startRoundTimer();
@@ -176,12 +177,30 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
             ],
           ),
           actions: [
-            BrandButton(
-              text: 'Return to Home',
-              onPressed: () {
-                Navigator.of(context).pop();
-                context.go('/home');
-              },
+            Row(
+              children: [
+                Expanded(
+                  child: BrandButton(
+                    text: 'Play Again',
+                    type: BrandButtonType.gold,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.go('/arena');
+                    },
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: BrandButton(
+                    text: 'Home',
+                    type: BrandButtonType.primary,
+                    onPressed: () {
+                      Navigator.of(context).pop();
+                      context.go('/home');
+                    },
+                  ),
+                ),
+              ],
             ),
           ],
         ),

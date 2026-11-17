@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -20,27 +21,69 @@ class DuelLobbyScreen extends ConsumerStatefulWidget {
 
 class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
   bool _isSearching = false;
+  int _searchTimeLeft = 20;
+  Timer? _searchTimer;
+
+  @override
+  void dispose() {
+    _searchTimer?.cancel();
+    super.dispose();
+  }
+
+  void _cancelMatchmaking() {
+    _searchTimer?.cancel();
+    if (mounted) {
+      setState(() {
+        _isSearching = false;
+        _searchTimeLeft = 20;
+      });
+    }
+  }
 
   Future<void> _startMatchmaking() async {
-    setState(() => _isSearching = true);
+    setState(() {
+      _isSearching = true;
+      _searchTimeLeft = 20;
+    });
+
     final user = ref.read(authStateProvider).value;
     final userName = user?.name ?? 'Lumad Learner';
+    final service = ref.read(duelServiceProvider);
+
+    _searchTimer?.cancel();
+    _searchTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
+      if (!mounted) {
+        timer.cancel();
+        return;
+      }
+
+      if (_searchTimeLeft > 1) {
+        setState(() => _searchTimeLeft--);
+      } else {
+        timer.cancel();
+        // 20-second timeout elapsed -> Fallback to instant AI Bot Match
+        try {
+          final botSessionId = await service.createBotMatch(userName: userName);
+          if (mounted) {
+            setState(() => _isSearching = false);
+            context.push('/arena/battle', extra: {'sessionId': botSessionId});
+          }
+        } catch (e) {
+          _cancelMatchmaking();
+        }
+      }
+    });
 
     try {
-      final service = ref.read(duelServiceProvider);
       final sessionId = await service.findOrCreateMatch(userName: userName);
 
-      if (mounted) {
+      if (mounted && _isSearching) {
+        _searchTimer?.cancel();
         setState(() => _isSearching = false);
         context.push('/arena/battle', extra: {'sessionId': sessionId});
       }
     } catch (e) {
-      if (mounted) {
-        setState(() => _isSearching = false);
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Matchmaking error: $e')),
-        );
-      }
+      // Don't interrupt countdown; let timer complete or fallback
     }
   }
 
@@ -61,7 +104,7 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                // Hero Arena Banner (With Dual-Tone Gold Gradient & 3D Shadow Lip)
+                // Hero Arena Banner
                 BrandCard(
                   backgroundColor: AppColors.gold500,
                   child: Column(
@@ -99,9 +142,28 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
                     textAlign: TextAlign.center,
                   ),
                   const SizedBox(height: 8),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppColors.gold500.withValues(alpha: 0.2),
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppColors.gold500),
+                    ),
+                    child: Text(
+                      'Matchmaking Countdown: 00:${_searchTimeLeft.toString().padLeft(2, '0')}',
+                      style: AppTypography.labelBold.copyWith(color: AppColors.gold400),
+                    ),
+                  ),
+                  const SizedBox(height: 4),
                   Text(
-                    'Synchronizing real-time battle session...',
+                    'Auto-matching AI Rival if no human opponent connects',
                     style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                  ),
+                  const SizedBox(height: AppSpacing.lg),
+                  BrandButton(
+                    text: 'Cancel Search',
+                    type: BrandButtonType.secondary,
+                    onPressed: _cancelMatchmaking,
                   ),
                 ] else ...[
                   // Rewards Summary Banner

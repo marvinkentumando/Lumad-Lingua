@@ -56,8 +56,10 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
 
   @override
   void dispose() {
-    _amplitudeTimer?.cancel();
+    _stopAmplitudePolling();
+    _audioRecorder.stop();
     _audioRecorder.dispose();
+    _audioPlayer.stop();
     _audioPlayer.dispose();
     super.dispose();
   }
@@ -143,13 +145,15 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
         setState(() => _isPlayingRecorded = true);
         await _audioPlayer.setFilePath(state.audioPath!);
         await _audioPlayer.play();
-        setState(() => _isPlayingRecorded = false);
       } catch (e) {
-        setState(() => _isPlayingRecorded = false);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(content: Text('Playback error: $e')),
           );
+        }
+      } finally {
+        if (mounted) {
+          setState(() => _isPlayingRecorded = false);
         }
       }
     } else {

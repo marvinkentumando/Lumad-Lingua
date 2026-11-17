@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
+import '../../utils/level_helper.dart';
 import '../../providers/classroom_provider.dart';
 import '../../providers/progress_provider.dart';
 import '../../widgets/common/app_card.dart';
@@ -60,6 +62,111 @@ class ClassroomDashboardScreen extends ConsumerWidget {
     }
   }
 
+  void _showStudentDetailsDialog(BuildContext context, Map<String, dynamic> student, int rank) {
+    HapticFeedback.lightImpact();
+    final name = student['name'] ?? 'Learner';
+    final xp = student['totalXp'] ?? 0;
+    final streak = student['streakDays'] ?? 0;
+    final level = LevelHelper.calculateLevel(xp);
+
+    String rankTitle = 'Mansaka Scholar 🎓';
+    if (level < 3) {
+      rankTitle = 'Beginning Learner 📚';
+    } else if (level < 5) {
+      rankTitle = 'Growing Speaker 💬';
+    } else if (level < 8) {
+      rankTitle = 'Confident Communicator 🌟';
+    } else if (level < 11) {
+      rankTitle = 'Fluent Achiever 🏆';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.forest800,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 20,
+              backgroundColor: AppColors.gold500,
+              child: Text(
+                name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
+                style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 16),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: AppTypography.h3.copyWith(color: Colors.white)),
+                  Text('Classroom Rank #$rank', style: AppTypography.caption.copyWith(color: AppColors.gold400, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.forest900,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: AppColors.forest700),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Title & Rank', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      Text(rankTitle, style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Level', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      Text('Level $level', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total XP', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      XPBadge(xp: xp),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Streak', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      StreakIndicator(streakDays: streak),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          BrandButton(
+            text: 'Close',
+            type: BrandButtonType.primary,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final className = classroomData['name'] ?? 'Classroom Dashboard';
@@ -80,8 +187,26 @@ class ClassroomDashboardScreen extends ConsumerWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              // Classroom Header Card
-              AppCard(
+              // 3D Tactile Classroom Header Card
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(AppSpacing.lg),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [Color(0xFF2E5A36), AppColors.forest500, Color(0xFF142917)],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  ),
+                  borderRadius: BorderRadius.circular(AppRadius.card),
+                  border: Border.all(color: AppColors.gold500, width: 2),
+                  boxShadow: const [
+                    BoxShadow(
+                      color: Color(0xFF0A140B),
+                      offset: Offset(0, 6),
+                      blurRadius: 0,
+                    ),
+                  ],
+                ),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -94,16 +219,41 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                             style: AppTypography.h2.copyWith(color: Colors.white, fontSize: 22),
                           ),
                         ),
-                        Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: AppColors.gold500,
-                            borderRadius: BorderRadius.circular(AppRadius.chip),
-                            border: Border.all(color: AppColors.gold700),
-                          ),
-                          child: Text(
-                            'Code: $joinCode',
-                            style: AppTypography.labelBold.copyWith(color: AppColors.forest900),
+                        // 3D Tactile Copy Join Code Pill Button
+                        GestureDetector(
+                          onTap: () {
+                            Clipboard.setData(ClipboardData(text: joinCode));
+                            HapticFeedback.lightImpact();
+                            ScaffoldMessenger.of(context).hideCurrentSnackBar();
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              SnackBar(content: Text('Copied class join code "$joinCode" to clipboard! 📋')),
+                            );
+                          },
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: AppColors.gold500,
+                              borderRadius: BorderRadius.circular(AppRadius.chip),
+                              border: Border.all(color: AppColors.gold700, width: 1.5),
+                              boxShadow: const [
+                                BoxShadow(
+                                  color: Color(0xFFB88500),
+                                  offset: Offset(0, 3),
+                                  blurRadius: 0,
+                                ),
+                              ],
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Code: $joinCode',
+                                  style: AppTypography.labelBold.copyWith(color: AppColors.forest900),
+                                ),
+                                const SizedBox(width: 4),
+                                const Icon(Icons.copy_rounded, size: 14, color: AppColors.forest900),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -246,9 +396,9 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                                       crossAxisAlignment: CrossAxisAlignment.end,
                                       children: [
-                                        if (top2 != null) _buildPodiumUser(top2, 2, AppColors.forest700),
-                                        if (top1 != null) _buildPodiumUser(top1, 1, AppColors.forest900),
-                                        if (top3 != null) _buildPodiumUser(top3, 3, AppColors.forest700),
+                                        if (top2 != null) _buildPodiumUser(context, top2, 2, AppColors.forest700),
+                                        if (top1 != null) _buildPodiumUser(context, top1, 1, AppColors.forest900),
+                                        if (top3 != null) _buildPodiumUser(context, top3, 3, AppColors.forest700),
                                       ],
                                     ),
                                   ],
@@ -272,6 +422,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                   final rank = index + 4;
 
                                   return AppCard(
+                                    onTap: () => _showStudentDetailsDialog(context, student, rank),
                                     child: Row(
                                       children: [
                                         Container(
@@ -311,6 +462,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                             ],
                                           ),
                                         ),
+                                        const Icon(Icons.chevron_right_rounded, color: AppColors.creamText3),
                                       ],
                                     ),
                                   );
@@ -335,41 +487,44 @@ class ClassroomDashboardScreen extends ConsumerWidget {
     );
   }
 
-  Widget _buildPodiumUser(Map<String, dynamic> student, int rank, Color badgeColor) {
+  Widget _buildPodiumUser(BuildContext context, Map<String, dynamic> student, int rank, Color badgeColor) {
     final name = student['name'] ?? 'Learner';
     final xp = student['totalXp'] ?? 0;
     final medalEmoji = rank == 1 ? '🥇' : (rank == 2 ? '🥈' : '🥉');
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Text(medalEmoji, style: const TextStyle(fontSize: 24)),
-        const SizedBox(height: 4),
-        CircleAvatar(
-          radius: rank == 1 ? 28 : 22,
-          backgroundColor: badgeColor,
-          child: Text(
-            name.substring(0, 1).toUpperCase(),
-            style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
+    return GestureDetector(
+      onTap: () => _showStudentDetailsDialog(context, student, rank),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Text(medalEmoji, style: const TextStyle(fontSize: 24)),
+          const SizedBox(height: 4),
+          CircleAvatar(
+            radius: rank == 1 ? 28 : 22,
+            backgroundColor: badgeColor,
+            child: Text(
+              name.isNotEmpty ? name.substring(0, 1).toUpperCase() : 'L',
+              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
+            ),
           ),
-        ),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: 80,
-          child: Text(
-            name,
-            style: AppTypography.lessonTitle.copyWith(color: AppColors.forest900, fontSize: 13),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 82,
+            child: Text(
+              name,
+              style: AppTypography.lessonTitle.copyWith(color: AppColors.forest900, fontSize: 13),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '$xp XP',
-          style: AppTypography.xpValue.copyWith(color: AppColors.forest900),
-        ),
-      ],
+          const SizedBox(height: 2),
+          Text(
+            '$xp XP',
+            style: AppTypography.xpValue.copyWith(color: AppColors.forest900),
+          ),
+        ],
+      ),
     );
   }
 }

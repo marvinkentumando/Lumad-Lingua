@@ -283,7 +283,7 @@ class LeaderboardScreen extends ConsumerWidget {
           radius: rank == 1 ? 28 : 22,
           backgroundColor: badgeColor,
           child: Text(
-            user.name.substring(0, 1).toUpperCase(),
+            user.name.isNotEmpty ? user.name.substring(0, 1).toUpperCase() : 'L',
             style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
           ),
         ),

@@ -158,6 +158,37 @@ class DuelService {
     }
   }
 
+  /// Creates an instant bot match session against AI Rival Bot
+  Future<String> createBotMatch({required String userName}) async {
+    final user = _auth.currentUser;
+    final uid = user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
+
+    try {
+      final duelQuestions = await _fetchFirebaseQuestions();
+      final newDoc = _firestore.collection('duel_sessions').doc();
+      final session = DuelSessionModel(
+        id: newDoc.id,
+        player1Id: uid,
+        player1Name: userName,
+        player1Score: 0,
+        player1Hp: 100,
+        player2Id: 'bot_ai',
+        player2Name: 'AI Rival (Bot)',
+        player2Score: 0,
+        player2Hp: 100,
+        status: 'active',
+        currentRound: 0,
+        questions: duelQuestions,
+        createdAt: DateTime.now(),
+      );
+
+      await newDoc.set(session.toJson());
+      return newDoc.id;
+    } catch (e) {
+      return 'local_duel_${DateTime.now().millisecondsSinceEpoch}';
+    }
+  }
+
   /// Streams real-time updates for an active duel session
   Stream<DuelSessionModel?> watchDuelSession(String sessionId) {
     return _firestore
@@ -191,30 +222,47 @@ class DuelService {
     try {
       final docRef = _firestore.collection('duel_sessions').doc(sessionId);
       final doc = await docRef.get();
-      if (!doc.exists || doc.data() == null) return;
 
-      final data = doc.data()!;
       final speedBonus = isCorrect ? ((10000 - responseTimeMs).clamp(0, 10000) ~/ 100) : 0;
       final pointsEarned = isCorrect ? (100 + speedBonus) : 0;
       final hpDamage = isCorrect ? 0 : 20;
 
-      if (isPlayer1) {
-        final newScore = (data['player1Score'] as int? ?? 0) + pointsEarned;
-        final newHp = ((data['player1Hp'] as int? ?? 100) - hpDamage).clamp(0, 100);
-        await docRef.update({
-          'player1Score': newScore,
-          'player1Hp': newHp,
-          'currentRound': currentRound + 1,
-        });
-      } else {
-        final newScore = (data['player2Score'] as int? ?? 0) + pointsEarned;
-        final newHp = ((data['player2Hp'] as int? ?? 100) - hpDamage).clamp(0, 100);
-        await docRef.update({
-          'player2Score': newScore,
-          'player2Hp': newHp,
-          'currentRound': currentRound + 1,
-        });
+      if (!doc.exists || doc.data() == null) {
+        return;
       }
+
+      final data = doc.data()!;
+      final isBotMatch = data['player2Id'] == 'bot_ai';
+
+      int p1Score = data['player1Score'] as int? ?? 0;
+      int p1Hp = data['player1Hp'] as int? ?? 100;
+      int p2Score = data['player2Score'] as int? ?? 0;
+      int p2Hp = data['player2Hp'] as int? ?? 100;
+
+      if (isPlayer1) {
+        p1Score += pointsEarned;
+        p1Hp = (p1Hp - hpDamage).clamp(0, 100);
+
+        if (isBotMatch) {
+          // Simulate dynamic AI bot response (70% accuracy)
+          final botCorrect = (DateTime.now().millisecondsSinceEpoch % 10) < 7;
+          final botPoints = botCorrect ? 175 : 0;
+          final botDamage = botCorrect ? 0 : 20;
+          p2Score += botPoints;
+          p2Hp = (p2Hp - botDamage).clamp(0, 100);
+        }
+      } else {
+        p2Score += pointsEarned;
+        p2Hp = (p2Hp - hpDamage).clamp(0, 100);
+      }
+
+      await docRef.update({
+        'player1Score': p1Score,
+        'player1Hp': p1Hp,
+        'player2Score': p2Score,
+        'player2Hp': p2Hp,
+        'currentRound': currentRound + 1,
+      });
     } catch (_) {}
   }
 

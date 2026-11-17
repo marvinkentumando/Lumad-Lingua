@@ -28,6 +28,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
   bool? _isAnswerChecked;
   bool _isCorrect = false;
   bool _isRecording = false;
+  bool _isOutOfHeartsDialogShown = false;
 
   final List<String> _selectedArrangement = [];
 
@@ -111,41 +112,45 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
       body: sessionAsync.when(
         data: (session) {
           if (session.hearts == 0) {
-            WidgetsBinding.instance.addPostFrameCallback((_) {
-              showDialog(
-                context: context,
-                barrierDismissible: false,
-                builder: (context) => AlertDialog(
-                  title: Text('Out of Hearts! 💔', style: AppTypography.h3),
-                  content: Text('You have lost all 5 hearts due to mistakes. Refill your hearts with 30 crystals or exit the lesson.', style: AppTypography.body),
-                  actions: [
-                    TextButton(
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                        context.pop();
-                      },
-                      child: const Text('Exit Lesson'),
-                    ),
-                    BrandButton(
-                      text: 'Refill Hearts (-30 Crystals)',
-                      type: BrandButtonType.gold,
-                      onPressed: () {
-                        final user = ref.read(authStateProvider).value;
-                        if (user != null && user.crystals >= 30) {
-                          ref.read(authStateProvider.notifier).updateCrystals(user.crystals - 30);
-                          ref.read(lessonSessionProvider.notifier).refillHearts();
-                          Navigator.of(context).pop();
-                        } else {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(content: Text('Not enough crystals for heart refill!')),
-                          );
-                        }
-                      },
-                    ),
-                  ],
-                ),
-              );
-            });
+            if (!_isOutOfHeartsDialogShown) {
+              _isOutOfHeartsDialogShown = true;
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (dialogContext) => AlertDialog(
+                    title: Text('Out of Hearts! 💔', style: AppTypography.h3),
+                    content: Text('You have lost all 5 hearts due to mistakes. Refill your hearts with 30 crystals or exit the lesson.', style: AppTypography.body),
+                    actions: [
+                      TextButton(
+                        onPressed: () {
+                          Navigator.of(dialogContext).pop();
+                          if (context.mounted) context.pop();
+                        },
+                        child: const Text('Exit Lesson'),
+                      ),
+                      BrandButton(
+                        text: 'Refill Hearts (-30 Crystals)',
+                        type: BrandButtonType.gold,
+                        onPressed: () {
+                          final user = ref.read(authStateProvider).value;
+                          if (user != null && user.crystals >= 30) {
+                            ref.read(authStateProvider.notifier).updateCrystals(user.crystals - 30);
+                            ref.read(lessonSessionProvider.notifier).refillHearts();
+                            _isOutOfHeartsDialogShown = false;
+                            Navigator.of(dialogContext).pop();
+                          } else {
+                            ScaffoldMessenger.of(context).showSnackBar(
+                              const SnackBar(content: Text('Not enough crystals for heart refill!')),
+                            );
+                          }
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              });
+            }
             return const Center(child: Text('Out of hearts.'));
           }
 

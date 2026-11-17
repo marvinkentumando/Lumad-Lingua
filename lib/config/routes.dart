@@ -86,7 +86,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/dictionary/details',
       builder: (context, state) {
-        final vocab = state.extra as VocabularyModel;
+        final vocab = state.extra as VocabularyModel?;
+        if (vocab == null) {
+          return const DictionaryScreen();
+        }
         return WordDetailsScreen(vocabulary: vocab);
       },
     ),

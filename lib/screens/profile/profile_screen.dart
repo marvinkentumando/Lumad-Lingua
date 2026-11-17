@@ -114,6 +114,45 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
     );
   }
 
+  void _showEditProfileOptionsModal(BuildContext context, String currentName, String? currentAvatarUrl) {
+    showModalBottomSheet(
+      context: context,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.modal)),
+      ),
+      builder: (modalContext) => Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Edit Profile Options', style: AppTypography.h3),
+            const SizedBox(height: AppSpacing.md),
+            ListTile(
+              leading: const Icon(Icons.edit, color: AppColors.gold500),
+              title: Text('Edit Display Name', style: AppTypography.bodyLarge),
+              subtitle: Text(currentName, style: AppTypography.caption),
+              onTap: () {
+                Navigator.pop(modalContext);
+                _showEditProfileDialog(currentName);
+              },
+            ),
+            const Divider(),
+            ListTile(
+              leading: const Icon(Icons.camera_alt, color: AppColors.gold500),
+              title: Text('Change Profile Picture', style: AppTypography.bodyLarge),
+              subtitle: Text('Upload or select avatar image', style: AppTypography.caption),
+              onTap: () {
+                Navigator.pop(modalContext);
+                _showEditAvatarDialog(currentAvatarUrl);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   void _showEditProfileDialog(String currentName) {
     final nameController = TextEditingController(text: currentName);
     showDialog(
@@ -307,24 +346,38 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                         child: Stack(
                           alignment: Alignment.bottomRight,
                           children: [
-                            CircleAvatar(
-                              radius: 60,
-                              backgroundColor: AppColors.forest500,
-                              backgroundImage: getAvatarImage(user?.avatarUrl),
-                              child: (user == null || user.avatarUrl == null || user.avatarUrl!.isEmpty)
-                                  ? Text(
-                                      user != null ? user.name.substring(0, 1).toUpperCase() : 'L',
-                                      style: AppTypography.displayBold.copyWith(color: Colors.white, fontSize: 44),
-                                    )
-                                  : null,
+                            Container(
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.gold500, width: 3.5),
+                                boxShadow: const [
+                                  BoxShadow(
+                                    color: Color(0xFFB88500),
+                                    offset: Offset(0, 4),
+                                    blurRadius: 0,
+                                  ),
+                                ],
+                              ),
+                              child: CircleAvatar(
+                                radius: 72,
+                                backgroundColor: AppColors.forest500,
+                                backgroundImage: getAvatarImage(user?.avatarUrl),
+                                child: (user == null || user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                                    ? Text(
+                                        user != null ? user.name.substring(0, 1).toUpperCase() : 'L',
+                                        style: AppTypography.displayBold.copyWith(color: Colors.white, fontSize: 52),
+                                      )
+                                    : null,
+                              ),
                             ),
                             Container(
-                              padding: const EdgeInsets.all(8),
-                              decoration: const BoxDecoration(
+                              padding: const EdgeInsets.all(9),
+                              decoration: BoxDecoration(
                                 color: AppColors.gold500,
                                 shape: BoxShape.circle,
+                                border: Border.all(color: AppColors.gold700, width: 2),
                               ),
-                              child: const Icon(Icons.camera_alt, size: 20, color: AppColors.forest900),
+                              child: const Icon(Icons.camera_alt, size: 22, color: AppColors.forest900),
                             ),
                           ],
                         ),
@@ -367,7 +420,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
                                   Text(
-                                    '${user?.streakDays ?? 3} Days',
+                                    '${user?.streakDays ?? 0} ${(user?.streakDays ?? 0) == 1 ? 'Day' : 'Days'}',
                                     style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
                                   ),
                                   Text('Streak', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
@@ -471,6 +524,30 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               // Journey Management Section & Classroom Shortcut Button Card
               Text('Journey Management', style: AppTypography.h3),
               const SizedBox(height: AppSpacing.sm),
+
+              // Dedicated Edit Profile & Avatar Card
+              AppCard(
+                onTap: isGuest
+                    ? () => context.push('/login')
+                    : () => _showEditProfileOptionsModal(context, user.name, user.avatarUrl),
+                child: Row(
+                  children: [
+                    const Icon(Icons.manage_accounts_rounded, color: AppColors.gold500, size: 32),
+                    const SizedBox(width: AppSpacing.md),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Edit Profile & Avatar', style: AppTypography.h3.copyWith(color: Colors.white)),
+                          Text('Update your display name and profile picture', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                        ],
+                      ),
+                    ),
+                    const Icon(Icons.chevron_right, color: AppColors.gold500),
+                  ],
+                ),
+              ),
+              const SizedBox(height: AppSpacing.md),
               classroomsAsync.when(
                 data: (snapshot) {
                   final docs = snapshot.docs;

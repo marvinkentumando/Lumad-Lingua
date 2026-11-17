@@ -27,15 +27,13 @@ class _SplashScreenState extends State<SplashScreen> with SingleTickerProviderSt
     _controller.forward();
 
     Future.delayed(const Duration(seconds: 3), () async {
+      final prefs = await SharedPreferences.getInstance();
       if (mounted) {
-        final prefs = await SharedPreferences.getInstance();
         final hasCompletedOnboarding = prefs.getBool('has_completed_onboarding') ?? false;
-        if (mounted) {
-          if (hasCompletedOnboarding) {
-            context.go('/home');
-          } else {
-            context.go('/onboarding');
-          }
+        if (hasCompletedOnboarding) {
+          context.go('/home');
+        } else {
+          context.go('/onboarding');
         }
       }
     });
