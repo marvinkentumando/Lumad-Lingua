@@ -52,6 +52,7 @@ dependencies:
   http: ^1.2.2
   image_picker: ^1.1.2
   confetti: ^0.7.0
+  flutter_local_notifications: ^17.2.1
 
 dev_dependencies:
   flutter_test:

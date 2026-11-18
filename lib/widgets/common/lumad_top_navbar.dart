@@ -32,6 +32,7 @@ class LumadTopNavbar extends ConsumerWidget implements PreferredSizeWidget {
     final user = ref.watch(authStateProvider).value;
     final isCustomActive = ref.watch(customThemeAccentProvider);
     final navbarBg = isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700;
+    final hasFrame = user?.equippedFrame != null;
 
     return AppBar(
       backgroundColor: navbarBg,
@@ -56,21 +57,33 @@ class LumadTopNavbar extends ConsumerWidget implements PreferredSizeWidget {
               const SizedBox(width: 8),
               GestureDetector(
                 onTap: () => context.go('/profile'),
-                child: CircleAvatar(
-                  radius: 18,
-                  backgroundColor: AppColors.gold500,
-                  backgroundImage: getAvatarImage(user?.avatarUrl),
-                  child: (user == null || user.avatarUrl == null || user.avatarUrl!.isEmpty)
-                      ? Text(
-                          (user != null && user.name.isNotEmpty)
-                              ? user.name.substring(0, 1).toUpperCase()
-                              : 'L',
-                          style: AppTypography.labelBold.copyWith(
-                            color: AppColors.forest900,
-                            fontSize: 13,
-                          ),
+                child: Container(
+                  padding: hasFrame ? const EdgeInsets.all(2) : EdgeInsets.zero,
+                  decoration: hasFrame
+                      ? BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.gold500, width: 2.0),
+                          boxShadow: const [
+                            BoxShadow(color: AppColors.gold700, blurRadius: 4, spreadRadius: 0.5),
+                          ],
                         )
                       : null,
+                  child: CircleAvatar(
+                    radius: 17,
+                    backgroundColor: AppColors.gold500,
+                    backgroundImage: getAvatarImage(user?.avatarUrl),
+                    child: (user == null || user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                        ? Text(
+                            (user != null && user.name.isNotEmpty)
+                                ? user.name.substring(0, 1).toUpperCase()
+                                : 'L',
+                            style: AppTypography.labelBold.copyWith(
+                              color: AppColors.forest900,
+                              fontSize: 13,
+                            ),
+                          )
+                        : null,
+                  ),
                 ),
               ),
             ],

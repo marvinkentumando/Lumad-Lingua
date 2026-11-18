@@ -4,11 +4,13 @@ class PronunciationAttempt {
   final String phrase;
   final double score;
   final DateTime timestamp;
+  final String? audioPath;
 
   const PronunciationAttempt({
     required this.phrase,
     required this.score,
     required this.timestamp,
+    this.audioPath,
   });
 }
 
@@ -65,9 +67,17 @@ class PronunciationNotifier extends Notifier<PronunciationState> {
     );
   }
 
-  void addAttempt(String phrase, double score) {
+  void addAttempt(String phrase, double score, [String? audioPath]) {
     final updated = List<PronunciationAttempt>.from(state.history)
-      ..insert(0, PronunciationAttempt(phrase: phrase, score: score, timestamp: DateTime.now()));
+      ..insert(
+        0,
+        PronunciationAttempt(
+          phrase: phrase,
+          score: score,
+          timestamp: DateTime.now(),
+          audioPath: audioPath ?? state.audioPath,
+        ),
+      );
     state = state.copyWith(history: updated);
   }
 

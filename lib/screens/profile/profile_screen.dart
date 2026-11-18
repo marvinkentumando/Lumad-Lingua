@@ -352,21 +352,52 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 const SizedBox(height: AppSpacing.md),
               ],
 
-              // Flush User Header (Larger Avatar Circle & Clean Stats Readout)
+              // Flush User Header (Larger Avatar Circle, Equipped Banner & Frame, Clean Stats Readout)
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: AppSpacing.md),
                 child: Column(
                   children: [
+                    if (user?.equippedBanner != null) ...[
+                      Container(
+                        width: double.infinity,
+                        margin: const EdgeInsets.only(bottom: AppSpacing.md),
+                        padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFFFD54F), AppColors.gold500, Color(0xFFFFA000)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          border: Border.all(color: AppColors.gold700, width: 2.0),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.center,
+                          children: [
+                            const Icon(Icons.stars, color: AppColors.forest900, size: 20),
+                            const SizedBox(width: 8),
+                            Text(
+                              'EQUIPPED PROFILE BANNER',
+                              style: AppTypography.labelBold.copyWith(color: AppColors.forest900, letterSpacing: 1.1),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                     Center(
                       child: Container(
+                        padding: (user?.equippedFrame != null) ? const EdgeInsets.all(4) : EdgeInsets.zero,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
-                          border: Border.all(color: AppColors.gold500, width: 3.5),
-                          boxShadow: const [
+                          border: Border.all(
+                            color: (user?.equippedFrame != null) ? AppColors.gold500 : AppColors.gold500,
+                            width: (user?.equippedFrame != null) ? 5.0 : 3.5,
+                          ),
+                          boxShadow: [
                             BoxShadow(
-                              color: Color(0xFFB88500),
-                              offset: Offset(0, 4),
-                              blurRadius: 0,
+                              color: (user?.equippedFrame != null) ? AppColors.gold700 : const Color(0xFFB88500),
+                              offset: const Offset(0, 4),
+                              blurRadius: (user?.equippedFrame != null) ? 8 : 0,
                             ),
                           ],
                         ),
@@ -395,7 +426,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       style: AppTypography.mono.copyWith(color: AppColors.creamText2),
                     ),
                     const SizedBox(height: AppSpacing.md),
-                    // Statistical Readout Row (Streak & Total XP)
+                    // Statistical Readout Row (Streak, Total XP, & Streak Freezes)
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
@@ -422,7 +453,7 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                           height: 28,
                           width: 1,
                           color: isDark ? AppColors.creamBorder.withValues(alpha: 0.4) : AppColors.forest700.withValues(alpha: 0.3),
-                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.lg),
+                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
                         ),
                         GestureDetector(
                           onTap: () => context.push('/xp'),
@@ -438,6 +469,31 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                                     style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
                                   ),
                                   Text('Total XP', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
+                                ],
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          height: 28,
+                          width: 1,
+                          color: isDark ? AppColors.creamBorder.withValues(alpha: 0.4) : AppColors.forest700.withValues(alpha: 0.3),
+                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                        ),
+                        GestureDetector(
+                          onTap: () => context.push('/shop'),
+                          child: Row(
+                            children: [
+                              const Icon(Icons.ac_unit, color: AppColors.gold400, size: 22),
+                              const SizedBox(width: 4),
+                              Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    '${user?.streakFreezes ?? 0} Freezes',
+                                    style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
+                                  ),
+                                  Text('Streak Protect', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
                                 ],
                               ),
                             ],

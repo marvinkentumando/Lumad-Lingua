@@ -22,6 +22,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   late AudioPlayer _player;
   bool _isPlaying = false;
   bool _isLoaded = false;
+  double _playbackSpeed = 1.0;
+  static const List<double> _speeds = [1.0, 0.75, 0.5];
 
   @override
   void initState() {
@@ -33,6 +35,23 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void dispose() {
     _player.dispose();
     super.dispose();
+  }
+
+  void _toggleSpeed() {
+    final nextIndex = (_speeds.indexOf(_playbackSpeed) + 1) % _speeds.length;
+    final nextSpeed = _speeds[nextIndex];
+    setState(() => _playbackSpeed = nextSpeed);
+    _player.setSpeed(nextSpeed);
+
+    if (mounted) {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Playback speed set to ${nextSpeed}x ${nextSpeed < 1.0 ? '🐢 (Slow Motion)' : '⚡'}'),
+          duration: const Duration(milliseconds: 1200),
+        ),
+      );
+    }
   }
 
   Future<void> _playAudio() async {
@@ -52,6 +71,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         await _player.setUrl(resolvedUrl);
         _isLoaded = true;
       }
+      await _player.setSpeed(_playbackSpeed);
       setState(() => _isPlaying = true);
       await _player.seek(Duration.zero);
       await _player.play();
@@ -110,6 +130,36 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
                   style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(width: AppSpacing.sm),
+          // Speed Toggle Button Chip (1.0x -> 0.75x -> 0.5x)
+          GestureDetector(
+            onTap: _toggleSpeed,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              decoration: BoxDecoration(
+                color: _playbackSpeed < 1.0 ? AppColors.gold500 : AppColors.forest800,
+                borderRadius: BorderRadius.circular(AppRadius.chip),
+                border: Border.all(
+                  color: AppColors.gold500,
+                  width: 1.5,
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (_playbackSpeed < 1.0) const Icon(Icons.slow_motion_video, size: 14, color: AppColors.forest900),
+                  if (_playbackSpeed < 1.0) const SizedBox(width: 4),
+                  Text(
+                    '${_playbackSpeed}x',
+                    style: AppTypography.labelBold.copyWith(
+                      color: _playbackSpeed < 1.0 ? AppColors.forest900 : AppColors.gold400,
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ],

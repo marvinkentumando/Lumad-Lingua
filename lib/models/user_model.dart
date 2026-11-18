@@ -10,6 +10,9 @@ class UserModel {
   final String currentLessonId;
   final String? avatarUrl;
   final List<String> inventory;
+  final int streakFreezes;
+  final String? equippedFrame;
+  final String? equippedBanner;
 
   const UserModel({
     required this.id,
@@ -23,6 +26,9 @@ class UserModel {
     this.currentLessonId = 'lesson_1_2',
     this.avatarUrl,
     this.inventory = const [],
+    this.streakFreezes = 0,
+    this.equippedFrame,
+    this.equippedBanner,
   });
 
   /// Returns the first word/name of the user's display name for greetings (e.g., "Juan" from "Juan Dela Cruz").
@@ -44,6 +50,11 @@ class UserModel {
     String? currentLessonId,
     String? avatarUrl,
     List<String>? inventory,
+    int? streakFreezes,
+    String? equippedFrame,
+    String? equippedBanner,
+    bool clearEquippedFrame = false,
+    bool clearEquippedBanner = false,
   }) {
     return UserModel(
       id: id ?? this.id,
@@ -57,6 +68,9 @@ class UserModel {
       currentLessonId: currentLessonId ?? this.currentLessonId,
       avatarUrl: avatarUrl ?? this.avatarUrl,
       inventory: inventory ?? this.inventory,
+      streakFreezes: streakFreezes ?? this.streakFreezes,
+      equippedFrame: clearEquippedFrame ? null : (equippedFrame ?? this.equippedFrame),
+      equippedBanner: clearEquippedBanner ? null : (equippedBanner ?? this.equippedBanner),
     );
   }
 
@@ -73,6 +87,9 @@ class UserModel {
       currentLessonId: json['currentLessonId'] as String? ?? 'lesson_1_1',
       avatarUrl: json['avatarUrl'] as String?,
       inventory: (json['inventory'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      streakFreezes: json['streakFreezes'] as int? ?? 0,
+      equippedFrame: json['equippedFrame'] as String?,
+      equippedBanner: json['equippedBanner'] as String?,
     );
   }
 
@@ -89,6 +106,9 @@ class UserModel {
       'currentLessonId': currentLessonId,
       'avatarUrl': avatarUrl,
       'inventory': inventory,
+      'streakFreezes': streakFreezes,
+      'equippedFrame': equippedFrame,
+      'equippedBanner': equippedBanner,
     };
   }
 }

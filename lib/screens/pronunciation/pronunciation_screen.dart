@@ -174,7 +174,7 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
     final algoMode = config['pronunciation_algorithm'] as String? ?? 'dtw_hmm';
 
     final finalScore = await LocalMlService.evaluatePronunciationFromFileWithConfig(state.audioPath, algoMode);
-    ref.read(pronunciationProvider.notifier).addAttempt(phraseObj.mansaka, finalScore);
+    ref.read(pronunciationProvider.notifier).addAttempt(phraseObj.mansaka, finalScore, state.audioPath);
 
     int earnedXp = 15;
     int earnedCrystals = 5;

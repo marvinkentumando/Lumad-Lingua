@@ -3,32 +3,13 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../models/shop_item_model.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_filter_chip.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/screen_header.dart';
 import '../../widgets/common/lumad_background.dart';
-
-class ShopItem {
-  final String id;
-  final String title;
-  final String description;
-  final int cost;
-  final IconData icon;
-  final String category;
-  final bool isConsumable;
-
-  const ShopItem({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.cost,
-    required this.icon,
-    required this.category,
-    this.isConsumable = true,
-  });
-}
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -39,102 +20,105 @@ class ShopScreen extends ConsumerStatefulWidget {
 
 class _ShopScreenState extends ConsumerState<ShopScreen> {
   String _selectedCategory = 'All';
-  final List<String> _categories = ['All', 'Power-ups', 'Learning Pass', 'Customization'];
+  final List<String> _categories = [
+    'All',
+    'Streak Protection 🧊',
+    'Avatar Frames 🖼️',
+    'Profile Banners 🎨',
+    'Themes 🎨',
+    'Power-ups',
+  ];
 
-  final List<ShopItem> _items = const [
-    ShopItem(
+  final List<ShopItemModel> _items = const [
+    ShopItemModel(
       id: 'streak_freeze',
-      title: 'Streak Freeze',
-      description: 'Protects your streak if you miss practicing for a day.',
-      cost: 50,
-      icon: Icons.ac_unit,
-      category: 'Power-ups',
-      isConsumable: true,
+      name: 'Streak Freeze 🧊',
+      description: 'Protects your daily streak if you miss a day of practice due to travel or work.',
+      priceCrystals: 150,
+      type: ShopItemType.streakFreeze,
+      badgeText: 'STREAK PROTECT',
     ),
-    ShopItem(
-      id: 'xp_booster',
-      title: 'XP Double Booster (24h)',
-      description: 'Earn 2x XP on all completed lessons for 24 hours.',
-      cost: 100,
-      icon: Icons.bolt,
-      category: 'Power-ups',
-      isConsumable: true,
+    ShopItemModel(
+      id: 'frame_golden_weave',
+      name: 'Golden Ancestral Weave Frame',
+      description: 'Sacred dual-tone golden regalia frame wrapping your profile avatar.',
+      priceCrystals: 200,
+      type: ShopItemType.avatarFrame,
+      badgeText: 'AVATAR FRAME',
     ),
-    ShopItem(
-      id: 'ai_pronunciation_pass',
-      title: 'Audio Pronunciation AI Pass',
-      description: 'Unlocks detailed waveform and AI analysis on pronunciation attempts.',
-      cost: 75,
-      icon: Icons.graphic_eq,
-      category: 'Learning Pass',
-      isConsumable: false,
+    ShopItemModel(
+      id: 'frame_datu_crest',
+      name: 'Datu Tribal Crest Border',
+      description: 'High-status Datu honor crest border with ancestral geometric patterns.',
+      priceCrystals: 250,
+      type: ShopItemType.avatarFrame,
+      badgeText: 'AVATAR FRAME',
     ),
-    ShopItem(
+    ShopItemModel(
+      id: 'frame_dagmay_woven',
+      name: 'Dagmay Woven Regalia',
+      description: 'Intricate Mandaya & Mansaka woven pattern border for learners.',
+      priceCrystals: 180,
+      type: ShopItemType.avatarFrame,
+      badgeText: 'AVATAR FRAME',
+    ),
+    ShopItemModel(
+      id: 'banner_ancestral_gold',
+      name: 'Ancestral Gold Harvest Banner',
+      description: 'Radiant gold harvest pattern header banner on your profile.',
+      priceCrystals: 220,
+      type: ShopItemType.profileBanner,
+      badgeText: 'PROFILE BANNER',
+    ),
+    ShopItemModel(
+      id: 'banner_crimson_festival',
+      name: 'Crimson Festival Sun Banner',
+      description: 'Royal crimson & gold festival banner with tribal sun motif.',
+      priceCrystals: 220,
+      type: ShopItemType.profileBanner,
+      badgeText: 'PROFILE BANNER',
+    ),
+    ShopItemModel(
+      id: 'banner_forest_weave',
+      name: 'Mindanao Forest Weave Banner',
+      description: 'Deep forest green geometric tapestry banner for nature lovers.',
+      priceCrystals: 200,
+      type: ShopItemType.profileBanner,
+      badgeText: 'PROFILE BANNER',
+    ),
+    ShopItemModel(
       id: 'custom_theme_pass',
-      title: 'Custom Theme & Color Accents',
-      description: 'Unlock alternate seasonal UI palettes (Gold Harvest & River Blue).',
-      cost: 150,
-      icon: Icons.palette,
-      category: 'Customization',
-      isConsumable: false,
+      name: 'Royal Crimson & Gold Theme Pass',
+      description: 'Unlock alternate seasonal UI palettes across app cards and banners.',
+      priceCrystals: 150,
+      type: ShopItemType.themePass,
+      badgeText: 'THEME PASS',
     ),
-    ShopItem(
-      id: 'time_extension_pass',
-      title: 'Timed Quiz Time Extension (+30s)',
-      description: 'Grants 30 extra seconds during timed matching and listening drills.',
-      cost: 40,
-      icon: Icons.timer,
-      category: 'Power-ups',
-      isConsumable: true,
-    ),
-    ShopItem(
-      id: 'hint_pass_bundle',
-      title: 'Hint Pass Bundle (5 Hints)',
-      description: 'Reveals helpful word roots or hints during challenging grammar drills.',
-      cost: 60,
-      icon: Icons.lightbulb,
-      category: 'Power-ups',
-      isConsumable: true,
-    ),
-    ShopItem(
-      id: 'leaderboard_badge_customizer',
-      title: 'Leaderboard Custom Badge',
-      description: 'Display a custom title and decorative flair on your educator class roster.',
-      cost: 80,
-      icon: Icons.stars,
-      category: 'Customization',
-      isConsumable: false,
-    ),
-    ShopItem(
-      id: 'avatar_frame',
-      title: 'Tribal Avatar Frame',
-      description: 'Unlock a sacred Mansaka regalia frame for your profile avatar.',
-      cost: 200,
-      icon: Icons.filter_vintage,
-      category: 'Customization',
-      isConsumable: false,
-    ),
-    ShopItem(
-      id: 'heart_refill',
-      title: 'Heart / Life Refill',
-      description: 'Instantly refill your lesson hearts and continue practicing.',
-      cost: 30,
-      icon: Icons.favorite,
-      category: 'Power-ups',
-      isConsumable: true,
+    ShopItemModel(
+      id: 'xp_booster',
+      name: 'XP Double Booster (24h)',
+      description: 'Earn 2x XP on all completed lessons for 24 hours.',
+      priceCrystals: 100,
+      type: ShopItemType.themePass,
+      badgeText: 'POWER-UP',
     ),
   ];
 
-  void _confirmPurchase(ShopItem item, int currentCrystals, List<String> inventory) {
-    final isAlreadyOwned = !item.isConsumable && inventory.contains(item.id);
-    if (isAlreadyOwned) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('You already own "${item.title}"!')),
-      );
-      return;
+  IconData _getIconForItem(ShopItemModel item) {
+    switch (item.type) {
+      case ShopItemType.streakFreeze:
+        return Icons.ac_unit;
+      case ShopItemType.avatarFrame:
+        return Icons.filter_vintage;
+      case ShopItemType.profileBanner:
+        return Icons.wallpaper;
+      case ShopItemType.themePass:
+        return Icons.palette;
     }
+  }
 
-    if (currentCrystals < item.cost) {
+  void _confirmPurchase(ShopItemModel item, int currentCrystals) {
+    if (currentCrystals < item.priceCrystals) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Not enough crystals! Complete more lessons to earn crystals.')),
       );
@@ -145,78 +129,54 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     showDialog(
       context: context,
       builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardColor(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
         title: Row(
           children: [
             const Icon(Icons.diamond, color: AppColors.gold500, size: 28),
             const SizedBox(width: 8),
-            Text('Confirm Purchase', style: AppTypography.h3),
+            Text('Confirm Purchase', style: AppTypography.h3.copyWith(color: AppColors.textColor(context))),
           ],
         ),
         content: Column(
           mainAxisSize: MainAxisSize.min,
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Do you want to purchase "${item.title}" for ${item.cost} crystals?', style: AppTypography.body),
+            Text('Purchase "${item.name}" for ${item.priceCrystals} crystals?', style: AppTypography.body.copyWith(color: AppColors.textColor(context))),
             const SizedBox(height: 8),
-            Text('Remaining balance after purchase: ${currentCrystals - item.cost} Crystals', style: AppTypography.caption.copyWith(color: AppColors.forest700)),
+            Text('Remaining balance: ${currentCrystals - item.priceCrystals} Crystals', style: AppTypography.caption.copyWith(color: AppColors.subtitleColor(context))),
           ],
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(dialogContext).pop(),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context))),
           ),
           BrandButton(
             text: 'Confirm Purchase',
             type: BrandButtonType.gold,
-            onPressed: () {
+            onPressed: () async {
               Navigator.of(dialogContext).pop();
-              _buyItem(item, currentCrystals, inventory);
+              final authNotifier = ref.read(authStateProvider.notifier);
+              final success = await authNotifier.buyShopItem(item);
+
+              if (mounted) {
+                if (success) {
+                  HapticFeedback.heavyImpact();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text('Successfully acquired "${item.name}"! 🎉')),
+                  );
+                } else {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Purchase failed. Check crystal balance.')),
+                  );
+                }
+              }
             },
           ),
         ],
       ),
     );
-  }
-
-  Future<void> _buyItem(ShopItem item, int currentCrystals, List<String> inventory) async {
-    final authNotifier = ref.read(authStateProvider.notifier);
-    final user = ref.read(authStateProvider).value;
-
-    if (user == null) return;
-
-    final updatedCrystals = currentCrystals - item.cost;
-    final updatedInventory = List<String>.from(inventory);
-    if (item.isConsumable) {
-      updatedInventory.add(item.id);
-    } else if (!updatedInventory.contains(item.id)) {
-      updatedInventory.add(item.id);
-    }
-
-    final updatedUser = user.copyWith(
-      crystals: updatedCrystals,
-      inventory: updatedInventory,
-    );
-
-    await authNotifier.updateUser(updatedUser);
-
-    if (mounted) {
-      HapticFeedback.heavyImpact();
-      showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-          title: Text('Purchase Successful! 🎉', style: AppTypography.h3),
-          content: Text('You have successfully acquired "${item.title}". It is now active in your profile inventory!', style: AppTypography.body),
-          actions: [
-            BrandButton(
-              text: 'Awesome',
-              type: BrandButtonType.gold,
-              onPressed: () => Navigator.of(context).pop(),
-            ),
-          ],
-        ),
-      );
-    }
   }
 
   @override
@@ -225,10 +185,19 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
     final user = authState.value;
     final crystals = user?.crystals ?? 150;
     final inventory = user?.inventory ?? [];
+    final streakFreezes = user?.streakFreezes ?? 0;
+    final equippedFrame = user?.equippedFrame;
+    final equippedBanner = user?.equippedBanner;
 
-    final filteredItems = _selectedCategory == 'All'
-        ? _items
-        : _items.where((item) => item.category.toLowerCase().contains(_selectedCategory.toLowerCase())).toList();
+    final filteredItems = _items.where((item) {
+      if (_selectedCategory == 'All') return true;
+      if (_selectedCategory.contains('Streak') && item.type == ShopItemType.streakFreeze) return true;
+      if (_selectedCategory.contains('Frames') && item.type == ShopItemType.avatarFrame) return true;
+      if (_selectedCategory.contains('Banners') && item.type == ShopItemType.profileBanner) return true;
+      if (_selectedCategory.contains('Themes') && item.type == ShopItemType.themePass) return true;
+      if (_selectedCategory.contains('Power-ups') && item.type == ShopItemType.themePass) return true;
+      return false;
+    }).toList();
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
@@ -244,9 +213,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                     children: [
                       const ScreenHeader(
                         title: 'Crystal Shop',
-                        subtitle: 'Spend crystals on power-ups, passes & customization',
+                        subtitle: 'Spend crystals on streak freezes, frames, banners & themes',
                       ),
                       const SizedBox(height: AppSpacing.sm),
+
                       // Crystal Balance Banner
                       Container(
                         padding: const EdgeInsets.all(AppSpacing.md),
@@ -267,15 +237,28 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                           ],
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            const Icon(Icons.diamond, color: AppColors.forest900, size: 28),
-                            const SizedBox(width: 8),
-                            Text('$crystals Crystals Available', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
+                            Row(
+                              children: [
+                                const Icon(Icons.diamond, color: AppColors.forest900, size: 28),
+                                const SizedBox(width: 8),
+                                Text('$crystals Crystals Available', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
+                              ],
+                            ),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.forest900,
+                                borderRadius: BorderRadius.circular(12),
+                              ),
+                              child: Text('🧊 $streakFreezes Freezes', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 11)),
+                            ),
                           ],
                         ),
                       ),
                       const SizedBox(height: AppSpacing.md),
+
                       // Category Filter Pills
                       SingleChildScrollView(
                         scrollDirection: Axis.horizontal,
@@ -304,15 +287,17 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.72,
+                    childAspectRatio: 0.68,
                     crossAxisSpacing: AppSpacing.md,
                     mainAxisSpacing: AppSpacing.md,
                   ),
                   delegate: SliverChildBuilderDelegate(
                     (context, index) {
                       final item = filteredItems[index];
-                      final isOwned = !item.isConsumable && inventory.contains(item.id);
-                      final canAfford = crystals >= item.cost;
+                      final isOwned = inventory.contains(item.id);
+                      final isEquipped = (item.type == ShopItemType.avatarFrame && equippedFrame == item.id) ||
+                          (item.type == ShopItemType.profileBanner && equippedBanner == item.id);
+                      final canAfford = crystals >= item.priceCrystals;
 
                       return BrandCard(
                         padding: const EdgeInsets.all(AppSpacing.sm),
@@ -329,18 +314,27 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                     borderRadius: BorderRadius.circular(AppRadius.chip),
                                   ),
                                   child: Text(
-                                    item.category.toUpperCase(),
-                                    style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 9),
+                                    item.badgeText ?? 'ITEM',
+                                    style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 8),
                                   ),
                                 ),
-                                if (isOwned)
+                                if (isEquipped)
                                   Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                                     decoration: BoxDecoration(
                                       color: AppColors.semanticGreen,
                                       borderRadius: BorderRadius.circular(AppRadius.chip),
                                     ),
-                                    child: Text('OWNED', style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 9)),
+                                    child: Text('EQUIPPED', style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 8)),
+                                  )
+                                else if (isOwned)
+                                  Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                    decoration: BoxDecoration(
+                                      color: AppColors.forest700,
+                                      borderRadius: BorderRadius.circular(AppRadius.chip),
+                                    ),
+                                    child: Text('OWNED', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 8)),
                                   ),
                               ],
                             ),
@@ -352,13 +346,13 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                   color: AppColors.gold500.withValues(alpha: 0.2),
                                   shape: BoxShape.circle,
                                 ),
-                                child: Icon(item.icon, color: AppColors.gold500, size: 32),
+                                child: Icon(_getIconForItem(item), color: AppColors.gold500, size: 32),
                               ),
                             ),
                             const SizedBox(height: 8),
                             Text(
-                              item.title,
-                              style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 14),
+                              item.name,
+                              style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 13),
                               maxLines: 1,
                               overflow: TextOverflow.ellipsis,
                             ),
@@ -377,7 +371,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                 const Icon(Icons.diamond, color: AppColors.gold500, size: 14),
                                 const SizedBox(width: 4),
                                 Text(
-                                  '${item.cost}',
+                                  '${item.priceCrystals}',
                                   style: AppTypography.xpValue.copyWith(color: AppColors.gold400),
                                 ),
                               ],
@@ -386,12 +380,42 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                             SizedBox(
                               width: double.infinity,
                               height: 36,
-                              child: BrandButton(
-                                text: isOwned ? 'Active' : 'Buy',
-                                type: isOwned
-                                    ? BrandButtonType.secondary
-                                    : (canAfford ? BrandButtonType.gold : BrandButtonType.secondary),
-                                onPressed: isOwned ? null : () => _confirmPurchase(item, crystals, inventory),
+                              child: Builder(
+                                builder: (context) {
+                                  if (isEquipped) {
+                                    return BrandButton(
+                                      text: 'Equipped',
+                                      type: BrandButtonType.secondary,
+                                      onPressed: null,
+                                    );
+                                  } else if (isOwned) {
+                                    return BrandButton(
+                                      text: 'Equip',
+                                      type: BrandButtonType.gold,
+                                      onPressed: () async {
+                                        final authNotifier = ref.read(authStateProvider.notifier);
+                                        final messenger = ScaffoldMessenger.of(context);
+                                        final itemName = item.name;
+
+                                        if (item.type == ShopItemType.avatarFrame) {
+                                          await authNotifier.equipFrame(item.id);
+                                        } else if (item.type == ShopItemType.profileBanner) {
+                                          await authNotifier.equipBanner(item.id);
+                                        }
+
+                                        messenger.showSnackBar(
+                                          SnackBar(content: Text('Equipped "$itemName"! ✨')),
+                                        );
+                                      },
+                                    );
+                                  } else {
+                                    return BrandButton(
+                                      text: 'Buy',
+                                      type: canAfford ? BrandButtonType.gold : BrandButtonType.secondary,
+                                      onPressed: () => _confirmPurchase(item, crystals),
+                                    );
+                                  }
+                                },
                               ),
                             ),
                           ],
