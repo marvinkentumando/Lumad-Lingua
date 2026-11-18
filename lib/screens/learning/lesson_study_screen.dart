@@ -127,8 +127,8 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                ScreenHeader(
-                  title: lesson.title,
+                const ScreenHeader(
+                  title: 'Lesson Overview',
                 ),
                 const SizedBox(height: AppSpacing.sm),
 

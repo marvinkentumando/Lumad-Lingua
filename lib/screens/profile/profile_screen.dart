@@ -341,64 +341,36 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                 child: Column(
                   children: [
                     Center(
-                      child: GestureDetector(
-                        onTap: isGuest ? null : () => _showEditAvatarDialog(user.avatarUrl),
-                        child: Stack(
-                          alignment: Alignment.bottomRight,
-                          children: [
-                            Container(
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.gold500, width: 3.5),
-                                boxShadow: const [
-                                  BoxShadow(
-                                    color: Color(0xFFB88500),
-                                    offset: Offset(0, 4),
-                                    blurRadius: 0,
-                                  ),
-                                ],
-                              ),
-                              child: CircleAvatar(
-                                radius: 72,
-                                backgroundColor: AppColors.forest500,
-                                backgroundImage: getAvatarImage(user?.avatarUrl),
-                                child: (user == null || user.avatarUrl == null || user.avatarUrl!.isEmpty)
-                                    ? Text(
-                                        user != null ? user.name.substring(0, 1).toUpperCase() : 'L',
-                                        style: AppTypography.displayBold.copyWith(color: Colors.white, fontSize: 52),
-                                      )
-                                    : null,
-                              ),
-                            ),
-                            Container(
-                              padding: const EdgeInsets.all(9),
-                              decoration: BoxDecoration(
-                                color: AppColors.gold500,
-                                shape: BoxShape.circle,
-                                border: Border.all(color: AppColors.gold700, width: 2),
-                              ),
-                              child: const Icon(Icons.camera_alt, size: 22, color: AppColors.forest900),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle,
+                          border: Border.all(color: AppColors.gold500, width: 3.5),
+                          boxShadow: const [
+                            BoxShadow(
+                              color: Color(0xFFB88500),
+                              offset: Offset(0, 4),
+                              blurRadius: 0,
                             ),
                           ],
+                        ),
+                        child: CircleAvatar(
+                          radius: 72,
+                          backgroundColor: AppColors.forest500,
+                          backgroundImage: getAvatarImage(user?.avatarUrl),
+                          child: (user == null || user.avatarUrl == null || user.avatarUrl!.isEmpty)
+                              ? Text(
+                                  user != null ? user.name.substring(0, 1).toUpperCase() : 'L',
+                                  style: AppTypography.displayBold.copyWith(color: Colors.white, fontSize: 52),
+                                )
+                              : null,
                         ),
                       ),
                     ),
                     const SizedBox(height: AppSpacing.sm),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Text(
-                          user?.name ?? 'Lumad Learner',
-                          style: AppTypography.h2.copyWith(color: AppColors.creamText),
-                        ),
-                        if (!isGuest) ...[
-                          const SizedBox(width: 8),
-                          IconButton(
-                            icon: const Icon(Icons.edit, color: AppColors.gold500, size: 20),
-                            onPressed: () => _showEditProfileDialog(user.name),
-                          ),
-                        ],
-                      ],
+                    Text(
+                      user?.name ?? 'Lumad Learner',
+                      style: AppTypography.h2.copyWith(color: AppColors.creamText),
+                      textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -688,9 +660,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   if (isGuest) {
                     context.push('/login');
                   } else {
-                    await ref.read(authStateProvider.notifier).logout();
-                    if (context.mounted) {
-                      context.go('/home');
+                    final confirm = await showDialog<bool>(
+                      context: context,
+                      builder: (context) => AlertDialog(
+                        title: Text('Sign Out', style: AppTypography.h3),
+                        content: Text('Are you sure you want to sign out?', style: AppTypography.body),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(false),
+                            child: const Text('Cancel'),
+                          ),
+                          TextButton(
+                            onPressed: () => Navigator.of(context).pop(true),
+                            child: const Text('Sign Out', style: TextStyle(color: AppColors.semanticRed, fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    );
+
+                    if (confirm == true) {
+                      await ref.read(authStateProvider.notifier).logout();
+                      if (context.mounted) {
+                        context.go('/home');
+                      }
                     }
                   }
                 },

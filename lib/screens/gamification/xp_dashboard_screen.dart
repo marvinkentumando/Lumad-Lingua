@@ -51,7 +51,6 @@ class XpDashboardScreen extends ConsumerWidget {
               children: [
                 const ScreenHeader(
                   title: 'XP & Level',
-                  centerTitle: true,
                 ),
                 const SizedBox(height: AppSpacing.xs),
 

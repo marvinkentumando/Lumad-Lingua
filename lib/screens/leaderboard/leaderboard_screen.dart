@@ -1,21 +1,150 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../../utils/constants.dart';
+import '../../utils/level_helper.dart';
 import '../../models/user_model.dart';
 import '../../data/mock_users.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_card.dart';
+import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/brand_filter_chip.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
 
-class LeaderboardScreen extends ConsumerWidget {
+class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<LeaderboardScreen> createState() => _LeaderboardScreenState();
+}
+
+class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
+  String _selectedPeriod = 'All-Time';
+  final List<String> _periods = ['Weekly', 'Monthly', 'All-Time'];
+
+  void _showLearnerDetailsDialog(BuildContext context, UserModel user, int rank) {
+    HapticFeedback.lightImpact();
+    final level = LevelHelper.calculateLevel(user.totalXp);
+    final hasCustomBadge = user.inventory.contains('leaderboard_badge_customizer');
+
+    String rankTitle = 'Mansaka Scholar 🎓';
+    if (level < 3) {
+      rankTitle = 'Beginning Learner 📚';
+    } else if (level < 5) {
+      rankTitle = 'Growing Speaker 💬';
+    } else if (level < 8) {
+      rankTitle = 'Confident Communicator 🌟';
+    } else if (level < 11) {
+      rankTitle = 'Fluent Achiever 🏆';
+    }
+
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.forest800,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
+        title: Row(
+          children: [
+            CircleAvatar(
+              radius: 22,
+              backgroundColor: AppColors.gold500,
+              child: Text(
+                user.name.isNotEmpty ? user.name.substring(0, 1).toUpperCase() : 'L',
+                style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 18),
+              ),
+            ),
+            const SizedBox(width: AppSpacing.sm),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          user.name,
+                          style: AppTypography.h3.copyWith(color: Colors.white),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      if (hasCustomBadge) ...[
+                        const SizedBox(width: 4),
+                        const Icon(Icons.workspace_premium, color: AppColors.gold500, size: 16),
+                      ],
+                    ],
+                  ),
+                  Text('Global Rank #$rank', style: AppTypography.caption.copyWith(color: AppColors.gold400, fontWeight: FontWeight.bold)),
+                ],
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.forest900,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: AppColors.forest700),
+              ),
+              child: Column(
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Title & Rank', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      Text(rankTitle, style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 12)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Level', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      Text('Level $level', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Total XP', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      XPBadge(xp: user.totalXp),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Streak', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                      StreakIndicator(streakDays: user.streakDays),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          BrandButton(
+            text: 'Close',
+            type: BrandButtonType.primary,
+            onPressed: () => Navigator.of(context).pop(),
+          ),
+        ],
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
     final currentUser = ref.watch(authStateProvider).value;
 
     return Scaffold(
@@ -64,16 +193,38 @@ class LeaderboardScreen extends ConsumerWidget {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        // Top 3 Podium Card
+                        // Time-Period Filter Pills
+                        SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          child: Row(
+                            children: _periods.map((period) {
+                              final isSelected = _selectedPeriod == period;
+                              return Padding(
+                                padding: const EdgeInsets.only(right: 8.0),
+                                child: BrandFilterChip(
+                                  label: period,
+                                  isSelected: isSelected,
+                                  onSelected: (_) {
+                                    HapticFeedback.selectionClick();
+                                    setState(() => _selectedPeriod = period);
+                                  },
+                                ),
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                        const SizedBox(height: AppSpacing.md),
+
+                        // Top 3 Podium Card (3D Tactile Styling & Step Elevations)
                         BrandCard(
                           backgroundColor: AppColors.gold500,
-                          border: Border.all(color: AppColors.gold700, width: 1.5),
+                          border: Border.all(color: AppColors.gold700, width: 2),
                           child: DefaultTextStyle(
                             style: const TextStyle(color: AppColors.forest900),
                             child: Column(
                               children: [
                                 Text(
-                                  'GLOBAL TOP LEARNERS',
+                                  'GLOBAL TOP LEARNERS ($_selectedPeriod)',
                                   style: AppTypography.labelBold.copyWith(
                                     color: AppColors.forest900,
                                     letterSpacing: 1.2,
@@ -117,6 +268,7 @@ class LeaderboardScreen extends ConsumerWidget {
                             final hasCustomBadge = user.inventory.contains('leaderboard_badge_customizer');
 
                             return AppCard(
+                              onTap: () => _showLearnerDetailsDialog(context, user, rank),
                               backgroundColor: isMe ? AppColors.forest500 : AppColors.creamSurface,
                               border: isMe ? Border.all(color: AppColors.gold500, width: 2.0) : null,
                               child: Row(
@@ -179,6 +331,7 @@ class LeaderboardScreen extends ConsumerWidget {
                                       ],
                                     ),
                                   ),
+                                  const Icon(Icons.chevron_right_rounded, color: AppColors.creamText3),
                                 ],
                               ),
                             );
@@ -189,66 +342,70 @@ class LeaderboardScreen extends ConsumerWidget {
                   ),
                 ),
 
-                // Fixed Bottom Banner for Signed-In Learner
+                // Tactile Sticky Bottom Banner for Signed-In Learner
                 if (currentUser != null)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-                    decoration: BoxDecoration(
-                      color: AppColors.forest700,
-                      boxShadow: const [
-                        BoxShadow(
-                          color: Colors.black26,
-                          blurRadius: 8,
-                          offset: Offset(0, -2),
-                        ),
-                      ],
-                    ),
-                    child: Row(
-                      children: [
-                        CircleAvatar(
-                          backgroundColor: AppColors.gold500,
-                          child: Text(
-                            myRank > 0 ? '#$myRank' : '-',
-                            style: AppTypography.mono.copyWith(color: AppColors.forest900, fontWeight: FontWeight.bold),
+                  GestureDetector(
+                    onTap: () => _showLearnerDetailsDialog(context, currentUser, myRank > 0 ? myRank : 99),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.forest700,
+                        border: Border.all(color: AppColors.gold500, width: 1.5),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black38,
+                            blurRadius: 8,
+                            offset: Offset(0, -2),
                           ),
-                        ),
-                        const SizedBox(width: 12),
-                        Expanded(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Row(
-                                children: [
-                                  Flexible(
-                                    child: Text(
-                                      '${currentUser.name} (Your Rank)',
-                                      style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 15),
-                                      overflow: TextOverflow.ellipsis,
-                                    ),
-                                  ),
-                                  if (currentUser.inventory.contains('leaderboard_badge_customizer')) ...[
-                                    const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.all(2),
-                                      decoration: const BoxDecoration(
-                                        color: AppColors.gold500,
-                                        shape: BoxShape.circle,
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            backgroundColor: AppColors.gold500,
+                            child: Text(
+                              myRank > 0 ? '#$myRank' : 'Top',
+                              style: AppTypography.mono.copyWith(color: AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 12),
+                            ),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Row(
+                                  children: [
+                                    Flexible(
+                                      child: Text(
+                                        '${currentUser.name} (Your Rank)',
+                                        style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 15),
+                                        overflow: TextOverflow.ellipsis,
                                       ),
-                                      child: const Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
                                     ),
+                                    if (currentUser.inventory.contains('leaderboard_badge_customizer')) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.all(2),
+                                        decoration: const BoxDecoration(
+                                          color: AppColors.gold500,
+                                          shape: BoxShape.circle,
+                                        ),
+                                        child: const Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
+                                      ),
+                                    ],
                                   ],
-                                ],
-                              ),
-                              Text(
-                                '${currentUser.totalXp} Total XP • ${currentUser.streakDays} Day Streak',
-                                style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
-                              ),
-                            ],
+                                ),
+                                Text(
+                                  '${currentUser.totalXp} Total XP • ${currentUser.streakDays} Day Streak',
+                                  style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                                ),
+                              ],
+                            ),
                           ),
-                        ),
-                        XPBadge(xp: currentUser.totalXp),
-                      ],
+                          XPBadge(xp: currentUser.totalXp),
+                        ],
+                      ),
                     ),
                   ),
               ],
@@ -263,47 +420,50 @@ class LeaderboardScreen extends ConsumerWidget {
     final medalEmoji = rank == 1 ? '🥇' : (rank == 2 ? '🥈' : '🥉');
     final hasCustomBadge = user.inventory.contains('leaderboard_badge_customizer');
 
-    return Column(
-      mainAxisAlignment: MainAxisAlignment.end,
-      children: [
-        Stack(
-          alignment: Alignment.topRight,
-          children: [
-            Text(medalEmoji, style: const TextStyle(fontSize: 24)),
-            if (hasCustomBadge)
-              const Positioned(
-                right: -2,
-                top: -2,
-                child: Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
-              ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        CircleAvatar(
-          radius: rank == 1 ? 28 : 22,
-          backgroundColor: badgeColor,
-          child: Text(
-            user.name.isNotEmpty ? user.name.substring(0, 1).toUpperCase() : 'L',
-            style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
+    return GestureDetector(
+      onTap: () => _showLearnerDetailsDialog(context, user, rank),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        children: [
+          Stack(
+            alignment: Alignment.topRight,
+            children: [
+              Text(medalEmoji, style: const TextStyle(fontSize: 24)),
+              if (hasCustomBadge)
+                const Positioned(
+                  right: -2,
+                  top: -2,
+                  child: Icon(Icons.workspace_premium, color: AppColors.forest900, size: 14),
+                ),
+            ],
           ),
-        ),
-        const SizedBox(height: 6),
-        SizedBox(
-          width: 80,
-          child: Text(
-            user.name,
-            style: AppTypography.lessonTitle.copyWith(color: AppColors.forest900, fontSize: 13),
-            textAlign: TextAlign.center,
-            maxLines: 1,
-            overflow: TextOverflow.ellipsis,
+          const SizedBox(height: 4),
+          CircleAvatar(
+            radius: rank == 1 ? 28 : 22,
+            backgroundColor: badgeColor,
+            child: Text(
+              user.name.isNotEmpty ? user.name.substring(0, 1).toUpperCase() : 'L',
+              style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 18),
+            ),
           ),
-        ),
-        const SizedBox(height: 2),
-        Text(
-          '${user.totalXp} XP',
-          style: AppTypography.xpValue.copyWith(color: AppColors.forest900),
-        ),
-      ],
+          const SizedBox(height: 6),
+          SizedBox(
+            width: 82,
+            child: Text(
+              user.name,
+              style: AppTypography.lessonTitle.copyWith(color: AppColors.forest900, fontSize: 13),
+              textAlign: TextAlign.center,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            '${user.totalXp} XP',
+            style: AppTypography.xpValue.copyWith(color: AppColors.forest900),
+          ),
+        ],
+      ),
     );
   }
 }

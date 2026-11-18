@@ -28,14 +28,17 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
 
   final List<Map<String, String>> _presets = [
     {
+      'label': 'Good Morning ☀️',
       'text': 'Madyaw na masurom sang tanan sakop sang banwa!',
       'translation': 'Good morning to everyone in the community!',
     },
     {
+      'label': 'Happy to See You 😊',
       'text': 'Malipayon ako nga nakita ko kamo.',
       'translation': 'I am happy to see you all.',
     },
     {
+      'label': 'Overcoming Challenge 📚',
       'text': 'Mabudlay ang pagtuon apang madalag-on kita.',
       'translation': 'Learning is difficult, but we will succeed.',
     },
@@ -76,7 +79,7 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Sentiment Analysis Lab', style: AppTypography.h2.copyWith(color: Colors.white)),
+        title: Text('Mansaka Sentiment & Tone', style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
@@ -87,16 +90,16 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Info Banner
+                // Friendly Info Banner
                 BrandCard(
                   child: Row(
                     children: [
-                      const Icon(Icons.analytics_outlined, color: AppColors.gold500, size: 28),
+                      const Icon(Icons.emoji_emotions_outlined, color: AppColors.gold500, size: 36),
                       const SizedBox(width: AppSpacing.md),
                       Expanded(
                         child: Text(
-                          'Classifies community sentiment using admin-configured NLP models tailored for indigenous language preservation.',
-                          style: AppTypography.body.copyWith(color: Colors.white),
+                          'Discover the emotion, tone, and feeling hidden inside Mansaka expressions!',
+                          style: AppTypography.bodyLarge.copyWith(color: Colors.white),
                         ),
                       ),
                     ],
@@ -105,7 +108,7 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                 const SizedBox(height: AppSpacing.lg),
 
                 // Preset Selector
-                Text('Preset Sample Phrases', style: AppTypography.h3),
+                Text('Sample Expressions to Try', style: AppTypography.h3),
                 const SizedBox(height: AppSpacing.xs),
                 SizedBox(
                   height: 48,
@@ -117,7 +120,7 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                       return Padding(
                         padding: const EdgeInsets.only(right: 8.0),
                         child: ActionChip(
-                          label: Text('${preset['text']!.substring(0, 22)}...', style: AppTypography.labelBold.copyWith(fontSize: 12)),
+                          label: Text(preset['label']!, style: AppTypography.labelBold.copyWith(fontSize: 12)),
                           backgroundColor: AppColors.creamSurface,
                           onPressed: () {
                             HapticFeedback.selectionClick();
@@ -137,16 +140,16 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                 const SizedBox(height: AppSpacing.xs),
                 TextField(
                   controller: _textController,
-                  maxLines: 4,
+                  maxLines: 3,
                   style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context)),
                   decoration: const InputDecoration(
-                    hintText: 'Type or select a preset Mansaka text...',
+                    hintText: 'Type or select a sample Mansaka sentence...',
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
 
                 BrandButton(
-                  text: 'Analyze Sentiment',
+                  text: 'Check Sentence Tone',
                   icon: Icons.psychology,
                   type: BrandButtonType.gold,
                   isLoading: _isLoading,
@@ -155,7 +158,7 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
 
                 if (_result != null) ...[
                   const SizedBox(height: AppSpacing.xl),
-                  Text('Analysis Results', style: AppTypography.h3),
+                  Text('Sentiment Result', style: AppTypography.h3),
                   const SizedBox(height: AppSpacing.sm),
                   BrandCard(
                     child: Column(
@@ -164,28 +167,50 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Sentiment:', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                            Text('Emotional Mood:', style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 15)),
                             Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                               decoration: BoxDecoration(
                                 color: _getSentimentColor(_result!.sentiment),
                                 borderRadius: BorderRadius.circular(AppRadius.chip),
                               ),
-                              child: Text(
-                                _result!.sentiment.name.toUpperCase(),
-                                style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 11),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Text(
+                                    _getSentimentEmoji(_result!.sentiment),
+                                    style: const TextStyle(fontSize: 16),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Text(
+                                    _getSentimentTitle(_result!.sentiment),
+                                    style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 12),
+                                  ),
+                                ],
                               ),
                             ),
                           ],
                         ),
-                        const Divider(color: AppColors.forest700),
+                        const SizedBox(height: 8),
+                        Text(
+                          _getSentimentExplanation(_result!.sentiment),
+                          style: AppTypography.body.copyWith(color: AppColors.creamBorder, fontStyle: FontStyle.italic),
+                        ),
+                        const Divider(color: AppColors.forest700, height: 24),
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Language Classification:', style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder)),
-                            Text(
-                              _result!.languageClassification.name.toUpperCase(),
-                              style: AppTypography.labelBold.copyWith(color: AppColors.gold500),
+                            Text('Language Identity:', style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder)),
+                            Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: AppColors.gold500,
+                                borderRadius: BorderRadius.circular(AppRadius.chip),
+                              ),
+                              child: Text(
+                                _result!.languageClassification.name == 'mansaka' ? 'AUTHENTIC MANSAKA 🌿' : 'MIXED EXPRESSION 💬',
+                                style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
+                              ),
                             ),
                           ],
                         ),
@@ -193,33 +218,29 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Confidence Score:', style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder)),
+                            Text('Accuracy Rating:', style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder)),
                             Text(
-                              '${(_result!.confidenceScore * 100).toStringAsFixed(1)}%',
-                              style: AppTypography.mono.copyWith(color: AppColors.gold500, fontWeight: FontWeight.bold),
+                              '${(_result!.confidenceScore * 100).toInt()}% Certainty 🌟',
+                              style: AppTypography.mono.copyWith(color: AppColors.gold400, fontWeight: FontWeight.bold),
                             ),
                           ],
                         ),
                         const SizedBox(height: 8),
                         ClipRRect(
-                          borderRadius: BorderRadius.circular(4),
-                          child: LinearProgressIndicator(
-                            value: _result!.confidenceScore,
-                            backgroundColor: AppColors.forest700,
-                            color: AppColors.gold500,
-                            minHeight: 8,
+                          borderRadius: BorderRadius.circular(6),
+                          child: TweenAnimationBuilder<double>(
+                            tween: Tween<double>(begin: 0.0, end: _result!.confidenceScore),
+                            duration: const Duration(milliseconds: 500),
+                            curve: Curves.easeOutCubic,
+                            builder: (context, animatedVal, child) {
+                              return LinearProgressIndicator(
+                                value: animatedVal,
+                                backgroundColor: AppColors.forest700,
+                                color: AppColors.gold500,
+                                minHeight: 10,
+                              );
+                            },
                           ),
-                        ),
-                        const SizedBox(height: AppSpacing.md),
-                        Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                          children: [
-                            Text('Active Model Engine:', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                            Text(
-                              _result!.modelName,
-                              style: AppTypography.mono.copyWith(color: AppColors.gold300, fontSize: 11),
-                            ),
-                          ],
                         ),
                       ],
                     ),
@@ -241,6 +262,39 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
         return AppColors.semanticRed;
       case SentimentLabel.neutral:
         return AppColors.semanticWarning;
+    }
+  }
+
+  String _getSentimentEmoji(SentimentLabel label) {
+    switch (label) {
+      case SentimentLabel.positive:
+        return '😊';
+      case SentimentLabel.negative:
+        return '😔';
+      case SentimentLabel.neutral:
+        return '😐';
+    }
+  }
+
+  String _getSentimentTitle(SentimentLabel label) {
+    switch (label) {
+      case SentimentLabel.positive:
+        return 'JOYFUL & POSITIVE';
+      case SentimentLabel.negative:
+        return 'SOLEMN / CHALLENGING';
+      case SentimentLabel.neutral:
+        return 'CALM & BALANCED';
+    }
+  }
+
+  String _getSentimentExplanation(SentimentLabel label) {
+    switch (label) {
+      case SentimentLabel.positive:
+        return 'This phrase expresses warmth, joy, gratitude, and community happiness!';
+      case SentimentLabel.negative:
+        return 'This phrase touches on solemn, serious, or difficult learning challenges.';
+      case SentimentLabel.neutral:
+        return 'This phrase states a calm, balanced daily expression.';
     }
   }
 }

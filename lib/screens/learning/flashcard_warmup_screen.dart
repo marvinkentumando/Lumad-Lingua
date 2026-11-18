@@ -43,25 +43,13 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
   }
 
   Future<void> _playAudio(String? audioPath) async {
-    final url = AudioHelper.resolveSupabaseAudioUrl(audioPath);
-    if (url == null) {
+    if (audioPath == null || audioPath.trim().isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Audio not available for this card.')),
       );
       return;
     }
-
-    try {
-      await _audioPlayer.setUrl(url);
-      await _audioPlayer.play();
-    } catch (e) {
-      debugPrint('Error playing flashcard audio: $e');
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Could not play audio: $e')),
-        );
-      }
-    }
+    await AudioHelper.playAudio(audioPath);
   }
 
   void _nextCard() {
@@ -134,8 +122,8 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
             child: Column(
               children: [
                 ScreenHeader(
-                  title: widget.lesson.title,
-                  subtitle: 'Flashcard Warm-up',
+                  title: 'Flashcard Warm-up',
+                  subtitle: widget.lesson.title,
                 ),
                 const SizedBox(height: AppSpacing.sm),
                 // Progress Bar
@@ -277,7 +265,7 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
               ),
             const Spacer(),
             GestureDetector(
-              onTap: () {},
+              onTap: () {}, // Intercept tap so card doesn't flip when clicking audio
               child: BrandButton(
                 text: 'Listen Audio',
                 type: BrandButtonType.secondary,
@@ -314,9 +302,23 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
                 style: AppTypography.h1ExtraBold.copyWith(color: AppColors.forest900, fontSize: 28),
                 textAlign: TextAlign.center,
               ),
+              if (card.exampleMansaka != null && card.exampleMansaka!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Text(
+                  'Example: "${card.exampleMansaka}"',
+                  style: AppTypography.caption.copyWith(color: AppColors.forest900, fontStyle: FontStyle.italic),
+                  textAlign: TextAlign.center,
+                ),
+                if (card.exampleEnglish != null && card.exampleEnglish!.isNotEmpty)
+                  Text(
+                    '"${card.exampleEnglish}"',
+                    style: AppTypography.caption.copyWith(color: AppColors.forest800),
+                    textAlign: TextAlign.center,
+                  ),
+              ],
               const Spacer(),
               GestureDetector(
-                onTap: () {},
+                onTap: () {}, // Intercept tap so card doesn't flip when clicking audio
                 child: BrandButton(
                   text: 'Replay Audio',
                   type: BrandButtonType.primary,

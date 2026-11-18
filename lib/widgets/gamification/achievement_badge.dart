@@ -111,7 +111,7 @@ class AchievementBadgeWidget extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
-    final totalXp = user?.totalXp ?? 250;
+    final totalXp = user?.totalXp ?? 0;
     final progressAsync = ref.watch(userProgressProvider);
     final userProgress = progressAsync.value;
 
