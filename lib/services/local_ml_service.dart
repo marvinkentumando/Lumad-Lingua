@@ -191,12 +191,17 @@ class LocalMlService {
 
   // Dynamic Sentiment Analysis based on Admin Config
   static SentimentAnalysisResult analyzeWithConfig(String text, String modelMode) {
+    final tokens = _tokenize(text);
+    final mansakaKeywords = {'madyaw', 'masurom', 'banwa', 'salamat', 'marayaw', 'maudto', 'masawg'};
+    bool isMansaka = tokens.any((t) => mansakaKeywords.contains(t));
+    final langIdentity = isMansaka ? LanguageClassification.mansaka : LanguageClassification.mixed;
+
     if (modelMode == 'naive_bayes') {
       final res = runNaiveBayes(text);
       return SentimentAnalysisResult(
         text: text,
         sentiment: res['sentiment'],
-        languageClassification: LanguageClassification.mansaka,
+        languageClassification: langIdentity,
         confidenceScore: res['confidence'],
         modelName: 'Naive Bayes Classifier',
       );
@@ -205,7 +210,7 @@ class LocalMlService {
       return SentimentAnalysisResult(
         text: text,
         sentiment: res['sentiment'],
-        languageClassification: LanguageClassification.mansaka,
+        languageClassification: langIdentity,
         confidenceScore: res['confidence'],
         modelName: 'Support Vector Machine (SVM)',
       );
@@ -214,7 +219,7 @@ class LocalMlService {
       return SentimentAnalysisResult(
         text: text,
         sentiment: res['sentiment'],
-        languageClassification: LanguageClassification.mansaka,
+        languageClassification: langIdentity,
         confidenceScore: res['confidence'],
         modelName: 'BiLSTM Sequence Model',
       );

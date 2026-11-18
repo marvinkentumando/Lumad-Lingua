@@ -7,10 +7,10 @@ abstract class SentimentRepository {
   Future<SentimentAnalysisResult> analyzeText(String text);
 }
 
-class MockSentimentRepository implements SentimentRepository {
+class FirestoreSentimentRepository implements SentimentRepository {
   final AdminConfigService _adminConfigService;
 
-  MockSentimentRepository({AdminConfigService? adminConfigService})
+  FirestoreSentimentRepository({AdminConfigService? adminConfigService})
       : _adminConfigService = adminConfigService ?? AdminConfigService();
 
   @override
@@ -37,3 +37,5 @@ class MockSentimentRepository implements SentimentRepository {
     return result;
   }
 }
+
+typedef MockSentimentRepository = FirestoreSentimentRepository;

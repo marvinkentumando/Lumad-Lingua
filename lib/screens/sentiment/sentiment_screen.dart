@@ -9,7 +9,7 @@ import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_background.dart';
 
 final sentimentRepositoryProvider = Provider<SentimentRepository>((ref) {
-  return MockSentimentRepository();
+  return FirestoreSentimentRepository();
 });
 
 class SentimentScreen extends ConsumerStatefulWidget {
@@ -64,13 +64,7 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
     if (mounted) {
       setState(() {
         _isLoading = false;
-        _result = SentimentAnalysisResult(
-          text: result.text,
-          sentiment: result.sentiment,
-          languageClassification: result.languageClassification,
-          confidenceScore: result.confidenceScore,
-          modelName: 'Admin Active Model (BiLSTM/SVM)',
-        );
+        _result = result;
       });
     }
   }
@@ -79,7 +73,7 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Mansaka Sentiment & Tone', style: AppTypography.h2.copyWith(color: Colors.white)),
+        title: Text('Mansaka Sentiment', style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
         iconTheme: const IconThemeData(color: Colors.white),
       ),
