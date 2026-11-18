@@ -5,6 +5,8 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../models/duel_model.dart';
+import '../../models/daily_quest_model.dart';
+import '../../providers/daily_quests_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/duel_provider.dart';
 import '../../widgets/common/app_card.dart';
@@ -115,6 +117,8 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
       authNotifier.addXp(150);
       authNotifier.updateCrystals(user.crystals + 25);
     }
+
+    ref.read(dailyQuestsProvider.notifier).incrementProgress(QuestType.duel);
 
     if (mounted) {
       HapticFeedback.heavyImpact();

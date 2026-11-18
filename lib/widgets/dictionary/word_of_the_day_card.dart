@@ -3,25 +3,22 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../providers/dictionary_provider.dart';
+import '../../providers/bookmarks_provider.dart';
 import '../common/brand_button.dart';
 
-class WordOfTheDayCard extends ConsumerStatefulWidget {
+class WordOfTheDayCard extends ConsumerWidget {
   const WordOfTheDayCard({super.key});
 
   @override
-  ConsumerState<WordOfTheDayCard> createState() => _WordOfTheDayCardState();
-}
-
-class _WordOfTheDayCardState extends ConsumerState<WordOfTheDayCard> {
-  bool _isBookmarked = false;
-
-  @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
     final wordAsync = ref.watch(wordOfTheDayProvider);
+    ref.watch(bookmarksProvider);
 
     return wordAsync.when(
       data: (word) {
         if (word == null) return const SizedBox.shrink();
+
+        final isSaved = ref.read(bookmarksProvider.notifier).isBookmarked(word);
 
         return Container(
           decoration: BoxDecoration(
@@ -74,14 +71,17 @@ class _WordOfTheDayCardState extends ConsumerState<WordOfTheDayCard> {
                             Row(
                               children: [
                                 GestureDetector(
-                                  onTap: () {
-                                    setState(() => _isBookmarked = !_isBookmarked);
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      SnackBar(
-                                        content: Text(_isBookmarked ? 'Saved "${word.headword}" to study bookmarks! ⭐' : 'Removed from bookmarks.'),
-                                        duration: const Duration(seconds: 1),
-                                      ),
-                                    );
+                                  onTap: () async {
+                                    final nowSaved = await ref.read(bookmarksProvider.notifier).toggleBookmark(word);
+                                    if (context.mounted) {
+                                      ScaffoldMessenger.of(context).clearSnackBars();
+                                      ScaffoldMessenger.of(context).showSnackBar(
+                                        SnackBar(
+                                          content: Text(nowSaved ? 'Saved "${word.headword}" to study bookmarks!' : 'Removed "${word.headword}" from bookmarks.'),
+                                          duration: const Duration(seconds: 1),
+                                        ),
+                                      );
+                                    }
                                   },
                                   child: Container(
                                     padding: const EdgeInsets.all(6),
@@ -90,7 +90,7 @@ class _WordOfTheDayCardState extends ConsumerState<WordOfTheDayCard> {
                                       shape: BoxShape.circle,
                                     ),
                                     child: Icon(
-                                      _isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                      isSaved ? Icons.bookmark : Icons.bookmark_border,
                                       color: AppColors.forest900,
                                       size: 18,
                                     ),

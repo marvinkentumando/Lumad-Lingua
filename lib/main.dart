@@ -7,6 +7,7 @@ import 'config/app_config.dart';
 import 'config/routes.dart';
 import 'config/theme.dart';
 import 'providers/theme_provider.dart';
+import 'services/notification_service.dart';
 
 void main() async {
   runZonedGuarded(() async {
@@ -23,6 +24,11 @@ void main() async {
       );
     } catch (e) {
       debugPrint('Supabase initialization warning: $e');
+    }
+    try {
+      await NotificationService().initialize();
+    } catch (e) {
+      debugPrint('NotificationService initialization warning: $e');
     }
     runApp(
       const ProviderScope(

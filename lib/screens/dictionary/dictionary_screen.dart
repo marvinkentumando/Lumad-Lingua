@@ -2,7 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
+import '../../models/vocabulary_model.dart';
 import '../../providers/dictionary_provider.dart';
+import '../../providers/bookmarks_provider.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_filter_chip.dart';
 import '../../widgets/common/error_widget.dart';
@@ -22,7 +24,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   late TextEditingController _searchController;
   String _selectedCategory = 'All';
 
-  final List<String> _categories = ['All', 'Noun', 'Verb', 'Greeting', 'Phrase', 'General'];
+  final List<String> _categories = ['All', 'Saved', 'Noun', 'Verb', 'Greeting', 'Phrase', 'General'];
 
   @override
   void initState() {
@@ -39,6 +41,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   @override
   Widget build(BuildContext context) {
     final searchResultsAsync = ref.watch(dictionarySearchResultsProvider);
+    final savedBookmarks = ref.watch(bookmarksProvider);
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
@@ -114,14 +117,28 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
               // Dynamic Search Results Section ONLY
               searchResultsAsync.when(
                 data: (words) {
-                  final filteredWords = _selectedCategory == 'All'
-                      ? words
-                      : words.where((w) {
-                          final catLower = _selectedCategory.toLowerCase();
-                          final posMatch = w.partOfSpeech.toLowerCase().contains(catLower);
-                          final catMatch = w.category.toLowerCase().contains(catLower);
-                          return posMatch || catMatch;
-                        }).toList();
+                  List<VocabularyModel> filteredWords;
+                  if (_selectedCategory == 'Saved') {
+                    final savedList = savedBookmarks.values.toList();
+                    final query = _searchController.text.trim().toLowerCase();
+                    if (query.isEmpty) {
+                      filteredWords = savedList;
+                    } else {
+                      filteredWords = savedList.where((w) {
+                        return w.headword.toLowerCase().contains(query) ||
+                            w.translation.toLowerCase().contains(query);
+                      }).toList();
+                    }
+                  } else {
+                    filteredWords = _selectedCategory == 'All'
+                        ? words
+                        : words.where((w) {
+                            final catLower = _selectedCategory.toLowerCase();
+                            final posMatch = w.partOfSpeech.toLowerCase().contains(catLower);
+                            final catMatch = w.category.toLowerCase().contains(catLower);
+                            return posMatch || catMatch;
+                          }).toList();
+                  }
 
                   if (filteredWords.isEmpty) {
                     return Padding(
@@ -129,10 +146,16 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Icon(Icons.search_off, size: 64, color: AppColors.creamText3),
+                          Icon(
+                            _selectedCategory == 'Saved' ? Icons.bookmark_border : Icons.search_off,
+                            size: 64,
+                            color: AppColors.creamText3,
+                          ),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            'No dictionary entries match your search.',
+                            _selectedCategory == 'Saved'
+                                ? 'No saved study bookmarks yet.\nTap the bookmark icon on any word to save it!'
+                                : 'No dictionary entries match your search.',
                             style: AppTypography.h3.copyWith(color: AppColors.subtitleColor(context)),
                             textAlign: TextAlign.center,
                           ),
@@ -143,6 +166,8 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
 
                   return Column(
                     children: filteredWords.map((vocab) {
+                      final isBookmarked = ref.read(bookmarksProvider.notifier).isBookmarked(vocab);
+
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
                         child: BrandCard(
@@ -171,10 +196,34 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              // Right: Audio speaker button and navigation chevron affordance
+                              // Right: Action buttons (Bookmark, Audio speaker, Chevron)
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
+                                  GestureDetector(
+                                    onTap: () async {
+                                      final nowSaved = await ref.read(bookmarksProvider.notifier).toggleBookmark(vocab);
+                                      if (context.mounted) {
+                                        ScaffoldMessenger.of(context).clearSnackBars();
+                                        ScaffoldMessenger.of(context).showSnackBar(
+                                          SnackBar(
+                                            content: Text(nowSaved
+                                                ? 'Saved "${vocab.headword}" to study bookmarks!'
+                                                : 'Removed "${vocab.headword}" from bookmarks.'),
+                                            duration: const Duration(seconds: 1),
+                                          ),
+                                        );
+                                      }
+                                    },
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6.0),
+                                      child: Icon(
+                                        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                                        color: isBookmarked ? AppColors.gold500 : AppColors.creamText3,
+                                        size: 22,
+                                      ),
+                                    ),
+                                  ),
                                   GestureDetector(
                                     onTap: () {
                                       if (vocab.audioUrl != null && vocab.audioUrl!.isNotEmpty) {
@@ -186,15 +235,15 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                                       }
                                     },
                                     child: const Padding(
-                                      padding: EdgeInsets.all(8.0),
+                                      padding: EdgeInsets.all(6.0),
                                       child: Icon(
                                         Icons.volume_up_rounded,
                                         color: AppColors.gold500,
-                                        size: 26,
+                                        size: 24,
                                       ),
                                     ),
                                   ),
-                                  const SizedBox(width: 4),
+                                  const SizedBox(width: 2),
                                   const Icon(
                                     Icons.chevron_right,
                                     color: AppColors.creamText3,

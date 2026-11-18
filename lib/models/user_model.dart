@@ -25,6 +25,13 @@ class UserModel {
     this.inventory = const [],
   });
 
+  /// Returns the first word/name of the user's display name for greetings (e.g., "Juan" from "Juan Dela Cruz").
+  String get firstName {
+    final trimmed = name.trim();
+    if (trimmed.isEmpty) return 'Learner';
+    return trimmed.split(RegExp(r'\s+')).first;
+  }
+
   UserModel copyWith({
     String? id,
     String? name,

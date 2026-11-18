@@ -1,21 +1,56 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../models/vocabulary_model.dart';
+import '../../models/daily_quest_model.dart';
 import '../../utils/constants.dart';
+import '../../providers/bookmarks_provider.dart';
+import '../../providers/daily_quests_provider.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_background.dart';
 import '../../widgets/audio/audio_player_widget.dart';
 
-class WordDetailsScreen extends StatelessWidget {
+class WordDetailsScreen extends ConsumerWidget {
   final VocabularyModel vocabulary;
 
   const WordDetailsScreen({super.key, required this.vocabulary});
 
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    ref.watch(bookmarksProvider);
+    final isBookmarked = ref.read(bookmarksProvider.notifier).isBookmarked(vocabulary);
+
+    // Increment dictionary exploration daily quest progress
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(dailyQuestsProvider.notifier).incrementProgress(QuestType.dictionary);
+    });
+
     return Scaffold(
       appBar: AppBar(
         title: Text(vocabulary.headword, style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
+        actions: [
+          IconButton(
+            icon: Icon(
+              isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+              color: isBookmarked ? AppColors.gold500 : Colors.white,
+            ),
+            tooltip: isBookmarked ? 'Remove Bookmark' : 'Save Bookmark',
+            onPressed: () async {
+              final nowSaved = await ref.read(bookmarksProvider.notifier).toggleBookmark(vocabulary);
+              if (context.mounted) {
+                ScaffoldMessenger.of(context).clearSnackBars();
+                ScaffoldMessenger.of(context).showSnackBar(
+                  SnackBar(
+                    content: Text(nowSaved
+                        ? 'Saved "${vocabulary.headword}" to study bookmarks!'
+                        : 'Removed "${vocabulary.headword}" from bookmarks.'),
+                    duration: const Duration(seconds: 1),
+                  ),
+                );
+              }
+            },
+          ),
+        ],
       ),
       body: LumadBackground(
         child: SingleChildScrollView(

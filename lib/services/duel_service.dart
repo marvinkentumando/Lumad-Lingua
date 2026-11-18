@@ -104,13 +104,12 @@ class DuelService {
     return _sampleDuelQuestions;
   }
 
-  /// Enters matchmaking queue or creates a new waiting session with questions from Firebase
-  Future<String> findOrCreateMatch({required String userName}) async {
+  /// Checks if an existing human player is waiting in a duel session
+  Future<String?> findExistingHumanMatch({required String userName}) async {
     final user = _auth.currentUser;
     final uid = user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
 
     try {
-      // 1. Look for an existing open waiting session
       final waitingQuery = await _firestore
           .collection('duel_sessions')
           .where('status', isEqualTo: 'waiting')
@@ -130,11 +129,17 @@ class DuelService {
           return doc.id;
         }
       }
+    } catch (_) {}
+    return null;
+  }
 
-      // Fetch questions dynamically from Firebase
+  /// Creates a waiting session hosted by the user while waiting for a human opponent
+  Future<String> createWaitingSession({required String userName}) async {
+    final user = _auth.currentUser;
+    final uid = user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
+
+    try {
       final duelQuestions = await _fetchFirebaseQuestions();
-
-      // 2. Create a new waiting session
       final newDoc = _firestore.collection('duel_sessions').doc();
       final session = DuelSessionModel(
         id: newDoc.id,
@@ -153,9 +158,22 @@ class DuelService {
       await newDoc.set(session.toJson());
       return newDoc.id;
     } catch (e) {
-      // Offline fallback: return a mock local session ID
       return 'local_duel_${DateTime.now().millisecondsSinceEpoch}';
     }
+  }
+
+  /// Cancels and deletes a waiting room if search times out or is cancelled
+  Future<void> cancelWaitingSession(String sessionId) async {
+    try {
+      await _firestore.collection('duel_sessions').doc(sessionId).delete();
+    } catch (_) {}
+  }
+
+  /// Legacy helper for fallback
+  Future<String> findOrCreateMatch({required String userName}) async {
+    final existingId = await findExistingHumanMatch(userName: userName);
+    if (existingId != null) return existingId;
+    return createWaitingSession(userName: userName);
   }
 
   /// Creates an instant bot match session against AI Rival Bot

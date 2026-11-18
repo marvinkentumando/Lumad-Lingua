@@ -96,8 +96,10 @@ class HomeScreen extends ConsumerWidget {
                                 ),
                                 const SizedBox(height: 4),
                                 Text(
-                                  user?.name ?? 'Lumad Learner',
+                                  '${user?.firstName ?? 'Learner'}!',
                                   style: AppTypography.h1ExtraBold.copyWith(color: Colors.white, fontSize: 24),
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 4),
                                 Text(

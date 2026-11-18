@@ -6,6 +6,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/duel_provider.dart';
+import '../../models/duel_model.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
@@ -23,15 +24,32 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
   bool _isSearching = false;
   int _searchTimeLeft = 20;
   Timer? _searchTimer;
+  StreamSubscription<DuelSessionModel?>? _sessionSubscription;
+  String? _currentWaitingSessionId;
 
   @override
   void dispose() {
     _searchTimer?.cancel();
+    _sessionSubscription?.cancel();
+    _cleanupWaitingSession();
     super.dispose();
+  }
+
+  Future<void> _cleanupWaitingSession() async {
+    if (_currentWaitingSessionId != null) {
+      final sessionId = _currentWaitingSessionId!;
+      _currentWaitingSessionId = null;
+      try {
+        final service = ref.read(duelServiceProvider);
+        await service.cancelWaitingSession(sessionId);
+      } catch (_) {}
+    }
   }
 
   void _cancelMatchmaking() {
     _searchTimer?.cancel();
+    _sessionSubscription?.cancel();
+    _cleanupWaitingSession();
     if (mounted) {
       setState(() {
         _isSearching = false;
@@ -41,6 +59,8 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
   }
 
   Future<void> _startMatchmaking() async {
+    _cancelMatchmaking();
+
     setState(() {
       _isSearching = true;
       _searchTimeLeft = 20;
@@ -50,41 +70,138 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
     final userName = user?.name ?? 'Lumad Learner';
     final service = ref.read(duelServiceProvider);
 
-    _searchTimer?.cancel();
-    _searchTimer = Timer.periodic(const Duration(seconds: 1), (timer) async {
-      if (!mounted) {
-        timer.cancel();
+    try {
+      // 1. First check if another human player is already waiting
+      final existingSessionId = await service.findExistingHumanMatch(userName: userName);
+      if (existingSessionId != null && mounted) {
+        setState(() => _isSearching = false);
+        context.push('/arena/battle', extra: {'sessionId': existingSessionId});
         return;
       }
 
-      if (_searchTimeLeft > 1) {
-        setState(() => _searchTimeLeft--);
-      } else {
-        timer.cancel();
-        // 20-second timeout elapsed -> Fallback to instant AI Bot Match
-        try {
-          final botSessionId = await service.createBotMatch(userName: userName);
+      // 2. Create a waiting session for this user
+      final sessionId = await service.createWaitingSession(userName: userName);
+      _currentWaitingSessionId = sessionId;
+
+      // 3. Listen to live updates on this waiting session
+      _sessionSubscription = service.watchDuelSession(sessionId).listen((session) {
+        if (session != null && session.status == 'active' && session.player2Id != null && session.player2Id != 'bot_ai') {
+          _searchTimer?.cancel();
+          _sessionSubscription?.cancel();
+          _currentWaitingSessionId = null;
           if (mounted) {
             setState(() => _isSearching = false);
-            context.push('/arena/battle', extra: {'sessionId': botSessionId});
+            context.push('/arena/battle', extra: {'sessionId': session.id});
           }
-        } catch (e) {
-          _cancelMatchmaking();
         }
-      }
-    });
+      });
 
-    try {
-      final sessionId = await service.findOrCreateMatch(userName: userName);
+      // 4. Start 20-second countdown timer
+      _searchTimer = Timer.periodic(const Duration(seconds: 1), (timer) {
+        if (!mounted) {
+          timer.cancel();
+          return;
+        }
 
-      if (mounted && _isSearching) {
-        _searchTimer?.cancel();
-        setState(() => _isSearching = false);
-        context.push('/arena/battle', extra: {'sessionId': sessionId});
-      }
+        if (_searchTimeLeft > 1) {
+          setState(() => _searchTimeLeft--);
+        } else {
+          timer.cancel();
+          _onMatchmakingTimeout();
+        }
+      });
     } catch (e) {
-      // Don't interrupt countdown; let timer complete or fallback
+      _cancelMatchmaking();
     }
+  }
+
+  Future<void> _onMatchmakingTimeout() async {
+    _searchTimer?.cancel();
+    _sessionSubscription?.cancel();
+    await _cleanupWaitingSession();
+
+    if (mounted) {
+      setState(() => _isSearching = false);
+      _showNoOpponentDialog();
+    }
+  }
+
+  void _showNoOpponentDialog() {
+    final user = ref.read(authStateProvider).value;
+    final userName = user?.name ?? 'Lumad Learner';
+    final service = ref.read(duelServiceProvider);
+
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.cardColor(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
+        title: Row(
+          children: [
+            const Icon(Icons.group_off, color: AppColors.gold500, size: 28),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                'No Opponent Found',
+                style: AppTypography.h3.copyWith(color: AppColors.textColor(context)),
+              ),
+            ),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'No active human players connected within 20 seconds.',
+              style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context)),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Would you like to battle against the AI Rival (Bot) or try searching again?',
+              style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
+            ),
+          ],
+        ),
+        actions: [
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              BrandButton(
+                text: 'Play against AI Rival (Bot)',
+                icon: Icons.smart_toy,
+                type: BrandButtonType.gold,
+                onPressed: () async {
+                  Navigator.of(dialogContext).pop();
+                  try {
+                    final botSessionId = await service.createBotMatch(userName: userName);
+                    if (mounted) {
+                      context.push('/arena/battle', extra: {'sessionId': botSessionId});
+                    }
+                  } catch (_) {}
+                },
+              ),
+              const SizedBox(height: AppSpacing.xs),
+              BrandButton(
+                text: 'Search Again (20s)',
+                icon: Icons.refresh,
+                type: BrandButtonType.secondary,
+                onPressed: () {
+                  Navigator.of(dialogContext).pop();
+                  _startMatchmaking();
+                },
+              ),
+              const SizedBox(height: 4),
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: Text('Cancel', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context))),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -143,20 +260,27 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
                   ),
                   const SizedBox(height: 8),
                   Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                     decoration: BoxDecoration(
                       color: AppColors.gold500.withValues(alpha: 0.2),
                       borderRadius: BorderRadius.circular(20),
                       border: Border.all(color: AppColors.gold500),
                     ),
-                    child: Text(
-                      'Matchmaking Countdown: 00:${_searchTimeLeft.toString().padLeft(2, '0')}',
-                      style: AppTypography.labelBold.copyWith(color: AppColors.gold400),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const Icon(Icons.timer, color: AppColors.gold400, size: 18),
+                        const SizedBox(width: 6),
+                        Text(
+                          'Countdown: 00:${_searchTimeLeft.toString().padLeft(2, '0')}',
+                          style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 16),
+                        ),
+                      ],
                     ),
                   ),
-                  const SizedBox(height: 4),
+                  const SizedBox(height: 6),
                   Text(
-                    'Auto-matching AI Rival if no human opponent connects',
+                    'Searching live human opponents for 20 seconds...',
                     style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                   ),
                   const SizedBox(height: AppSpacing.lg),

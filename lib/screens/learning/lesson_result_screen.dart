@@ -1,22 +1,25 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
 import '../../utils/constants.dart';
+import '../../models/daily_quest_model.dart';
+import '../../providers/daily_quests_provider.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_background.dart';
 
-class LessonResultScreen extends StatefulWidget {
+class LessonResultScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> resultData;
 
   const LessonResultScreen({super.key, required this.resultData});
 
   @override
-  State<LessonResultScreen> createState() => _LessonResultScreenState();
+  ConsumerState<LessonResultScreen> createState() => _LessonResultScreenState();
 }
 
-class _LessonResultScreenState extends State<LessonResultScreen> {
+class _LessonResultScreenState extends ConsumerState<LessonResultScreen> {
   late ConfettiController _confettiController;
 
   @override
@@ -24,6 +27,10 @@ class _LessonResultScreenState extends State<LessonResultScreen> {
     super.initState();
     _confettiController = ConfettiController(duration: const Duration(seconds: 3));
     _confettiController.play();
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      ref.read(dailyQuestsProvider.notifier).incrementProgress(QuestType.lesson);
+    });
   }
 
   @override

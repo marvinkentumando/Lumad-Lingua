@@ -3,47 +3,9 @@ import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
-import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/daily_quests_provider.dart';
 import '../common/brand_button.dart';
-
-class DailyQuestItem {
-  final String id;
-  final String title;
-  final String description;
-  final int xpReward;
-  final int crystalReward;
-  final double progress; // 0.0 to 1.0
-  final bool isCompleted;
-  final bool isClaimed;
-  final String route;
-
-  const DailyQuestItem({
-    required this.id,
-    required this.title,
-    required this.description,
-    required this.xpReward,
-    required this.crystalReward,
-    required this.progress,
-    required this.isCompleted,
-    required this.isClaimed,
-    required this.route,
-  });
-
-  DailyQuestItem copyWith({bool? isClaimed}) {
-    return DailyQuestItem(
-      id: id,
-      title: title,
-      description: description,
-      xpReward: xpReward,
-      crystalReward: crystalReward,
-      progress: progress,
-      isCompleted: isCompleted,
-      isClaimed: isClaimed ?? this.isClaimed,
-      route: route,
-    );
-  }
-}
 
 class DailyQuestsWidget extends ConsumerStatefulWidget {
   const DailyQuestsWidget({super.key});
@@ -53,65 +15,6 @@ class DailyQuestsWidget extends ConsumerStatefulWidget {
 }
 
 class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
-  final List<DailyQuestItem> _quests = [
-    const DailyQuestItem(
-      id: 'q1',
-      title: 'Complete a Mansaka Lesson',
-      description: 'Finish any active lesson in your learning path',
-      xpReward: 50,
-      crystalReward: 10,
-      progress: 0.5,
-      isCompleted: false,
-      isClaimed: false,
-      route: '/learn',
-    ),
-    const DailyQuestItem(
-      id: 'q2',
-      title: 'Pronunciation Practice',
-      description: 'Record and test audio pronunciation',
-      xpReward: 30,
-      crystalReward: 5,
-      progress: 1.0,
-      isCompleted: true,
-      isClaimed: false,
-      route: '/pronunciation',
-    ),
-    const DailyQuestItem(
-      id: 'q3',
-      title: 'Lingua Duels PvP',
-      description: 'Compete in a rapid-fire vocabulary duel',
-      xpReward: 100,
-      crystalReward: 20,
-      progress: 0.0,
-      isCompleted: false,
-      isClaimed: false,
-      route: '/arena',
-    ),
-  ];
-
-  Future<void> _claimQuest(int index) async {
-    final quest = _quests[index];
-    if (quest.isClaimed || !quest.isCompleted) return;
-
-    HapticFeedback.heavyImpact();
-    final user = ref.read(authStateProvider).value;
-    if (user != null) {
-      final authNotifier = ref.read(authStateProvider.notifier);
-      authNotifier.addXp(quest.xpReward);
-      authNotifier.updateCrystals(user.crystals + quest.crystalReward);
-    }
-
-    setState(() {
-      _quests[index] = quest.copyWith(isClaimed: true);
-    });
-
-    if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Successfully claimed +${quest.xpReward} XP and +${quest.crystalReward} Crystals! 🎉')),
-      );
-    }
-  }
-
   void _showQuestsModal(BuildContext context) {
     HapticFeedback.lightImpact();
     showModalBottomSheet(
@@ -123,115 +26,138 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
       ),
       builder: (sheetContext) {
         final isDark = Theme.of(sheetContext).brightness == Brightness.dark;
-        return StatefulBuilder(
-          builder: (sheetContext, setSheetState) => Padding(
-            padding: EdgeInsets.only(
-              left: AppSpacing.md,
-              right: AppSpacing.md,
-              top: AppSpacing.md,
-              bottom: MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.md,
-            ),
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text('Daily Quests', style: AppTypography.h2.copyWith(color: AppColors.textColor(sheetContext))),
-                    IconButton(
-                      icon: Icon(Icons.close, color: AppColors.subtitleColor(sheetContext)),
-                      onPressed: () => Navigator.of(sheetContext).pop(),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                Text('Complete challenges daily to maintain your streak and earn bonus rewards.', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(sheetContext))),
-                const SizedBox(height: AppSpacing.md),
-                ListView.separated(
-                  shrinkWrap: true,
-                  physics: const NeverScrollableScrollPhysics(),
-                  itemCount: _quests.length,
-                  separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
-                  itemBuilder: (context, index) {
-                    final quest = _quests[index];
-                    return Container(
-                      padding: const EdgeInsets.all(12),
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.forest800 : Colors.white,
-                        borderRadius: BorderRadius.circular(AppRadius.card),
-                        border: Border.all(color: isDark ? AppColors.forest700 : AppColors.creamBorder),
+
+        return Consumer(
+          builder: (context, ref, child) {
+            final quests = ref.watch(dailyQuestsProvider);
+
+            return Padding(
+              padding: EdgeInsets.only(
+                left: AppSpacing.md,
+                right: AppSpacing.md,
+                top: AppSpacing.md,
+                bottom: MediaQuery.of(sheetContext).viewInsets.bottom + AppSpacing.md,
+              ),
+              child: Column(
+                mainAxisSize: MainAxisSize.min,
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text('Daily Quests', style: AppTypography.h2.copyWith(color: AppColors.textColor(sheetContext))),
+                      IconButton(
+                        icon: Icon(Icons.close, color: AppColors.subtitleColor(sheetContext)),
+                        onPressed: () => Navigator.of(sheetContext).pop(),
                       ),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Expanded(
-                                child: Text(quest.title, style: AppTypography.labelBold.copyWith(color: isDark ? Colors.white : AppColors.creamText, fontSize: 14)),
-                              ),
-                              Row(
-                                children: [
-                                  const Icon(Icons.bolt, size: 14, color: AppColors.gold500),
-                                  Text('+${quest.xpReward} XP', style: AppTypography.xpValue.copyWith(fontSize: 12, color: AppColors.gold400)),
-                                  const SizedBox(width: 6),
-                                  const Icon(Icons.diamond, size: 14, color: AppColors.gold500),
-                                  Text('+${quest.crystalReward}', style: AppTypography.xpValue.copyWith(fontSize: 12, color: AppColors.gold400)),
-                                ],
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 2),
-                          Text(quest.description, style: AppTypography.caption.copyWith(color: isDark ? Colors.white70 : AppColors.creamText2)),
-                          const SizedBox(height: 8),
-                          Row(
-                            children: [
-                              Expanded(
-                                child: ClipRRect(
-                                  borderRadius: BorderRadius.circular(4),
-                                  child: LinearProgressIndicator(
-                                    value: quest.isClaimed ? 1.0 : quest.progress,
-                                    backgroundColor: isDark ? AppColors.forest700 : AppColors.creamBorder,
-                                    color: quest.isClaimed ? (isDark ? Colors.grey : AppColors.creamText3) : (quest.isCompleted ? AppColors.semanticGreen : AppColors.gold500),
-                                    minHeight: 8,
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text('Complete challenges daily to maintain your streak and earn bonus rewards.',
+                      style: AppTypography.body.copyWith(color: AppColors.subtitleColor(sheetContext))),
+                  const SizedBox(height: AppSpacing.md),
+                  ListView.separated(
+                    shrinkWrap: true,
+                    physics: const NeverScrollableScrollPhysics(),
+                    itemCount: quests.length,
+                    separatorBuilder: (context, index) => const SizedBox(height: AppSpacing.sm),
+                    itemBuilder: (context, index) {
+                      final quest = quests[index];
+                      return Container(
+                        padding: const EdgeInsets.all(12),
+                        decoration: BoxDecoration(
+                          color: isDark ? AppColors.forest800 : Colors.white,
+                          borderRadius: BorderRadius.circular(AppRadius.card),
+                          border: Border.all(color: isDark ? AppColors.forest700 : AppColors.creamBorder),
+                        ),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    quest.title,
+                                    style: AppTypography.labelBold.copyWith(
+                                        color: isDark ? Colors.white : AppColors.creamText, fontSize: 14),
                                   ),
                                 ),
-                              ),
-                              const SizedBox(width: 12),
-                              SizedBox(
-                                width: 90,
-                                height: 34,
-                                child: BrandButton(
-                                  text: quest.isClaimed ? 'Claimed' : (quest.isCompleted ? 'Claim' : 'Go'),
-                                  type: quest.isClaimed
-                                      ? BrandButtonType.small
-                                      : (quest.isCompleted ? BrandButtonType.success : BrandButtonType.gold),
-                                  onPressed: quest.isClaimed
-                                      ? null
-                                      : () {
-                                          HapticFeedback.lightImpact();
-                                          if (quest.isCompleted) {
-                                            _claimQuest(index);
-                                            setSheetState(() {});
-                                            setState(() {});
-                                          } else {
-                                            Navigator.of(sheetContext).pop();
-                                            context.push(quest.route);
-                                          }
-                                        },
+                                Row(
+                                  children: [
+                                    const Icon(Icons.bolt, size: 14, color: AppColors.gold500),
+                                    Text('+${quest.xpReward} XP',
+                                        style: AppTypography.xpValue.copyWith(fontSize: 12, color: AppColors.gold400)),
+                                    const SizedBox(width: 6),
+                                    const Icon(Icons.diamond, size: 14, color: AppColors.gold500),
+                                    Text('+${quest.crystalReward}',
+                                        style: AppTypography.xpValue.copyWith(fontSize: 12, color: AppColors.gold400)),
+                                  ],
                                 ),
-                              ),
-                            ],
-                          ),
-                        ],
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ),
+                              ],
+                            ),
+                            const SizedBox(height: 2),
+                            Text(
+                              '${quest.description} (${quest.currentCount}/${quest.targetCount})',
+                              style: AppTypography.caption.copyWith(color: isDark ? Colors.white70 : AppColors.creamText2),
+                            ),
+                            const SizedBox(height: 8),
+                            Row(
+                              children: [
+                                Expanded(
+                                  child: ClipRRect(
+                                    borderRadius: BorderRadius.circular(4),
+                                    child: LinearProgressIndicator(
+                                      value: quest.isClaimed ? 1.0 : quest.progress,
+                                      backgroundColor: isDark ? AppColors.forest700 : AppColors.creamBorder,
+                                      color: quest.isClaimed
+                                          ? (isDark ? Colors.grey : AppColors.creamText3)
+                                          : (quest.isCompleted ? AppColors.semanticGreen : AppColors.gold500),
+                                      minHeight: 8,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 12),
+                                SizedBox(
+                                  width: 90,
+                                  height: 34,
+                                  child: BrandButton(
+                                    text: quest.isClaimed ? 'Claimed' : (quest.isCompleted ? 'Claim' : 'Go'),
+                                    type: quest.isClaimed
+                                        ? BrandButtonType.small
+                                        : (quest.isCompleted ? BrandButtonType.success : BrandButtonType.gold),
+                                    onPressed: quest.isClaimed
+                                        ? null
+                                        : () async {
+                                            HapticFeedback.lightImpact();
+                                            if (quest.isCompleted) {
+                                              final claimed = await ref.read(dailyQuestsProvider.notifier).claimQuest(quest.id);
+                                              if (claimed && sheetContext.mounted) {
+                                                ScaffoldMessenger.of(sheetContext).showSnackBar(
+                                                  SnackBar(
+                                                    content: Text(
+                                                        'Successfully claimed +${quest.xpReward} XP and +${quest.crystalReward} Crystals! 🎉'),
+                                                  ),
+                                                );
+                                              }
+                                            } else {
+                                              Navigator.of(sheetContext).pop();
+                                              context.push(quest.route);
+                                            }
+                                          },
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
+                ],
+              ),
+            );
+          },
         );
       },
     );
@@ -239,8 +165,9 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
 
   @override
   Widget build(BuildContext context) {
-    final completedCount = _quests.where((q) => q.isCompleted || q.isClaimed).length;
-    final progress = completedCount / _quests.length;
+    final quests = ref.watch(dailyQuestsProvider);
+    final completedCount = quests.where((q) => q.isCompleted || q.isClaimed).length;
+    final progress = quests.isEmpty ? 0.0 : completedCount / quests.length;
     final isCustomActive = ref.watch(customThemeAccentProvider);
 
     return GestureDetector(
@@ -294,12 +221,13 @@ class _DailyQuestsWidgetState extends ConsumerState<DailyQuestsWidget> {
                           borderRadius: BorderRadius.circular(AppRadius.chip),
                           border: Border.all(color: AppColors.gold500),
                         ),
-                        child: Text('🔥 1.5x Bonus', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 9)),
+                        child: Text('🔥 Daily Reset', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 9)),
                       ),
                     ],
                   ),
                   const SizedBox(height: 2),
-                  Text('$completedCount of ${_quests.length} Completed • Tap to View', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                  Text('$completedCount of ${quests.length} Completed • Tap to View',
+                      style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                   const SizedBox(height: 6),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(4),

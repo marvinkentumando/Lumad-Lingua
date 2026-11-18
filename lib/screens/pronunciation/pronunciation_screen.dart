@@ -6,6 +6,8 @@ import 'package:record/record.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:path_provider/path_provider.dart';
 import '../../utils/constants.dart';
+import '../../models/daily_quest_model.dart';
+import '../../providers/daily_quests_provider.dart';
 import '../../providers/pronunciation_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../services/local_ml_service.dart';
@@ -192,6 +194,8 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
       ref.read(authStateProvider.notifier).addXp(earnedXp);
       ref.read(authStateProvider.notifier).updateCrystals(user.crystals + earnedCrystals);
     }
+
+    ref.read(dailyQuestsProvider.notifier).incrementProgress(QuestType.pronunciation);
 
     if (mounted) {
       showDialog(
