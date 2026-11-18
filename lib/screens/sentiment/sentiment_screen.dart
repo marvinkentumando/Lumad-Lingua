@@ -167,26 +167,38 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Emotional Mood:', style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 15)),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                              decoration: BoxDecoration(
-                                color: _getSentimentColor(_result!.sentiment),
-                                borderRadius: BorderRadius.circular(AppRadius.chip),
+                            Expanded(
+                              child: Text(
+                                'Emotional Mood:',
+                                style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 15),
+                                overflow: TextOverflow.ellipsis,
                               ),
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Text(
-                                    _getSentimentEmoji(_result!.sentiment),
-                                    style: const TextStyle(fontSize: 16),
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    _getSentimentTitle(_result!.sentiment),
-                                    style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 12),
-                                  ),
-                                ],
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                decoration: BoxDecoration(
+                                  color: _getSentimentColor(_result!.sentiment),
+                                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Text(
+                                      _getSentimentEmoji(_result!.sentiment),
+                                      style: const TextStyle(fontSize: 16),
+                                    ),
+                                    const SizedBox(width: 6),
+                                    Flexible(
+                                      child: Text(
+                                        _getSentimentTitle(_result!.sentiment),
+                                        style: AppTypography.labelBold.copyWith(color: Colors.white, fontSize: 12),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                    ),
+                                  ],
+                                ),
                               ),
                             ),
                           ],
@@ -200,16 +212,26 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Language Identity:', style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder)),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.gold500,
-                                borderRadius: BorderRadius.circular(AppRadius.chip),
-                              ),
+                            Expanded(
                               child: Text(
-                                _result!.languageClassification.name == 'mansaka' ? 'AUTHENTIC MANSAKA 🌿' : 'MIXED EXPRESSION 💬',
-                                style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
+                                'Language Identity:',
+                                style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            Flexible(
+                              child: Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold500,
+                                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                                ),
+                                child: Text(
+                                  _result!.languageClassification.name == 'mansaka' ? 'AUTHENTIC MANSAKA 🌿' : 'MIXED EXPRESSION 💬',
+                                  style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 10),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
                               ),
                             ),
                           ],
@@ -218,7 +240,14 @@ class _SentimentScreenState extends ConsumerState<SentimentScreen> {
                         Row(
                           mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Text('Accuracy Rating:', style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder)),
+                            Expanded(
+                              child: Text(
+                                'Accuracy Rating:',
+                                style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
                             Text(
                               '${(_result!.confidenceScore * 100).toInt()}% Certainty 🌟',
                               style: AppTypography.mono.copyWith(color: AppColors.gold400, fontWeight: FontWeight.bold),

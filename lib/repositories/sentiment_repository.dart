@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/sentiment_model.dart';
 import '../services/local_ml_service.dart';
 import '../services/admin_config_service.dart';
@@ -17,6 +18,22 @@ class MockSentimentRepository implements SentimentRepository {
     await Future.delayed(const Duration(milliseconds: 500));
     final config = await _adminConfigService.getActiveAlgorithmConfig();
     final modelMode = config['sentiment_model'] as String? ?? 'ensemble';
-    return LocalMlService.analyzeWithConfig(text, modelMode);
+    final result = LocalMlService.analyzeWithConfig(text, modelMode);
+
+    // Log sentiment analysis result to Cloud Firestore for external admin dashboards
+    try {
+      await FirebaseFirestore.instance.collection('sentiment_logs').add({
+        'text': result.text,
+        'sentiment': result.sentiment.name,
+        'languageClassification': result.languageClassification.name,
+        'confidenceScore': result.confidenceScore,
+        'modelName': result.modelName,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
+    } catch (_) {
+      // Ignore network/offline logging failures to prevent disrupting user experience
+    }
+
+    return result;
   }
 }

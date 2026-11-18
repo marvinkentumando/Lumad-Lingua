@@ -1,6 +1,8 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/progress_provider.dart';
@@ -15,6 +17,7 @@ import '../../widgets/common/lumad_background.dart';
 ImageProvider? getAvatarImage(String? url) {
   if (url == null || url.isEmpty) return null;
   if (url.startsWith('assets/')) return AssetImage(url);
+  if (url.startsWith('/') || url.contains(':')) return FileImage(File(url));
   return NetworkImage(url);
 }
 
@@ -252,15 +255,29 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                   ),
                 ),
                 const SizedBox(height: AppSpacing.md),
-                Text('Or enter custom image URL:', style: AppTypography.caption),
-                const SizedBox(height: 6),
-                TextField(
-                  controller: avatarController,
-                  decoration: const InputDecoration(
-                    labelText: 'Image / Photo URL',
-                    hintText: 'https://...',
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: () async {
+                      final picker = ImagePicker();
+                      final image = await picker.pickImage(source: ImageSource.gallery);
+                      if (image != null) {
+                        setDialogState(() {
+                          avatarController.text = image.path;
+                        });
+                      }
+                    },
+                    icon: const Icon(Icons.photo_library, color: AppColors.gold500),
+                    label: const Text('Upload Image from Gallery'),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.gold500),
+                    ),
                   ),
                 ),
+                if (avatarController.text.isNotEmpty && !characterAssets.contains(avatarController.text) && !avatarController.text.startsWith('assets/')) ...[
+                  const SizedBox(height: 8),
+                  Text('Selected file: ${avatarController.text.split('/').last}', style: AppTypography.caption.copyWith(color: AppColors.gold400)),
+                ],
               ],
             ),
           ),
@@ -532,7 +549,6 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     final school = data['schoolOrCenter'] ?? 'School / Center';
 
                     return BrandCard(
-                      backgroundColor: AppColors.gold500,
                       onTap: () {
                         context.push('/classroom/dashboard', extra: {
                           'classId': doc.id,
@@ -541,18 +557,18 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                       },
                       child: Row(
                         children: [
-                          const Icon(Icons.school, size: 32, color: AppColors.forest900),
+                          const Icon(Icons.school, size: 32, color: AppColors.gold500),
                           const SizedBox(width: AppSpacing.md),
                           Expanded(
                             child: Column(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                Text(className, style: AppTypography.h3.copyWith(color: AppColors.forest900)),
-                                Text('School / Center: $school', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
+                                Text(className, style: AppTypography.h3.copyWith(color: Colors.white)),
+                                Text('School / Center: $school', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                               ],
                             ),
                           ),
-                          const Icon(Icons.chevron_right, color: AppColors.forest900),
+                          const Icon(Icons.chevron_right, color: AppColors.gold500),
                         ],
                       ),
                     );
@@ -560,22 +576,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                   // Not Enrolled: Join Classroom Button Card
                   return BrandCard(
-                    backgroundColor: AppColors.gold500,
                     onTap: isGuest ? () => context.push('/login') : () => _showJoinClassroomModal(context),
                     child: Row(
                       children: [
-                        const Icon(Icons.school, size: 32, color: AppColors.forest900),
+                        const Icon(Icons.school, size: 32, color: AppColors.gold500),
                         const SizedBox(width: AppSpacing.md),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
-                              Text('Join a Classroom', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
-                              Text('Connect with your educator & classmates', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
+                              Text('Join a Classroom', style: AppTypography.h3.copyWith(color: Colors.white)),
+                              Text('Connect with your educator & classmates', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                             ],
                           ),
                         ),
-                        const Icon(Icons.chevron_right, color: AppColors.forest900),
+                        const Icon(Icons.chevron_right, color: AppColors.gold500),
                       ],
                     ),
                   );
@@ -587,22 +602,21 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
               // Crystal Shop Shortcut
               BrandCard(
-                backgroundColor: AppColors.gold500,
                 onTap: () => context.push('/shop'),
                 child: Row(
                   children: [
-                    const Icon(Icons.diamond, size: 32, color: AppColors.forest900),
+                    const Icon(Icons.diamond, size: 32, color: AppColors.gold500),
                     const SizedBox(width: AppSpacing.md),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Crystal Shop', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
-                          Text('Spend crystals on power-ups & avatar frames', style: AppTypography.caption.copyWith(color: AppColors.forest800)),
+                          Text('Crystal Shop', style: AppTypography.h3.copyWith(color: Colors.white)),
+                          Text('Spend crystals on power-ups & avatar frames', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
                         ],
                       ),
                     ),
-                    const Icon(Icons.chevron_right, color: AppColors.forest900),
+                    const Icon(Icons.chevron_right, color: AppColors.gold500),
                   ],
                 ),
               ),

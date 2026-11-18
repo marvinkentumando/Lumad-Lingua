@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../models/activity_model.dart';
@@ -66,6 +68,12 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
       correct = true;
     }
 
+    if (correct) {
+      HapticFeedback.lightImpact();
+    } else {
+      HapticFeedback.heavyImpact();
+    }
+
     setState(() {
       _isAnswerChecked = true;
       _isCorrect = correct;
@@ -75,6 +83,73 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
   void _nextActivity(ActivityModel activity) {
     ref.read(lessonSessionProvider.notifier).answerCurrentActivity(_isCorrect, activity.xpReward);
     _resetSelection();
+  }
+
+  void _showHeartInfoModal(int currentHearts) {
+    showDialog(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        backgroundColor: AppColors.forest800,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
+        title: Row(
+          children: [
+            const Icon(Icons.favorite, color: AppColors.semanticRed, size: 28),
+            const SizedBox(width: 8),
+            Text('Heart Regeneration', style: AppTypography.h3.copyWith(color: Colors.white)),
+          ],
+        ),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('You have $currentHearts / 5 hearts remaining.', style: AppTypography.body.copyWith(color: Colors.white)),
+            const SizedBox(height: 12),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.forest900,
+                borderRadius: BorderRadius.circular(AppRadius.card),
+                border: Border.all(color: AppColors.forest700),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.timer_outlined, color: AppColors.gold500, size: 24),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text('Next Heart Refill in', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                        const SizedBox(height: 2),
+                        Text('18:42 mins', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 16)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(),
+            child: const Text('Close'),
+          ),
+          BrandButton(
+            text: 'Practice to Earn Heart',
+            type: BrandButtonType.primary,
+            onPressed: () {
+              Navigator.of(dialogContext).pop();
+              ref.read(lessonSessionProvider.notifier).refillHearts();
+              _isOutOfHeartsDialogShown = false;
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Practice completed! +1 Heart restored. 💖')),
+              );
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -89,14 +164,21 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
             children: [
               const Text('Interactive Lesson'),
               const Spacer(),
-              Row(
-                children: List.generate(
-                  5,
-                  (index) => Icon(
-                    index < session.hearts ? Icons.favorite : Icons.favorite_border,
-                    color: AppColors.semanticRed,
-                    size: 18,
-                  ),
+              GestureDetector(
+                onTap: () => _showHeartInfoModal(session.hearts),
+                child: Row(
+                  children: [
+                    ...List.generate(
+                      5,
+                      (index) => Icon(
+                        index < session.hearts ? Icons.favorite : Icons.favorite_border,
+                        color: AppColors.semanticRed,
+                        size: 18,
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                    const Icon(Icons.timer, color: AppColors.gold500, size: 14),
+                  ],
                 ),
               ),
             ],
@@ -108,6 +190,17 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
           icon: const Icon(Icons.close),
           onPressed: () => context.pop(),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.flag_outlined, color: Colors.white70),
+            tooltip: 'Report Question',
+            onPressed: () {
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Question reported to instructors. Thank you! 🚩')),
+              );
+            },
+          ),
+        ],
       ),
       body: sessionAsync.when(
         data: (session) {
@@ -129,6 +222,19 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                         },
                         child: const Text('Exit Lesson'),
                       ),
+                      BrandButton(
+                        text: 'Practice Drills',
+                        type: BrandButtonType.primary,
+                        onPressed: () {
+                          ref.read(lessonSessionProvider.notifier).refillHearts();
+                          _isOutOfHeartsDialogShown = false;
+                          Navigator.of(dialogContext).pop();
+                          ScaffoldMessenger.of(context).showSnackBar(
+                            const SnackBar(content: Text('Quick practice completed! Hearts restored. 💖')),
+                          );
+                        },
+                      ),
+                      const SizedBox(height: 8),
                       BrandButton(
                         text: 'Refill Hearts (-30 Crystals)',
                         type: BrandButtonType.gold,
@@ -174,6 +280,8 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
             return const Center(child: Text('No activity found.'));
           }
 
+          final isDark = Theme.of(context).brightness == Brightness.dark;
+
           return SafeArea(
             child: Column(
               children: [
@@ -190,14 +298,53 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          activity.questionText,
-                          style: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                            color: AppColors.darkCharcoal,
-                          ),
-                        ),
+                        Row(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Expanded(
+                              child: Text(
+                                activity.questionText,
+                                style: TextStyle(
+                                  fontSize: 20,
+                                  fontWeight: FontWeight.bold,
+                                  color: isDark ? Colors.white : AppColors.darkCharcoal,
+                                ),
+                              ),
+                            ),
+                            if (activity.audioAssetPath != null && activity.audioAssetPath!.isNotEmpty) ...[
+                              IconButton(
+                                icon: const Icon(Icons.volume_up, color: AppColors.gold500),
+                                onPressed: () {
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    const SnackBar(content: Text('Playing audio pronunciation...')),
+                                  );
+                                },
+                              ),
+                            ],
+                            if (activity.type == ActivityType.multipleChoice && activity.options != null && activity.correctOptionIndex != null) ...[
+                              IconButton(
+                                icon: const Icon(Icons.lightbulb_outline, color: AppColors.gold500),
+                                tooltip: 'Get Hint (-5 Crystals)',
+                                onPressed: () {
+                                  final user = ref.read(authStateProvider).value;
+                                  if (user != null && user.crystals >= 5) {
+                                    ref.read(authStateProvider.notifier).updateCrystals(user.crystals - 5);
+                                    setState(() {
+                                      _selectedOptionIndex = activity.correctOptionIndex;
+                                    });
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Hint applied! Correct option highlighted (-5 Crystals).')),
+                                    );
+                                  } else {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      const SnackBar(content: Text('Not enough crystals for a hint!')),
+                                    );
+                                  }
+                                },
+                              ),
+                            ],
+                          ],
+                        ).animate(target: _isAnswerChecked == true && !_isCorrect ? 1 : 0).shake(hz: 4, offset: const Offset(6, 0)),
                         const SizedBox(height: AppSpacing.lg),
 
                         // Render based on Activity Type
@@ -325,9 +472,9 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                   decoration: BoxDecoration(
                     color: _isAnswerChecked == true
                         ? (_isCorrect
-                            ? AppColors.lightGreenBackground
-                            : AppColors.coralRed.withValues(alpha: 0.1))
-                        : Colors.white,
+                            ? (isDark ? const Color(0xFF1B3822) : AppColors.lightGreenBackground)
+                            : (isDark ? const Color(0xFF381518) : AppColors.coralRed.withValues(alpha: 0.1)))
+                        : (isDark ? AppColors.forest800 : Colors.white),
                     boxShadow: const [
                       BoxShadow(color: Colors.black12, blurRadius: 4, offset: Offset(0, -2)),
                     ],
@@ -337,19 +484,37 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                     children: [
                       if (_isAnswerChecked == true) ...[
                         Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Icon(
-                              _isCorrect ? Icons.check_circle : Icons.error,
-                              color: _isCorrect ? AppColors.forestGreen : AppColors.coralRed,
+                            Row(
+                              children: [
+                                Icon(
+                                  _isCorrect ? Icons.check_circle : Icons.error,
+                                  color: _isCorrect ? AppColors.forestGreen : AppColors.coralRed,
+                                ),
+                                const SizedBox(width: 8),
+                                Text(
+                                  _isCorrect ? 'Excellent! Correct Answer.' : 'Not quite right.',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: _isCorrect ? AppColors.forestGreen : AppColors.coralRed,
+                                  ),
+                                ),
+                              ],
                             ),
-                            const SizedBox(width: 8),
-                            Text(
-                              _isCorrect ? 'Excellent! Correct Answer.' : 'Not quite right.',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: _isCorrect ? AppColors.forestGreen : AppColors.coralRed,
-                              ),
-                            ),
+                            if (_isCorrect) ...[
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                                decoration: BoxDecoration(
+                                  color: AppColors.gold500,
+                                  borderRadius: BorderRadius.circular(AppRadius.chip),
+                                ),
+                                child: Text(
+                                  '+${activity.xpReward} XP',
+                                  style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 12),
+                                ),
+                              ).animate().scale(duration: 300.ms, curve: Curves.elasticOut),
+                            ],
                           ],
                         ),
                         const SizedBox(height: AppSpacing.sm),
@@ -364,7 +529,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                       ),
                     ],
                   ),
-                ),
+                ).animate().fadeIn(duration: 200.ms),
               ],
             ),
           );

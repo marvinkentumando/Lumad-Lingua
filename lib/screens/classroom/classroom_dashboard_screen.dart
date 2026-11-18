@@ -171,7 +171,6 @@ class ClassroomDashboardScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final className = classroomData['name'] ?? 'Classroom Dashboard';
     final school = classroomData['schoolOrCenter'] ?? 'School / Center';
-    final educator = classroomData['educatorEmail'] ?? 'Educator';
     final joinCode = classroomData['joinCode'] ?? 'CODE';
     final studentIds = List<String>.from(classroomData['studentIds'] ?? []);
     final progressAsync = ref.watch(userProgressProvider);
@@ -180,6 +179,29 @@ class ClassroomDashboardScreen extends ConsumerWidget {
       appBar: AppBar(
         title: Text(className, style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
+        iconTheme: const IconThemeData(color: Colors.white),
+        actions: [
+          PopupMenuButton<String>(
+            icon: const Icon(Icons.more_vert, color: Colors.white70),
+            onSelected: (value) {
+              if (value == 'leave') {
+                _leaveClass(context, ref);
+              }
+            },
+            itemBuilder: (context) => [
+              const PopupMenuItem(
+                value: 'leave',
+                child: Row(
+                  children: [
+                    Icon(Icons.exit_to_app, color: AppColors.semanticRed, size: 20),
+                    SizedBox(width: 8),
+                    Text('Leave Classroom', style: TextStyle(color: AppColors.semanticRed)),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
       body: SafeArea(
         child: SingleChildScrollView(
@@ -198,7 +220,6 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                     end: Alignment.bottomRight,
                   ),
                   borderRadius: BorderRadius.circular(AppRadius.card),
-                  border: Border.all(color: AppColors.gold500, width: 2),
                   boxShadow: const [
                     BoxShadow(
                       color: Color(0xFF0A140B),
@@ -266,17 +287,6 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                         Text(
                           school,
                           style: AppTypography.body.copyWith(color: AppColors.creamBorder),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 4),
-                    Row(
-                      children: [
-                        const Icon(Icons.email, size: 16, color: AppColors.gold500),
-                        const SizedBox(width: 8),
-                        Text(
-                          'Educator: $educator',
-                          style: AppTypography.mono.copyWith(color: AppColors.creamBorder, fontSize: 13),
                         ),
                       ],
                     ),
@@ -367,6 +377,12 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                         }
 
                         final students = snapshot.data!.docs.map((doc) => doc.data()).toList();
+                        
+                        final totalClassXp = students.fold<int>(0, (acc, s) => acc + ((s['totalXp'] ?? 0) as num).toInt());
+                        final avgStreak = students.isEmpty ? 0.0 : students.fold<int>(0, (acc, s) => acc + ((s['streakDays'] ?? 0) as num).toInt()) / students.length;
+                        final targetXp = (students.length * 500).clamp(5000, 50000);
+                        final milestoneProgress = (totalClassXp / targetXp).clamp(0.0, 1.0);
+
                         students.sort((a, b) => (b['totalXp'] ?? 0).compareTo(a['totalXp'] ?? 0));
 
                         final top1 = students.isNotEmpty ? students[0] : null;
@@ -376,6 +392,88 @@ class ClassroomDashboardScreen extends ConsumerWidget {
 
                         return Column(
                           children: [
+                            // Advanced Class Analytics Card
+                            BrandCard(
+                              backgroundColor: AppColors.forest800,
+                              border: Border.all(color: AppColors.gold500, width: 1.5),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Row(
+                                    children: [
+                                      const Icon(Icons.analytics, color: AppColors.gold500, size: 20),
+                                      const SizedBox(width: 8),
+                                      Text('Class Community Analytics', style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 18)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  Row(
+                                    children: [
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.forest900,
+                                            borderRadius: BorderRadius.circular(AppRadius.card),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Total Class XP', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                                              const SizedBox(height: 4),
+                                              Text('$totalClassXp XP', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 18)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                      const SizedBox(width: AppSpacing.sm),
+                                      Expanded(
+                                        child: Container(
+                                          padding: const EdgeInsets.all(10),
+                                          decoration: BoxDecoration(
+                                            color: AppColors.forest900,
+                                            borderRadius: BorderRadius.circular(AppRadius.card),
+                                          ),
+                                          child: Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              Text('Avg Streak', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                                              const SizedBox(height: 4),
+                                              Text('${avgStreak.toStringAsFixed(1)} Days', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 18)),
+                                            ],
+                                          ),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Row(
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          Text('Milestone Goal ($targetXp XP)', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                                          Text('${(milestoneProgress * 100).toInt()}%', style: AppTypography.labelBold.copyWith(color: AppColors.gold400)),
+                                        ],
+                                      ),
+                                      const SizedBox(height: 6),
+                                      ClipRRect(
+                                        borderRadius: BorderRadius.circular(8),
+                                        child: LinearProgressIndicator(
+                                          value: milestoneProgress,
+                                          minHeight: 10,
+                                          backgroundColor: AppColors.forest900,
+                                          valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold500),
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ],
+                              ),
+                            ),
+                            const SizedBox(height: AppSpacing.md),
+
                             // Class Top 3 Podium Card
                             BrandCard(
                               backgroundColor: AppColors.gold500,
@@ -472,14 +570,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                         );
                       },
                     ),
-              const SizedBox(height: AppSpacing.xxl),
-
-              // Classroom Actions
-              BrandButton(
-                text: 'Leave Classroom',
-                type: BrandButtonType.danger,
-                onPressed: () => _leaveClass(context, ref),
-              ),
+              const SizedBox(height: AppSpacing.lg),
             ],
           ),
         ),
