@@ -23,6 +23,7 @@ class DictionaryScreen extends ConsumerStatefulWidget {
 class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   late TextEditingController _searchController;
   String _selectedCategory = 'All';
+  String? _playingVocabId;
 
   final List<String> _categories = ['All', 'Saved', 'Noun', 'Verb', 'Greeting', 'Phrase', 'General'];
 
@@ -167,6 +168,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                   return Column(
                     children: filteredWords.map((vocab) {
                       final isBookmarked = ref.read(bookmarksProvider.notifier).isBookmarked(vocab);
+                      final isPlaying = _playingVocabId == vocab.id;
 
                       return Padding(
                         padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -196,7 +198,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                                 ),
                               ),
                               const SizedBox(width: AppSpacing.sm),
-                              // Right: Action buttons (Bookmark, Audio speaker, Chevron)
+                              // Right: Action buttons (Bookmark, Play/Pause audio, Chevron)
                               Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
@@ -225,21 +227,35 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                                     ),
                                   ),
                                   GestureDetector(
-                                    onTap: () {
-                                      if (vocab.audioUrl != null && vocab.audioUrl!.isNotEmpty) {
-                                        AudioHelper.playAudio(vocab.audioUrl!);
+                                    onTap: () async {
+                                      if (isPlaying) {
+                                        await AudioHelper.stopAudio();
+                                        if (mounted) {
+                                          setState(() => _playingVocabId = null);
+                                        }
                                       } else {
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          const SnackBar(content: Text('Playing reference pronunciation audio...')),
-                                        );
+                                        if (vocab.audioUrl != null && vocab.audioUrl!.isNotEmpty) {
+                                          setState(() => _playingVocabId = vocab.id);
+                                          await AudioHelper.playAudio(vocab.audioUrl!);
+                                          Future.delayed(const Duration(milliseconds: 2200), () {
+                                            if (mounted && _playingVocabId == vocab.id) {
+                                              setState(() => _playingVocabId = null);
+                                            }
+                                          });
+                                        } else {
+                                          ScaffoldMessenger.of(context).clearSnackBars();
+                                          ScaffoldMessenger.of(context).showSnackBar(
+                                            const SnackBar(content: Text('Playing reference pronunciation audio...')),
+                                          );
+                                        }
                                       }
                                     },
-                                    child: const Padding(
-                                      padding: EdgeInsets.all(6.0),
+                                    child: Padding(
+                                      padding: const EdgeInsets.all(6.0),
                                       child: Icon(
-                                        Icons.volume_up_rounded,
+                                        isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
                                         color: AppColors.gold500,
-                                        size: 24,
+                                        size: 26,
                                       ),
                                     ),
                                   ),

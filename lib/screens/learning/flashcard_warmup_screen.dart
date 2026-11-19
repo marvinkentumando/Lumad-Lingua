@@ -1,62 +1,37 @@
 import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:just_audio/just_audio.dart';
 import '../../utils/constants.dart';
-import '../../utils/audio_helper.dart';
 import '../../models/lesson_model.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
-import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/lumad_background.dart';
+import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/screen_header.dart';
+import '../../utils/audio_helper.dart';
 
-class FlashcardWarmupScreen extends ConsumerStatefulWidget {
+class FlashcardWarmupScreen extends StatefulWidget {
   final LessonModel lesson;
 
   const FlashcardWarmupScreen({super.key, required this.lesson});
 
   @override
-  ConsumerState<FlashcardWarmupScreen> createState() => _FlashcardWarmupScreenState();
+  State<FlashcardWarmupScreen> createState() => _FlashcardWarmupScreenState();
 }
 
-class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
+class _FlashcardWarmupScreenState extends State<FlashcardWarmupScreen> {
   int _currentIndex = 0;
   bool _isFlipped = false;
-  final Set<int> _reviewedIndices = {};
-  final AudioPlayer _audioPlayer = AudioPlayer();
-
-  @override
-  void initState() {
-    super.initState();
-    if (widget.lesson.flashcards.isNotEmpty) {
-      _reviewedIndices.add(0);
-    }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
-  }
-
-  Future<void> _playAudio(String? audioPath) async {
-    if (audioPath == null || audioPath.trim().isEmpty) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Audio not available for this card.')),
-      );
-      return;
-    }
-    await AudioHelper.playAudio(audioPath);
-  }
+  bool _isPlayingAudio = false;
+  final Set<int> _reviewedIndices = {0};
 
   void _nextCard() {
     if (_currentIndex < widget.lesson.flashcards.length - 1) {
       setState(() {
         _currentIndex++;
         _isFlipped = false;
+        _isPlayingAudio = false;
         _reviewedIndices.add(_currentIndex);
       });
     }
@@ -67,12 +42,66 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
       setState(() {
         _currentIndex--;
         _isFlipped = false;
+        _isPlayingAudio = false;
       });
     }
   }
 
+  Future<void> _playAudio(String? path) async {
+    if (_isPlayingAudio) {
+      await AudioHelper.stopAudio();
+      if (mounted) setState(() => _isPlayingAudio = false);
+      return;
+    }
+
+    if (path != null && path.isNotEmpty) {
+      setState(() => _isPlayingAudio = true);
+      await AudioHelper.playAudio(path);
+      Future.delayed(const Duration(milliseconds: 2200), () {
+        if (mounted) setState(() => _isPlayingAudio = false);
+      });
+    } else {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Playing reference pronunciation audio...')),
+      );
+    }
+  }
+
   void _startActivities() {
-    context.pushReplacement('/lesson/${widget.lesson.id}/drills');
+    context.pushReplacement('/lesson/${widget.lesson.id}');
+  }
+
+  void _showCompletionDialog() {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => AlertDialog(
+        backgroundColor: AppColors.forest800,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
+        title: Row(
+          children: [
+            const Icon(Icons.check_circle, color: AppColors.gold500, size: 28),
+            const SizedBox(width: 8),
+            Text('Warm-up Complete!', style: AppTypography.h3.copyWith(color: Colors.white)),
+          ],
+        ),
+        content: Text(
+          'You reviewed all ${widget.lesson.flashcards.length} vocabulary flashcards. Ready for interactive drills?',
+          style: AppTypography.body.copyWith(color: Colors.white),
+        ),
+        actions: [
+          BrandButton(
+            text: 'Start Interactive Lesson',
+            type: BrandButtonType.gold,
+            onPressed: () {
+              Navigator.of(context).pop();
+              _startActivities();
+            },
+          ),
+        ],
+      ),
+    );
   }
 
   @override
@@ -185,7 +214,7 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
                 ),
                 const SizedBox(height: AppSpacing.md),
                 Text(
-                  'Tap card to flip • Tap speaker to listen',
+                  'Tap card to flip • Tap button below to listen',
                   style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                 ),
                 const SizedBox(height: AppSpacing.lg),
@@ -267,9 +296,9 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
             GestureDetector(
               onTap: () {}, // Intercept tap so card doesn't flip when clicking audio
               child: BrandButton(
-                text: 'Listen Audio',
+                text: _isPlayingAudio ? 'Pause Audio' : 'Listen Audio',
                 type: BrandButtonType.secondary,
-                icon: Icons.volume_up_rounded,
+                icon: _isPlayingAudio ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
                 onPressed: () => _playAudio(card.audioPath),
               ),
             ),
@@ -309,46 +338,20 @@ class _FlashcardWarmupScreenState extends ConsumerState<FlashcardWarmupScreen> {
                   style: AppTypography.caption.copyWith(color: AppColors.forest900, fontStyle: FontStyle.italic),
                   textAlign: TextAlign.center,
                 ),
-                if (card.exampleEnglish != null && card.exampleEnglish!.isNotEmpty)
-                  Text(
-                    '"${card.exampleEnglish}"',
-                    style: AppTypography.caption.copyWith(color: AppColors.forest800),
-                    textAlign: TextAlign.center,
-                  ),
               ],
               const Spacer(),
               GestureDetector(
-                onTap: () {}, // Intercept tap so card doesn't flip when clicking audio
+                onTap: () {},
                 child: BrandButton(
-                  text: 'Replay Audio',
+                  text: _isPlayingAudio ? 'Pause Audio' : 'Listen Audio',
                   type: BrandButtonType.primary,
-                  icon: Icons.replay_rounded,
+                  icon: _isPlayingAudio ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
                   onPressed: () => _playAudio(card.audioPath),
                 ),
               ),
             ],
           ),
         ),
-      ),
-    );
-  }
-
-  void _showCompletionDialog() {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: Text('Warm-up Completed! 🎉', style: AppTypography.h3),
-        content: Text('Great job reviewing your flashcards. You are ready to start the interactive drills.', style: AppTypography.body),
-        actions: [
-          BrandButton(
-            text: 'Begin Activities',
-            type: BrandButtonType.gold,
-            onPressed: () {
-              Navigator.of(context).pop();
-              _startActivities();
-            },
-          ),
-        ],
       ),
     );
   }

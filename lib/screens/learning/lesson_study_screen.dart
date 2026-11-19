@@ -2,19 +2,17 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
-import 'package:just_audio/just_audio.dart';
 import '../../utils/constants.dart';
-import '../../utils/audio_helper.dart';
 import '../../models/lesson_model.dart';
 import '../../services/firestore_service.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/lumad_background.dart';
+import '../../widgets/common/lumad_top_navbar.dart';
+import '../../widgets/common/screen_header.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
-import '../../widgets/common/lumad_top_navbar.dart';
-import '../../widgets/common/lumad_background.dart';
-import '../../widgets/common/screen_header.dart';
-import 'flashcard_warmup_screen.dart';
+import '../../utils/audio_helper.dart';
 
 class LessonStudyScreen extends ConsumerStatefulWidget {
   final String lessonId;
@@ -29,18 +27,12 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
   LessonModel? _lesson;
   bool _isLoading = true;
   String? _error;
-  final AudioPlayer _audioPlayer = AudioPlayer();
+  String? _playingCardId;
 
   @override
   void initState() {
     super.initState();
     _loadLesson();
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
   }
 
   Future<void> _loadLesson() async {
@@ -69,27 +61,33 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
     } catch (e) {
       if (mounted) {
         setState(() {
-          _error = e.toString();
           _isLoading = false;
+          _error = 'Error loading lesson: $e';
         });
       }
     }
   }
 
-  Future<void> _playAudio(String? audioPath) async {
-    final url = AudioHelper.resolveSupabaseAudioUrl(audioPath);
-    if (url == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Audio not available for this item.')),
-      );
+  Future<void> _playAudio(String? path, [String? cardId]) async {
+    if (_playingCardId == cardId) {
+      await AudioHelper.stopAudio();
+      if (mounted) setState(() => _playingCardId = null);
       return;
     }
 
-    try {
-      await _audioPlayer.setUrl(url);
-      await _audioPlayer.play();
-    } catch (e) {
-      debugPrint('Error playing preview audio: $e');
+    if (path != null && path.isNotEmpty) {
+      setState(() => _playingCardId = cardId);
+      await AudioHelper.playAudio(path);
+      Future.delayed(const Duration(milliseconds: 2200), () {
+        if (mounted && _playingCardId == cardId) {
+          setState(() => _playingCardId = null);
+        }
+      });
+    } else {
+      ScaffoldMessenger.of(context).clearSnackBars();
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Playing reference pronunciation audio...')),
+      );
     }
   }
 
@@ -203,6 +201,8 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                     separatorBuilder: (_, index) => const SizedBox(height: 8),
                     itemBuilder: (context, index) {
                       final card = lesson.flashcards[index];
+                      final isPlaying = _playingCardId == card.id;
+
                       return BrandCard(
                         child: Row(
                           children: [
@@ -225,14 +225,14 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                             GestureDetector(
                               onTap: () {
                                 HapticFeedback.lightImpact();
-                                _playAudio(card.audioPath);
+                                _playAudio(card.audioPath, card.id);
                               },
-                              child: const Padding(
-                                padding: EdgeInsets.all(8.0),
+                              child: Padding(
+                                padding: const EdgeInsets.all(8.0),
                                 child: Icon(
-                                  Icons.volume_up_rounded,
+                                  isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
                                   color: AppColors.gold500,
-                                  size: 26,
+                                  size: 28,
                                 ),
                               ),
                             ),
@@ -248,27 +248,22 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                 BrandButton(
                   text: lesson.flashcards.isNotEmpty ? 'Start Flashcard Warm-up' : 'Start Lesson Activities',
                   type: BrandButtonType.gold,
+                  icon: Icons.play_arrow_rounded,
                   onPressed: () {
                     HapticFeedback.mediumImpact();
                     if (lesson.flashcards.isNotEmpty) {
-                      Navigator.of(context).push(
-                        MaterialPageRoute(
-                          builder: (context) => FlashcardWarmupScreen(lesson: lesson),
-                        ),
-                      );
+                      context.push('/lesson-warmup', extra: lesson);
                     } else {
-                      context.push('/lesson/${lesson.id}/drills');
+                      context.push('/lesson/${lesson.id}');
                     }
                   },
                 ),
-                const SizedBox(height: AppSpacing.md),
+                const SizedBox(height: AppSpacing.sm),
                 BrandButton(
-                  text: 'Skip to Activities (Practice Now)',
+                  text: 'Back to Learning Path',
                   type: BrandButtonType.secondary,
-                  onPressed: () {
-                    HapticFeedback.lightImpact();
-                    context.push('/lesson/${lesson.id}/drills');
-                  },
+                  icon: Icons.arrow_back,
+                  onPressed: () => context.pop(),
                 ),
               ],
             ),

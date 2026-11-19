@@ -13,6 +13,7 @@ class UserModel {
   final int streakFreezes;
   final String? equippedFrame;
   final String? equippedBanner;
+  final DateTime? lastActiveDate;
 
   const UserModel({
     required this.id,
@@ -29,6 +30,7 @@ class UserModel {
     this.streakFreezes = 0,
     this.equippedFrame,
     this.equippedBanner,
+    this.lastActiveDate,
   });
 
   /// Returns the first word/name of the user's display name for greetings (e.g., "Juan" from "Juan Dela Cruz").
@@ -53,6 +55,7 @@ class UserModel {
     int? streakFreezes,
     String? equippedFrame,
     String? equippedBanner,
+    DateTime? lastActiveDate,
     bool clearEquippedFrame = false,
     bool clearEquippedBanner = false,
   }) {
@@ -71,6 +74,7 @@ class UserModel {
       streakFreezes: streakFreezes ?? this.streakFreezes,
       equippedFrame: clearEquippedFrame ? null : (equippedFrame ?? this.equippedFrame),
       equippedBanner: clearEquippedBanner ? null : (equippedBanner ?? this.equippedBanner),
+      lastActiveDate: lastActiveDate ?? this.lastActiveDate,
     );
   }
 
@@ -90,6 +94,9 @@ class UserModel {
       streakFreezes: json['streakFreezes'] as int? ?? 0,
       equippedFrame: json['equippedFrame'] as String?,
       equippedBanner: json['equippedBanner'] as String?,
+      lastActiveDate: json['lastActiveDate'] != null
+          ? DateTime.tryParse(json['lastActiveDate'] as String)
+          : null,
     );
   }
 
@@ -109,6 +116,7 @@ class UserModel {
       'streakFreezes': streakFreezes,
       'equippedFrame': equippedFrame,
       'equippedBanner': equippedBanner,
+      'lastActiveDate': lastActiveDate?.toIso8601String(),
     };
   }
 }

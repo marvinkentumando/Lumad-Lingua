@@ -46,4 +46,11 @@ class AudioHelper {
       }
     } catch (_) {}
   }
+
+  /// Stops any currently active audio playback
+  static Future<void> stopAudio() async {
+    try {
+      await _player.stop();
+    } catch (_) {}
+  }
 }

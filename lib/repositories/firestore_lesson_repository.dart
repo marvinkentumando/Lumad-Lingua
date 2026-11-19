@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import '../models/learning_unit_model.dart';
 import '../models/lesson_model.dart';
 import '../models/activity_model.dart';
@@ -27,8 +28,12 @@ class FirestoreLessonRepository implements LessonRepository {
 
   @override
   Future<void> updateLessonProgress(String lessonId, int starsEarned, {String? userId}) async {
-    if (userId != null && userId.isNotEmpty) {
-      await _firestoreService.updateLessonProgress(userId, lessonId, starsEarned);
+    final uid = (userId != null && userId.isNotEmpty)
+        ? userId
+        : FirebaseAuth.instance.currentUser?.uid;
+
+    if (uid != null && uid.isNotEmpty) {
+      await _firestoreService.updateLessonProgress(uid, lessonId, starsEarned);
     }
   }
 

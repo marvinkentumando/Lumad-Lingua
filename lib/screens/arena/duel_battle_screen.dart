@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,12 +41,40 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
     super.dispose();
   }
 
+  void _triggerAiBotAnswerIfNeeded() {
+    final session = ref.read(duelSessionStreamProvider(widget.sessionId)).value;
+    final user = ref.read(authStateProvider).value;
+    final service = ref.read(duelServiceProvider);
+
+    if (session != null && session.player2Id == 'bot_ai' && session.player1Id == user?.id) {
+      final currentRound = session.currentRound;
+      final botDelayMs = Random().nextInt(1400) + 1800; // 1.8s to 3.2s
+      final botCorrect = Random().nextDouble() < 0.75; // 75% AI accuracy
+
+      Timer(Duration(milliseconds: botDelayMs), () async {
+        if (mounted) {
+          try {
+            await service.submitRoundAnswer(
+              sessionId: widget.sessionId,
+              isPlayer1: false,
+              isCorrect: botCorrect,
+              responseTimeMs: botDelayMs,
+              currentRound: currentRound,
+            );
+          } catch (_) {}
+        }
+      });
+    }
+  }
+
   void _startRoundTimer() {
     _timer?.cancel();
     _timeLeft = 10;
     _hasAnswered = false;
     _selectedOption = null;
     _startTimeMs = DateTime.now().millisecondsSinceEpoch;
+
+    _triggerAiBotAnswerIfNeeded();
 
     _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
       if (!mounted) return;

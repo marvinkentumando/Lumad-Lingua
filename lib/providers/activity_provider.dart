@@ -85,7 +85,7 @@ class LessonSessionNotifier extends AsyncNotifier<LessonSessionState> {
     }
   }
 
-  void answerCurrentActivity(bool isCorrect, int activityXp) {
+  Future<void> answerCurrentActivity(bool isCorrect, int activityXp) async {
     if (state.value == null) return;
     final session = state.value!;
     final newScore = session.score + (isCorrect ? 1 : 0);
@@ -110,9 +110,14 @@ class LessonSessionNotifier extends AsyncNotifier<LessonSessionState> {
       }
 
       final earnedXp = newScore * 10 + 30;
+      final user = ref.read(authStateProvider).value;
 
-      _repository.updateLessonProgress(session.lessonId, stars);
+      await _repository.updateLessonProgress(session.lessonId, stars, userId: user?.id);
       ref.read(authStateProvider.notifier).addXp(earnedXp);
+
+      // Invalidate stream providers to immediately unlock the next lesson in the Learning Path UI
+      ref.invalidate(unitsProvider);
+      ref.invalidate(unitLessonsProvider);
 
       state = AsyncValue.data(session.copyWith(
         currentIndex: nextIndex,

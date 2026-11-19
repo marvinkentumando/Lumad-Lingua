@@ -15,14 +15,61 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   @override
   Future<UserModel?> build() async {
     _repository = ref.watch(authRepositoryProvider);
-    return _repository.getCurrentUser();
+    final rawUser = await _repository.getCurrentUser();
+    if (rawUser != null) {
+      final verifiedUser = _verifyAndProcessStreakProtection(rawUser);
+      if (verifiedUser != rawUser) {
+        _repository.saveUser(verifiedUser);
+      }
+      return verifiedUser;
+    }
+    return null;
+  }
+
+  UserModel _verifyAndProcessStreakProtection(UserModel user) {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+
+    if (user.lastActiveDate == null) {
+      return user.copyWith(lastActiveDate: today);
+    }
+
+    final lastActive = DateTime(
+      user.lastActiveDate!.year,
+      user.lastActiveDate!.month,
+      user.lastActiveDate!.day,
+    );
+
+    final daysDifference = today.difference(lastActive).inDays;
+
+    if (daysDifference <= 1) {
+      // Streak intact or practiced today/yesterday
+      return user.copyWith(lastActiveDate: today);
+    } else {
+      // Missed 1 or more days! Check Streak Freeze protection
+      if (user.streakFreezes > 0) {
+        // Auto-consume 1 Streak Freeze to preserve streak
+        return user.copyWith(
+          streakFreezes: user.streakFreezes - 1,
+          lastActiveDate: today,
+        );
+      } else {
+        // Streak lost -> reset to 1
+        return user.copyWith(
+          streakDays: 1,
+          lastActiveDate: today,
+        );
+      }
+    }
   }
 
   Future<bool> login(String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _repository.login(email, password);
-      state = AsyncValue.data(user);
+      final rawUser = await _repository.login(email, password);
+      final verifiedUser = _verifyAndProcessStreakProtection(rawUser);
+      await _repository.saveUser(verifiedUser);
+      state = AsyncValue.data(verifiedUser);
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
@@ -33,8 +80,10 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   Future<bool> register(String name, String email, String password) async {
     state = const AsyncValue.loading();
     try {
-      final user = await _repository.register(name, email, password);
-      state = AsyncValue.data(user);
+      final rawUser = await _repository.register(name, email, password);
+      final verifiedUser = _verifyAndProcessStreakProtection(rawUser);
+      await _repository.saveUser(verifiedUser);
+      state = AsyncValue.data(verifiedUser);
       return true;
     } catch (e, st) {
       state = AsyncValue.error(e, st);
