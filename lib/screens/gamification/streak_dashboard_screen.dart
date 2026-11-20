@@ -9,6 +9,7 @@ import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/lumad_background.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/screen_header.dart';
+import '../../widgets/gamification/day_7_mystery_chest_dialog.dart';
 
 class StreakDashboardScreen extends ConsumerStatefulWidget {
   const StreakDashboardScreen({super.key});
@@ -178,6 +179,72 @@ class _StreakDashboardScreenState extends ConsumerState<StreakDashboardScreen> w
                       ),
                     ],
                   ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
+                // Day 7 Streak Mystery Chest Card
+                Builder(
+                  builder: (context) {
+                    final isChestClaimed = inventory.contains('day_7_chest_claimed');
+                    final canClaimChest = streak >= 7 && !isChestClaimed;
+
+                    return Container(
+                      padding: const EdgeInsets.all(AppSpacing.md),
+                      decoration: BoxDecoration(
+                        gradient: const LinearGradient(
+                          colors: [Color(0xFFFFD54F), AppColors.gold500, Color(0xFFFFA000)],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                        borderRadius: BorderRadius.circular(AppRadius.card),
+                        border: Border.all(color: AppColors.gold700, width: 2),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0xFFC78C00),
+                            offset: Offset(0, 4),
+                            blurRadius: 0,
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: AppColors.forest900,
+                              shape: BoxShape.circle,
+                              border: Border.all(color: AppColors.gold400, width: 2),
+                            ),
+                            child: const Text('🎁', style: TextStyle(fontSize: 28)),
+                          ),
+                          const SizedBox(width: AppSpacing.md),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text('Day 7 Streak Mystery Chest', style: AppTypography.h3.copyWith(color: AppColors.forest900, fontSize: 16)),
+                                const SizedBox(height: 2),
+                                Text(
+                                  isChestClaimed
+                                      ? 'Claimed! Rewards unlocked.'
+                                      : (canClaimChest ? 'Unlocked! Ready to open.' : 'Reach Day 7 streak to open ($streak/7)'),
+                                  style: AppTypography.caption.copyWith(color: AppColors.forest800, fontWeight: FontWeight.bold),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          BrandButton(
+                            text: isChestClaimed ? 'Claimed 🎁' : (canClaimChest ? 'Open 🎁' : '$streak/7'),
+                            type: isChestClaimed
+                                ? BrandButtonType.secondary
+                                : (canClaimChest ? BrandButtonType.primary : BrandButtonType.secondary),
+                            onPressed: isChestClaimed || !canClaimChest ? null : () => showDay7MysteryChestDialog(context, ref),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
                 ),
                 const SizedBox(height: AppSpacing.lg),
 

@@ -46,6 +46,7 @@ class LumadLinguaApp extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final themeMode = ref.watch(themeModeProvider);
+    final isElderMode = ref.watch(elderModeProvider);
 
     return MaterialApp.router(
       title: AppConfig.appName,
@@ -54,6 +55,14 @@ class LumadLinguaApp extends ConsumerWidget {
       darkTheme: AppTheme.darkTheme,
       themeMode: themeMode,
       routerConfig: appRouter,
+      builder: (context, child) {
+        return MediaQuery(
+          data: MediaQuery.of(context).copyWith(
+            textScaler: TextScaler.linear(isElderMode ? 1.25 : 1.0),
+          ),
+          child: child!,
+        );
+      },
     );
   }
 }

@@ -53,6 +53,7 @@ class DuelSessionModel {
   final List<DuelQuestion> questions;
   final String? winnerId;
   final DateTime? createdAt;
+  final String? roomCode;
 
   const DuelSessionModel({
     required this.id,
@@ -69,6 +70,7 @@ class DuelSessionModel {
     this.questions = const [],
     this.winnerId,
     this.createdAt,
+    this.roomCode,
   });
 
   factory DuelSessionModel.fromJson(Map<String, dynamic> json) {
@@ -88,6 +90,7 @@ class DuelSessionModel {
       questions: rawQuestions.map((q) => DuelQuestion.fromJson(Map<String, dynamic>.from(q as Map))).toList(),
       winnerId: json['winnerId'] as String?,
       createdAt: json['createdAt'] != null ? DateTime.tryParse(json['createdAt'] as String) : null,
+      roomCode: json['roomCode'] as String?,
     );
   }
 
@@ -107,6 +110,7 @@ class DuelSessionModel {
       'questions': questions.map((q) => q.toJson()).toList(),
       'winnerId': winnerId,
       'createdAt': createdAt?.toIso8601String(),
+      'roomCode': roomCode,
     };
   }
 }

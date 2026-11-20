@@ -1,0 +1,62 @@
+class RegionalStrings {
+  static const Map<String, Map<String, String>> translations = {
+    'en': {
+      'welcome': 'Welcome Back!',
+      'greeting': 'Madyaw na allaw,',
+      'dailyQuests': 'Daily Quests',
+      'dictionary': 'Mansaka Dictionary',
+      'profile': 'Profile',
+      'settings': 'App Settings',
+      'signIn': 'Sign In',
+      'register': 'Create Account',
+      'learningPath': 'Learning Path',
+      'arena': 'PvP Arena',
+      'pronunciation': 'Pronunciation Lab',
+      'searchHint': 'Search Mansaka or English words...',
+      'saveBookmarks': 'Saved Bookmarks',
+      'streak': 'Streak',
+      'crystals': 'Crystals',
+      'xp': 'Total XP',
+    },
+    'ceb': {
+      'welcome': 'Maayong Pagbalik!',
+      'greeting': 'Maayong adlaw,',
+      'dailyQuests': 'Adlaw-adlaw nga Buluhaton',
+      'dictionary': 'Mansaka nga Diksyonaryo',
+      'profile': 'Propayl',
+      'settings': 'Mga Setting sa App',
+      'signIn': 'Pag-login',
+      'register': 'Paghimo og Account',
+      'learningPath': 'Agianan sa Pagtoon',
+      'arena': 'PvP Arena',
+      'pronunciation': 'Lab sa Paglitok',
+      'searchHint': 'Pangita og Mansaka o Ingles nga pulong...',
+      'saveBookmarks': 'Gipang-save nga mga Pulong',
+      'streak': 'Sunod-sunod nga Adlaw',
+      'crystals': 'Kristales',
+      'xp': 'Kinatibuk-ang XP',
+    },
+    'tl': {
+      'welcome': 'Maligayang Pagbálik!',
+      'greeting': 'Magandang araw,',
+      'dailyQuests': 'Pang-araw-araw na Gawain',
+      'dictionary': 'Diksyunaryong Mansaka',
+      'profile': 'Profil',
+      'settings': 'Mga Setting ng App',
+      'signIn': 'Mag-sign In',
+      'register': 'Gumawa ng Account',
+      'learningPath': 'Landas ng Pagkatuto',
+      'arena': 'PvP Arena',
+      'pronunciation': 'Lab sa Pagbigkas',
+      'searchHint': 'Maghanap ng salitang Mansaka o Ingles...',
+      'saveBookmarks': 'Mga Naka-save na Salita',
+      'streak': 'Sunod-sunod na Araw',
+      'crystals': 'Kristal',
+      'xp': 'Kabuuang XP',
+    },
+  };
+
+  static String get(String langCode, String key) {
+    return translations[langCode]?[key] ?? translations['en']?[key] ?? key;
+  }
+}

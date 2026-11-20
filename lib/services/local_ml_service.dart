@@ -44,11 +44,37 @@ class LocalMlService {
             frames.add(frameCoefs);
           }
 
-          if (frames.isNotEmpty) return frames;
+          if (frames.isNotEmpty) {
+            return trimSilenceFromFrames(frames);
+          }
         }
       }
     } catch (_) {}
     return List.generate(16, (i) => List.generate(13, (j) => (sin(i + j) * 0.5 + 0.5)));
+  }
+
+  // 0.1 Automatically trim leading and trailing silence frames from recorded audio
+  static List<List<double>> trimSilenceFromFrames(
+    List<List<double>> frames, {
+    double silenceThreshold = 0.04,
+  }) {
+    if (frames.isEmpty) return frames;
+
+    int startIndex = 0;
+    while (startIndex < frames.length && frames[startIndex][0] < silenceThreshold) {
+      startIndex++;
+    }
+
+    int endIndex = frames.length - 1;
+    while (endIndex > startIndex && frames[endIndex][0] < silenceThreshold) {
+      endIndex--;
+    }
+
+    if (startIndex > endIndex) {
+      return frames;
+    }
+
+    return frames.sublist(startIndex, endIndex + 1);
   }
 
   // 1. Dynamic Time Warping (DTW) with MFCC Preprocessing (MFCC + DTW)

@@ -13,6 +13,7 @@ import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_logo_emblem.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/lumad_background.dart';
+import '../../widgets/common/guest_lock_dialog.dart';
 
 ImageProvider? getAvatarImage(String? url) {
   if (url == null || url.isEmpty) return null;
@@ -428,75 +429,93 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: AppSpacing.md),
                     // Statistical Readout Row (Streak, Total XP, & Streak Freezes)
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
+                      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
                       children: [
-                        GestureDetector(
-                          onTap: () => context.push('/streak'),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.local_fire_department, color: AppColors.terracotta, size: 22),
-                              const SizedBox(width: 4),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${user?.streakDays ?? 0} ${(user?.streakDays ?? 0) == 1 ? 'Day' : 'Days'}',
-                                    style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.push('/streak'),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.local_fire_department, color: AppColors.terracotta, size: 20),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${user?.streakDays ?? 0} ${(user?.streakDays ?? 0) == 1 ? 'Day' : 'Days'}',
+                                        style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text('Streak', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
+                                    ],
                                   ),
-                                  Text('Streak', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         Container(
-                          height: 28,
+                          height: 24,
                           width: 1,
                           color: isDark ? AppColors.creamBorder.withValues(alpha: 0.4) : AppColors.forest700.withValues(alpha: 0.3),
-                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
                         ),
-                        GestureDetector(
-                          onTap: () => context.push('/xp'),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.bolt, color: AppColors.gold500, size: 22),
-                              const SizedBox(width: 4),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${user?.totalXp ?? 250} XP',
-                                    style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.push('/xp'),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.bolt, color: AppColors.gold500, size: 20),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${user?.totalXp ?? 250} XP',
+                                        style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text('Total XP', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
+                                    ],
                                   ),
-                                  Text('Total XP', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                         Container(
-                          height: 28,
+                          height: 24,
                           width: 1,
                           color: isDark ? AppColors.creamBorder.withValues(alpha: 0.4) : AppColors.forest700.withValues(alpha: 0.3),
-                          margin: const EdgeInsets.symmetric(horizontal: AppSpacing.md),
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
                         ),
-                        GestureDetector(
-                          onTap: () => context.push('/shop'),
-                          child: Row(
-                            children: [
-                              const Icon(Icons.ac_unit, color: AppColors.gold400, size: 22),
-                              const SizedBox(width: 4),
-                              Column(
-                                crossAxisAlignment: CrossAxisAlignment.start,
-                                children: [
-                                  Text(
-                                    '${user?.streakFreezes ?? 0} Freezes',
-                                    style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 15),
+                        Expanded(
+                          child: GestureDetector(
+                            onTap: () => context.push('/shop'),
+                            child: Row(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                const Icon(Icons.diamond, color: AppColors.gold500, size: 20),
+                                const SizedBox(width: 4),
+                                Flexible(
+                                  child: Column(
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        '${user?.crystals ?? 150}',
+                                        style: AppTypography.mono.copyWith(color: isDark ? Colors.white : AppColors.forest900, fontWeight: FontWeight.bold, fontSize: 14),
+                                        overflow: TextOverflow.ellipsis,
+                                      ),
+                                      Text('Crystals', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
+                                    ],
                                   ),
-                                  Text('Streak Protect', style: AppTypography.caption.copyWith(color: isDark ? AppColors.creamBorder : AppColors.forest700, fontSize: 10)),
-                                ],
-                              ),
-                            ],
+                                ),
+                              ],
+                            ),
                           ),
                         ),
                       ],
@@ -573,7 +592,11 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
               // Dedicated Edit Profile & Avatar Card
               AppCard(
                 onTap: isGuest
-                    ? () => context.push('/login')
+                    ? () => showGuestLockDialog(
+                          context,
+                          title: 'Profile Customization Locked 🔒',
+                          message: 'Guests cannot customize profile display names or upload avatar photos.',
+                        )
                     : () => _showEditProfileOptionsModal(context, user.name, user.avatarUrl),
                 child: Row(
                   children: [
@@ -632,7 +655,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                   // Not Enrolled: Join Classroom Button Card
                   return BrandCard(
-                    onTap: isGuest ? () => context.push('/login') : () => _showJoinClassroomModal(context),
+                    onTap: isGuest
+                        ? () => showGuestLockDialog(
+                              context,
+                              title: 'Educator Classroom Locked 🔒',
+                              message: 'Guests cannot join teacher classrooms or submit assignments to rosters.',
+                            )
+                        : () => _showJoinClassroomModal(context),
                     child: Row(
                       children: [
                         const Icon(Icons.school, size: 32, color: AppColors.gold500),

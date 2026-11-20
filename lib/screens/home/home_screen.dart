@@ -4,11 +4,14 @@ import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/lumad_background.dart';
 import '../../widgets/gamification/daily_quests_widget.dart';
+import '../../widgets/gamification/lottie_streak_flame_widget.dart';
 import '../../widgets/dictionary/word_of_the_day_card.dart';
 import '../../providers/lesson_provider.dart';
 import '../../models/lesson_model.dart';
@@ -20,6 +23,7 @@ class HomeScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final user = ref.watch(authStateProvider).value;
     final isCustomActive = ref.watch(customThemeAccentProvider);
+    final langCode = ref.watch(localizationProvider);
 
     final cardGradient = LinearGradient(
       colors: isCustomActive
@@ -89,7 +93,7 @@ class HomeScreen extends ConsumerWidget {
                               mainAxisAlignment: MainAxisAlignment.center,
                               children: [
                                 Text(
-                                  'Madyaw na allaw,',
+                                  RegionalStrings.get(langCode, 'greeting'),
                                   style: AppTypography.bodyLarge.copyWith(color: AppColors.gold400),
                                   maxLines: 1,
                                   overflow: TextOverflow.visible,
@@ -101,10 +105,21 @@ class HomeScreen extends ConsumerWidget {
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Level ${user?.level ?? 3} Learner',
-                                  style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                                const SizedBox(height: 6),
+                                Row(
+                                  children: [
+                                    Text(
+                                      'Level ${user?.level ?? 1} Learner',
+                                      style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
+                                    ),
+                                    const SizedBox(width: 10),
+                                    GestureDetector(
+                                      onTap: () => context.push('/streak'),
+                                      child: LottieStreakFlameWidget(
+                                        streakDays: user?.streakDays ?? 0,
+                                      ),
+                                    ),
+                                  ],
                                 ),
                               ],
                             ),

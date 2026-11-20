@@ -8,7 +8,6 @@ import '../models/achievement_model.dart';
 import '../models/vocabulary_model.dart';
 import '../data/mock_vocabulary.dart';
 import '../data/mock_achievements.dart';
-import '../utils/level_helper.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore;
@@ -60,7 +59,9 @@ class FirestoreService {
       var units = snapshot.docs.map((d) => LearningUnitModel.fromJson(d.data(), documentId: d.id)).toList();
       units.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
 
-      if (userId == null || userId.isEmpty) return units;
+      if (userId == null || userId.isEmpty) {
+        return units.map((u) => u.copyWith(isUnlocked: u.unitNumber == 1)).toList();
+      }
 
       List<LearningUnitModel> evaluated = [];
       for (int i = 0; i < units.length; i++) {
@@ -95,7 +96,13 @@ class FirestoreService {
       baseLessons.sort((a, b) => a.lessonOrder.compareTo(b.lessonOrder));
 
       if (userId == null || userId.isEmpty) {
-        return baseLessons;
+        return baseLessons.map((lesson) {
+          final lessonIndex = baseLessons.indexOf(lesson);
+          if (lessonIndex == 0) {
+            return lesson.copyWith(status: LessonStatus.available);
+          }
+          return lesson.copyWith(status: LessonStatus.locked);
+        }).toList();
       }
 
       // Merge with user progress locally
@@ -160,7 +167,7 @@ class FirestoreService {
       units.sort((a, b) => a.unitNumber.compareTo(b.unitNumber));
 
       if (userId == null || userId.isEmpty) {
-        return units;
+        return units.map((u) => u.copyWith(isUnlocked: u.unitNumber == 1)).toList();
       }
 
       List<LearningUnitModel> evaluated = [];
@@ -221,18 +228,6 @@ class FirestoreService {
       );
 
       await _progressCol.doc(userId).set(updatedProgress.toJson(), SetOptions(merge: true));
-
-      // Also check achievements & update user total XP
-      final user = await getUser(userId);
-      if (user != null) {
-        final totalXp = user.totalXp + 30; // standard lesson XP reward
-        final newLevel = LevelHelper.calculateLevel(totalXp);
-        final updatedUser = user.copyWith(
-          totalXp: totalXp,
-          level: newLevel,
-        );
-        await saveUser(updatedUser);
-      }
     } catch (e) {
       // Ignore offline errors
     }

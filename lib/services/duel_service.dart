@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/duel_model.dart';
@@ -176,6 +177,80 @@ class DuelService {
     return createWaitingSession(userName: userName);
   }
 
+  /// Generates a 6-character private room code (e.g. DUEL-942) and creates a waiting session
+  Future<Map<String, String>> createPrivateRoomSession({required String userName}) async {
+    final user = _auth.currentUser;
+    final uid = user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
+    final randomNum = (100 + Random().nextInt(900)).toString();
+    final code = 'DUEL-$randomNum';
+
+    try {
+      final duelQuestions = await _fetchFirebaseQuestions();
+      final newDoc = _firestore.collection('duel_sessions').doc();
+      final session = DuelSessionModel(
+        id: newDoc.id,
+        player1Id: uid,
+        player1Name: userName,
+        player1Score: 0,
+        player1Hp: 100,
+        player2Score: 0,
+        player2Hp: 100,
+        status: 'waiting',
+        currentRound: 0,
+        questions: duelQuestions,
+        createdAt: DateTime.now(),
+        roomCode: code,
+      );
+
+      await newDoc.set(session.toJson());
+      return {'sessionId': newDoc.id, 'roomCode': code};
+    } catch (e) {
+      return {'sessionId': 'local_duel_${DateTime.now().millisecondsSinceEpoch}', 'roomCode': code};
+    }
+  }
+
+  /// Joins a private room using a 6-character code (e.g. DUEL-942)
+  Future<String> joinRoomByCode({required String roomCode, required String userName}) async {
+    final user = _auth.currentUser;
+    final uid = user?.uid ?? 'guest_${DateTime.now().millisecondsSinceEpoch}';
+    final normalizedCode = roomCode.trim().toUpperCase();
+
+    final query = await _firestore
+        .collection('duel_sessions')
+        .where('roomCode', isEqualTo: normalizedCode)
+        .where('status', isEqualTo: 'waiting')
+        .limit(1)
+        .get();
+
+    if (query.docs.isEmpty) {
+      throw Exception('No open private room found with code "$normalizedCode".');
+    }
+
+    final doc = query.docs.first;
+    await doc.reference.update({
+      'player2Id': uid,
+      'player2Name': userName,
+      'status': 'active',
+    });
+
+    return doc.id;
+  }
+
+  /// Requests an instant rematch against the same opponent or bot
+  Future<String> requestRematch({required String previousSessionId, required String userName}) async {
+    try {
+      final doc = await _firestore.collection('duel_sessions').doc(previousSessionId).get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        final isBotMatch = data['player2Id'] == 'bot_ai';
+        if (isBotMatch) {
+          return await createBotMatch(userName: userName);
+        }
+      }
+    } catch (_) {}
+    return await createBotMatch(userName: userName);
+  }
+
   /// Creates an instant bot match session against AI Rival Bot
   Future<String> createBotMatch({required String userName}) async {
     final user = _auth.currentUser;
@@ -284,10 +359,21 @@ class DuelService {
     } catch (_) {}
   }
 
-  /// Finalizes the duel session and sets the winner
+  /// Finalizes the duel session and sets the winner (cleans up bot sessions to prevent clutter)
   Future<void> completeMatch({required String sessionId, required String winnerId}) async {
     try {
-      await _firestore.collection('duel_sessions').doc(sessionId).update({
+      final docRef = _firestore.collection('duel_sessions').doc(sessionId);
+      final doc = await docRef.get();
+      if (doc.exists && doc.data() != null) {
+        final data = doc.data()!;
+        final isBotMatch = data['player2Id'] == 'bot_ai';
+        if (isBotMatch) {
+          await docRef.delete();
+          return;
+        }
+      }
+
+      await docRef.update({
         'status': 'completed',
         'winnerId': winnerId,
       });

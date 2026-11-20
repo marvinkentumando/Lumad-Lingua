@@ -10,6 +10,7 @@ import '../../widgets/common/brand_filter_chip.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/screen_header.dart';
 import '../../widgets/common/lumad_background.dart';
+import '../../widgets/common/guest_lock_dialog.dart';
 
 class ShopScreen extends ConsumerStatefulWidget {
   const ShopScreen({super.key});
@@ -59,6 +60,30 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
       name: 'Dagmay Woven Regalia',
       description: 'Intricate Mandaya & Mansaka woven pattern border for learners.',
       priceCrystals: 180,
+      type: ShopItemType.avatarFrame,
+      badgeText: 'AVATAR FRAME',
+    ),
+    ShopItemModel(
+      id: 'frame_agong_bronze',
+      name: 'Agong Bronze Ceremonial Gong Frame',
+      description: 'Resonant bronze ceremonial gong border honoring ancestral Lumad music.',
+      priceCrystals: 220,
+      type: ShopItemType.avatarFrame,
+      badgeText: 'AVATAR FRAME',
+    ),
+    ShopItemModel(
+      id: 'frame_bangkaw_spear',
+      name: 'Bangkaw Spear & Shield Frame',
+      description: 'Warrior Bangkaw spear and shield regalia border representing bravery.',
+      priceCrystals: 240,
+      type: ShopItemType.avatarFrame,
+      badgeText: 'AVATAR FRAME',
+    ),
+    ShopItemModel(
+      id: 'frame_kagikit_boat',
+      name: 'Kagikit Royal Ancestral Boat Frame',
+      description: 'Majestic Kagikit royal raft frame celebrating river navigation heritage.',
+      priceCrystals: 260,
       type: ShopItemType.avatarFrame,
       badgeText: 'AVATAR FRAME',
     ),
@@ -118,6 +143,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   }
 
   void _confirmPurchase(ShopItemModel item, int currentCrystals) {
+    final user = ref.read(authStateProvider).value;
+    if (user == null) {
+      showGuestLockDialog(
+        context,
+        title: 'Shop Purchases Locked 🔒',
+        message: 'Guests cannot purchase items or save inventory items across sessions.',
+      );
+      return;
+    }
+
     if (currentCrystals < item.priceCrystals) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Not enough crystals! Complete more lessons to earn crystals.')),
@@ -393,6 +428,16 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                                       text: 'Equip',
                                       type: BrandButtonType.gold,
                                       onPressed: () async {
+                                        final user = ref.read(authStateProvider).value;
+                                        if (user == null) {
+                                          showGuestLockDialog(
+                                            context,
+                                            title: 'Equipping Cosmetics Locked 🔒',
+                                            message: 'Guests cannot equip avatar frames or banners across sessions.',
+                                          );
+                                          return;
+                                        }
+
                                         final authNotifier = ref.read(authStateProvider.notifier);
                                         final messenger = ScaffoldMessenger.of(context);
                                         final itemName = item.name;

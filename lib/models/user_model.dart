@@ -14,6 +14,7 @@ class UserModel {
   final String? equippedFrame;
   final String? equippedBanner;
   final DateTime? lastActiveDate;
+  final DateTime? xpBoosterExpiresAt;
 
   const UserModel({
     required this.id,
@@ -31,6 +32,7 @@ class UserModel {
     this.equippedFrame,
     this.equippedBanner,
     this.lastActiveDate,
+    this.xpBoosterExpiresAt,
   });
 
   /// Returns the first word/name of the user's display name for greetings (e.g., "Juan" from "Juan Dela Cruz").
@@ -38,6 +40,11 @@ class UserModel {
     final trimmed = name.trim();
     if (trimmed.isEmpty) return 'Learner';
     return trimmed.split(RegExp(r'\s+')).first;
+  }
+
+  bool get isXpBoosterActive {
+    if (xpBoosterExpiresAt == null) return false;
+    return DateTime.now().isBefore(xpBoosterExpiresAt!);
   }
 
   UserModel copyWith({
@@ -56,6 +63,7 @@ class UserModel {
     String? equippedFrame,
     String? equippedBanner,
     DateTime? lastActiveDate,
+    DateTime? xpBoosterExpiresAt,
     bool clearEquippedFrame = false,
     bool clearEquippedBanner = false,
   }) {
@@ -75,6 +83,7 @@ class UserModel {
       equippedFrame: clearEquippedFrame ? null : (equippedFrame ?? this.equippedFrame),
       equippedBanner: clearEquippedBanner ? null : (equippedBanner ?? this.equippedBanner),
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
+      xpBoosterExpiresAt: xpBoosterExpiresAt ?? this.xpBoosterExpiresAt,
     );
   }
 
@@ -97,6 +106,9 @@ class UserModel {
       lastActiveDate: json['lastActiveDate'] != null
           ? DateTime.tryParse(json['lastActiveDate'] as String)
           : null,
+      xpBoosterExpiresAt: json['xpBoosterExpiresAt'] != null
+          ? DateTime.tryParse(json['xpBoosterExpiresAt'] as String)
+          : null,
     );
   }
 
@@ -117,6 +129,7 @@ class UserModel {
       'equippedFrame': equippedFrame,
       'equippedBanner': equippedBanner,
       'lastActiveDate': lastActiveDate?.toIso8601String(),
+      'xpBoosterExpiresAt': xpBoosterExpiresAt?.toIso8601String(),
     };
   }
 }

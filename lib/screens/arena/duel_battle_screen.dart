@@ -210,28 +210,51 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
             ],
           ),
           actions: [
-            Row(
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Expanded(
-                  child: BrandButton(
-                    text: 'Play Again',
-                    type: BrandButtonType.gold,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/arena');
-                    },
-                  ),
+                BrandButton(
+                  text: 'Request Rematch ⚔️',
+                  type: BrandButtonType.gold,
+                  onPressed: () async {
+                    Navigator.of(context).pop();
+                    final service = ref.read(duelServiceProvider);
+                    final user = ref.read(authStateProvider).value;
+                    final userName = user?.name ?? 'Lumad Learner';
+                    final newSessionId = await service.requestRematch(
+                      previousSessionId: widget.sessionId,
+                      userName: userName,
+                    );
+                    if (context.mounted) {
+                      context.pushReplacement('/arena/battle', extra: {'sessionId': newSessionId});
+                    }
+                  },
                 ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: BrandButton(
-                    text: 'Home',
-                    type: BrandButtonType.primary,
-                    onPressed: () {
-                      Navigator.of(context).pop();
-                      context.go('/home');
-                    },
-                  ),
+                const SizedBox(height: AppSpacing.xs),
+                Row(
+                  children: [
+                    Expanded(
+                      child: BrandButton(
+                        text: 'Arena Lobby',
+                        type: BrandButtonType.secondary,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.go('/arena');
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: BrandButton(
+                        text: 'Home',
+                        type: BrandButtonType.secondary,
+                        onPressed: () {
+                          Navigator.of(context).pop();
+                          context.go('/home');
+                        },
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),

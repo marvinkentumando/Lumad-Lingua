@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants.dart';
 import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/localization_provider.dart';
 import '../../services/notification_service.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/lumad_background.dart';
@@ -72,6 +73,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
   Widget build(BuildContext context) {
     final themeMode = ref.watch(themeModeProvider);
     final isDarkMode = themeMode == ThemeMode.dark;
+    final isElderMode = ref.watch(elderModeProvider);
+    final currentLang = ref.watch(localizationProvider);
+    final currentPattern = ref.watch(backgroundPatternProvider);
     final user = ref.watch(authStateProvider).value;
     final hasCustomThemePass = user?.inventory.contains('custom_theme_pass') ?? false;
     final isCustomAccentActive = ref.watch(customThemeAccentProvider);
@@ -130,6 +134,103 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                         SnackBar(content: Text(val ? 'Offline dictionary mode enabled! 📦' : 'Offline dictionary mode disabled.')),
                       );
                     },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Accessibility & Elder Support',
+              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              child: SwitchListTile(
+                title: Text('Elder High-Contrast & Large Text Mode 👁️', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: Text('Provides enlarged typography (+25% text scale) and high contrast for tribal elders & visually impaired learners', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                value: isElderMode,
+                activeThumbColor: AppColors.gold500,
+                onChanged: (val) {
+                  ref.read(elderModeProvider.notifier).setElderMode(val);
+                  ScaffoldMessenger.of(context).clearSnackBars();
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(content: Text(val ? 'Elder High-Contrast & Large Text Mode activated! 👁️ (+25% Text Scale)' : 'Standard text scaling restored.')),
+                  );
+                },
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Regional UI Language (Lingua Franca)',
+              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text('English', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentLang == 'en' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () {
+                      ref.read(localizationProvider.notifier).setLanguage('en');
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UI Language set to English')));
+                    },
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('Cebuano (Binisaya)', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentLang == 'ceb' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () {
+                      ref.read(localizationProvider.notifier).setLanguage('ceb');
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UI Language set to Cebuano (Binisaya)')));
+                    },
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('Tagalog (Filipino)', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentLang == 'tl' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () {
+                      ref.read(localizationProvider.notifier).setLanguage('tl');
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UI Language set to Tagalog (Filipino)')));
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Tribal Background Pattern',
+              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text('Lumad Woven Waves 🌊', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentPattern == 'woven_waves' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () => ref.read(backgroundPatternProvider.notifier).setPattern('woven_waves'),
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('Tribal Chevron Geometry 📐', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentPattern == 'tribal_geom' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () => ref.read(backgroundPatternProvider.notifier).setPattern('tribal_geom'),
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('Royal Crimson & Gold 🎨', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentPattern == 'royal_crimson' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () => ref.read(backgroundPatternProvider.notifier).setPattern('royal_crimson'),
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('Solid Forest Gradient 🌲', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    trailing: currentPattern == 'solid_forest' ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () => ref.read(backgroundPatternProvider.notifier).setPattern('solid_forest'),
                   ),
                 ],
               ),

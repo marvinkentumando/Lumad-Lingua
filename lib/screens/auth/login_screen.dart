@@ -4,7 +4,10 @@ import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/validators.dart';
 import '../../providers/auth_provider.dart';
-import '../../widgets/common/app_button.dart';
+import '../../widgets/common/brand_button.dart';
+import '../../widgets/common/brand_card.dart';
+import '../../widgets/common/lumad_logo_emblem.dart';
+import '../../widgets/common/lumad_background.dart';
 
 class LoginScreen extends ConsumerStatefulWidget {
   const LoginScreen({super.key});
@@ -50,6 +53,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
       if (success && mounted) {
         context.go('/home');
       } else if (mounted) {
+        ScaffoldMessenger.of(context).clearSnackBars();
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Login failed. Please check your credentials.'),
@@ -65,129 +69,164 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     final authState = ref.watch(authStateProvider);
 
     return Scaffold(
-      body: SafeArea(
-        child: FadeTransition(
-          opacity: _fadeAnimation,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(AppSpacing.lg),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const SizedBox(height: AppSpacing.xl),
-                  Center(
-                    child: Container(
-                      padding: const EdgeInsets.all(16),
-                      decoration: const BoxDecoration(
-                        color: AppColors.forestGreen,
-                        shape: BoxShape.circle,
-                      ),
-                      child: const Icon(
-                        Icons.menu_book_rounded,
-                        size: 48,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  const Center(
-                    child: Text(
+      body: LumadBackground(
+        child: SafeArea(
+          child: FadeTransition(
+            opacity: _fadeAnimation,
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(AppSpacing.lg),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: AppSpacing.lg),
+                    // Centered Lumad Logo Emblem with Ancestral Glow
+                    const LumadLogoEmblem(size: 68, borderRadius: 18),
+                    const SizedBox(height: AppSpacing.md),
+                    Text(
                       'Welcome Back!',
-                      style: TextStyle(
-                        fontSize: 26,
-                        fontWeight: FontWeight.bold,
-                        color: AppColors.darkCharcoal,
+                      style: AppTypography.h1ExtraBold.copyWith(color: AppColors.textColor(context), fontSize: 28),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Sign in to preserve Mansaka heritage & sync your progress',
+                      style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
+                      textAlign: TextAlign.center,
+                    ),
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Card Form Container
+                    BrandCard(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Email Address',
+                            style: AppTypography.labelBold.copyWith(color: Colors.white),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextFormField(
+                            controller: _emailController,
+                            validator: AppValidators.validateEmail,
+                            keyboardType: TextInputType.emailAddress,
+                            textInputAction: TextInputAction.next,
+                            autofillHints: const [AutofillHints.email],
+                            style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
+                            decoration: InputDecoration(
+                              hintText: 'Enter your email',
+                              hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
+                              prefixIcon: const Icon(Icons.email_outlined, color: AppColors.forest500),
+                              filled: true,
+                              fillColor: AppColors.creamSurface,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.gold500, width: 2.0),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          Text(
+                            'Password',
+                            style: AppTypography.labelBold.copyWith(color: Colors.white),
+                          ),
+                          const SizedBox(height: AppSpacing.xs),
+                          TextFormField(
+                            controller: _passwordController,
+                            validator: AppValidators.validatePassword,
+                            obscureText: _obscurePassword,
+                            textInputAction: TextInputAction.done,
+                            autofillHints: const [AutofillHints.password],
+                            onFieldSubmitted: (_) => _handleLogin(),
+                            style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
+                            decoration: InputDecoration(
+                              hintText: 'Enter your password',
+                              hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
+                              prefixIcon: const Icon(Icons.lock_outline, color: AppColors.forest500),
+                              suffixIcon: IconButton(
+                                icon: Icon(
+                                  _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                                  color: AppColors.forest500,
+                                ),
+                                onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                              ),
+                              filled: true,
+                              fillColor: AppColors.creamSurface,
+                              border: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                              ),
+                              enabledBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                              ),
+                              focusedBorder: OutlineInputBorder(
+                                borderRadius: BorderRadius.circular(AppRadius.button),
+                                borderSide: const BorderSide(color: AppColors.gold500, width: 2.0),
+                              ),
+                            ),
+                          ),
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                              onPressed: () => context.push('/forgot-password'),
+                              child: Text(
+                                'Forgot Password?',
+                                style: AppTypography.labelBold.copyWith(color: AppColors.gold500),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: AppSpacing.sm),
+                          BrandButton(
+                            text: 'Sign In',
+                            type: BrandButtonType.gold,
+                            isLoading: authState.isLoading,
+                            onPressed: _handleLogin,
+                          ),
+                        ],
                       ),
                     ),
-                  ),
-                  const Center(
-                    child: Text(
-                      'Sign in to continue learning Mansaka',
-                      style: TextStyle(
-                        fontSize: 14,
-                        color: AppColors.darkCharcoal,
-                      ),
+                    const SizedBox(height: AppSpacing.md),
+
+                    // Guest Exploration Secondary CTA
+                    BrandButton(
+                      text: 'Continue as Guest Learner',
+                      type: BrandButtonType.secondary,
+                      icon: Icons.explore,
+                      onPressed: () => context.go('/home'),
                     ),
-                  ),
-                  const SizedBox(height: AppSpacing.xxl),
-                  const Text(
-                    'Email Address',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    controller: _emailController,
-                    validator: AppValidators.validateEmail,
-                    keyboardType: TextInputType.emailAddress,
-                    textInputAction: TextInputAction.next,
-                    autofillHints: const [AutofillHints.email],
-                    decoration: const InputDecoration(
-                      hintText: 'Enter your email',
-                      prefixIcon: Icon(Icons.email_outlined),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  const Text(
-                    'Password',
-                    style: TextStyle(fontWeight: FontWeight.bold),
-                  ),
-                  const SizedBox(height: AppSpacing.xs),
-                  TextFormField(
-                    controller: _passwordController,
-                    validator: AppValidators.validatePassword,
-                    obscureText: _obscurePassword,
-                    textInputAction: TextInputAction.done,
-                    autofillHints: const [AutofillHints.password],
-                    onFieldSubmitted: (_) => _handleLogin(),
-                    decoration: InputDecoration(
-                      hintText: 'Enter your password',
-                      prefixIcon: const Icon(Icons.lock_outline),
-                      suffixIcon: IconButton(
-                        icon: Icon(
-                          _obscurePassword ? Icons.visibility_off : Icons.visibility,
+                    const SizedBox(height: AppSpacing.xl),
+
+                    // Bottom Register Redirect Row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "Don't have an account? ",
+                          style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                         ),
-                        onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment.centerRight,
-                    child: TextButton(
-                      onPressed: () => context.push('/forgot-password'),
-                      child: const Text('Forgot Password?'),
-                    ),
-                  ),
-                  const SizedBox(height: AppSpacing.lg),
-                  AppButton(
-                    text: 'Login',
-                    isLoading: authState.isLoading,
-                    onPressed: _handleLogin,
-                  ),
-                  const SizedBox(height: AppSpacing.md),
-                  AppButton(
-                    text: 'Explore Mock Dashboard',
-                    variant: AppButtonVariant.outline,
-                    onPressed: () => context.go('/home'),
-                  ),
-                  const SizedBox(height: AppSpacing.xl),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      const Text("Don't have an account? "),
-                      GestureDetector(
-                        onTap: () => context.push('/register'),
-                        child: const Text(
-                          'Register',
-                          style: TextStyle(
-                            color: AppColors.forestGreen,
-                            fontWeight: FontWeight.bold,
+                        GestureDetector(
+                          onTap: () => context.push('/register'),
+                          child: Text(
+                            'Create Account',
+                            style: AppTypography.labelBold.copyWith(
+                              color: AppColors.gold500,
+                            ),
                           ),
                         ),
-                      ),
-                    ],
-                  ),
-                ],
+                      ],
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -196,4 +235,3 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
     );
   }
 }
-

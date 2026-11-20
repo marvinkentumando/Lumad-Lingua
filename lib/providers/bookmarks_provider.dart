@@ -2,8 +2,7 @@ import 'dart:convert';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../models/vocabulary_model.dart';
-
-const String _bookmarksStorageKey = 'lumad_saved_bookmarks';
+import 'auth_provider.dart';
 
 class BookmarksNotifier extends Notifier<Map<String, VocabularyModel>> {
   @override
@@ -14,8 +13,10 @@ class BookmarksNotifier extends Notifier<Map<String, VocabularyModel>> {
 
   Future<void> _loadFromPrefs() async {
     try {
+      final user = ref.read(authStateProvider).value;
+      final userId = user?.id ?? 'guest';
       final prefs = await SharedPreferences.getInstance();
-      final String? jsonStr = prefs.getString(_bookmarksStorageKey);
+      final String? jsonStr = prefs.getString('lumad_saved_bookmarks_$userId');
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> list = jsonDecode(jsonStr);
         final Map<String, VocabularyModel> loaded = {};
@@ -52,9 +53,11 @@ class BookmarksNotifier extends Notifier<Map<String, VocabularyModel>> {
 
   Future<void> _saveToPrefs(Map<String, VocabularyModel> map) async {
     try {
+      final user = ref.read(authStateProvider).value;
+      final userId = user?.id ?? 'guest';
       final prefs = await SharedPreferences.getInstance();
       final listJson = map.values.map((v) => v.toJson()).toList();
-      await prefs.setString(_bookmarksStorageKey, jsonEncode(listJson));
+      await prefs.setString('lumad_saved_bookmarks_$userId', jsonEncode(listJson));
     } catch (_) {}
   }
 }

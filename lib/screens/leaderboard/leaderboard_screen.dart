@@ -14,6 +14,7 @@ import '../../widgets/common/brand_filter_chip.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
+import '../../widgets/common/guest_lock_dialog.dart';
 
 class LeaderboardScreen extends ConsumerStatefulWidget {
   const LeaderboardScreen({super.key});
@@ -342,8 +343,56 @@ class _LeaderboardScreenState extends ConsumerState<LeaderboardScreen> {
                   ),
                 ),
 
-                // Tactile Sticky Bottom Banner for Signed-In Learner
-                if (currentUser != null)
+                // Tactile Sticky Bottom Banner for Guest vs Signed-In Learner
+                if (currentUser == null)
+                  GestureDetector(
+                    onTap: () => showGuestLockDialog(
+                      context,
+                      title: 'Global Ranks Locked 🔒',
+                      message: 'Guests cannot appear on the global leaderboard or track public rankings.',
+                    ),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+                      decoration: BoxDecoration(
+                        color: AppColors.forest700,
+                        border: Border.all(color: AppColors.gold500, width: 1.5),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Colors.black38,
+                            blurRadius: 8,
+                            offset: Offset(0, -2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          const CircleAvatar(
+                            backgroundColor: AppColors.gold500,
+                            child: Icon(Icons.lock, color: AppColors.forest900, size: 20),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  'Exploring as Guest',
+                                  style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 15),
+                                ),
+                                Text(
+                                  'Sign in to compete for top ranks on Global Leaderboards 🏆',
+                                  style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+                          const Icon(Icons.chevron_right, color: AppColors.gold500),
+                        ],
+                      ),
+                    ),
+                  )
+                else
                   GestureDetector(
                     onTap: () => _showLearnerDetailsDialog(context, currentUser, myRank > 0 ? myRank : 99),
                     child: Container(

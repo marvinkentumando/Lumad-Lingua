@@ -4,11 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/daily_quest_model.dart';
 import 'auth_provider.dart';
 
-String _todayDateKey() {
+String _todayDateKey(String userId) {
   final now = DateTime.now();
   final month = now.month.toString().padLeft(2, '0');
   final day = now.day.toString().padLeft(2, '0');
-  return 'lumad_daily_quests_${now.year}-$month-$day';
+  return 'lumad_daily_quests_${userId}_${now.year}-$month-$day';
 }
 
 List<DailyQuestModel> _generateDefaultQuestsForToday() {
@@ -94,10 +94,12 @@ class DailyQuestsNotifier extends Notifier<List<DailyQuestModel>> {
 
   Future<void> _loadState() async {
     try {
+      final user = ref.read(authStateProvider).value;
+      final userId = user?.id ?? 'guest';
       final prefs = await SharedPreferences.getInstance();
-      final key = _todayDateKey();
-      final jsonStr = prefs.getString(key);
+      final key = _todayDateKey(userId);
       final defaultQuests = _generateDefaultQuestsForToday();
+      final jsonStr = prefs.getString(key);
 
       if (jsonStr != null && jsonStr.isNotEmpty) {
         final List<dynamic> decoded = jsonDecode(jsonStr);
@@ -124,8 +126,10 @@ class DailyQuestsNotifier extends Notifier<List<DailyQuestModel>> {
 
   Future<void> _saveState() async {
     try {
+      final user = ref.read(authStateProvider).value;
+      final userId = user?.id ?? 'guest';
       final prefs = await SharedPreferences.getInstance();
-      final key = _todayDateKey();
+      final key = _todayDateKey(userId);
       final listJson = state.map((q) => q.toJson()).toList();
       await prefs.setString(key, jsonEncode(listJson));
     } catch (_) {}

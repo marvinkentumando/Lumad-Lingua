@@ -18,6 +18,7 @@ import '../../widgets/common/lumad_background.dart';
 import '../../widgets/audio/recording_button.dart';
 import '../../widgets/audio/audio_player_widget.dart';
 import '../../widgets/audio/audio_waveform_widget.dart';
+import '../../widgets/audio/pitch_contour_widget.dart';
 import 'pronunciation_history_screen.dart';
 
 class PronunciationPhrase {
@@ -367,7 +368,11 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                   style: AppTypography.labelBold.copyWith(color: AppColors.creamText),
                 ),
                 if (state.hasRecording) ...[
-                  const SizedBox(height: AppSpacing.lg),
+                  const SizedBox(height: AppSpacing.md),
+                  const PitchContourWidget(
+                    score: 88.0,
+                  ),
+                  const SizedBox(height: AppSpacing.md),
                   BrandCard(
                     child: Row(
                       children: [
@@ -382,7 +387,7 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text(
-                            'Your Recording',
+                            'Your Recording Preview',
                             style: AppTypography.labelBold.copyWith(color: Colors.white),
                           ),
                         ),

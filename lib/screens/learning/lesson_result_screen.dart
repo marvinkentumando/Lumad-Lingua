@@ -6,9 +6,11 @@ import 'package:confetti/confetti.dart';
 import '../../utils/constants.dart';
 import '../../models/daily_quest_model.dart';
 import '../../providers/daily_quests_provider.dart';
+import '../../providers/auth_provider.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_background.dart';
+import '../../widgets/gamification/level_up_dialog.dart';
 
 class LessonResultScreen extends ConsumerStatefulWidget {
   final Map<String, dynamic> resultData;
@@ -30,6 +32,13 @@ class _LessonResultScreenState extends ConsumerState<LessonResultScreen> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       ref.read(dailyQuestsProvider.notifier).incrementProgress(QuestType.lesson);
+
+      final authNotifier = ref.read(authStateProvider.notifier);
+      final newLevel = authNotifier.pendingLevelUp;
+      if (newLevel != null && mounted) {
+        authNotifier.clearPendingLevelUp();
+        showLevelUpDialog(context, newLevel: newLevel);
+      }
     });
   }
 

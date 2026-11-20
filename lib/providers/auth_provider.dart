@@ -5,12 +5,29 @@ import '../repositories/auth_repository.dart';
 import '../repositories/firebase_auth_repository.dart';
 import '../utils/level_helper.dart';
 
+const UserModel defaultGuestUser = UserModel(
+  id: 'guest',
+  name: 'Lumad Learner',
+  email: 'learner@lumadlingua.com',
+  totalXp: 0,
+  level: 1,
+  streakDays: 0,
+  crystals: 150,
+);
+
 final authRepositoryProvider = Provider<AuthRepository>((ref) {
   return FirebaseAuthRepository();
 });
 
 class AuthNotifier extends AsyncNotifier<UserModel?> {
   late final AuthRepository _repository;
+  int? _pendingLevelUp;
+
+  int? get pendingLevelUp => _pendingLevelUp;
+
+  void clearPendingLevelUp() {
+    _pendingLevelUp = null;
+  }
 
   @override
   Future<UserModel?> build() async {
@@ -23,7 +40,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
       }
       return verifiedUser;
     }
-    return null;
+    return defaultGuestUser;
   }
 
   UserModel _verifyAndProcessStreakProtection(UserModel user) {
@@ -91,34 +108,52 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     }
   }
 
+  Future<bool> sendPasswordResetEmail(String email) async {
+    try {
+      await _repository.sendPasswordResetEmail(email);
+      return true;
+    } catch (_) {
+      return false;
+    }
+  }
+
   Future<void> logout() async {
     await _repository.logout();
-    state = const AsyncValue.data(null);
+    state = const AsyncValue.data(defaultGuestUser);
   }
 
   Future<void> updateUser(UserModel updatedUser) async {
     state = AsyncValue.data(updatedUser);
-    try {
-      await _repository.saveUser(updatedUser);
-    } catch (_) {}
-  }
-
-  Future<void> updateCrystals(int crystals) async {
-    if (state.value != null) {
-      final updated = state.value!.copyWith(crystals: crystals);
-      state = AsyncValue.data(updated);
+    if (updatedUser.id != 'guest') {
       try {
-        await _repository.saveUser(updated);
+        await _repository.saveUser(updatedUser);
       } catch (_) {}
     }
   }
 
-  void addXp(int xp) {
-    if (state.value != null) {
-      final current = state.value!;
-      final newXp = current.totalXp + xp;
-      final newLevel = LevelHelper.calculateLevel(newXp);
-      state = AsyncValue.data(current.copyWith(
+  Future<void> updateCrystals(int crystals) async {
+    final current = state.value ?? defaultGuestUser;
+    final updated = current.copyWith(crystals: crystals);
+    await updateUser(updated);
+  }
+
+  void addXp(int baseXp) {
+    final current = state.value ?? defaultGuestUser;
+    final bool isBoosterActive = current.isXpBoosterActive;
+    final actualXp = isBoosterActive ? (baseXp * 2) : baseXp;
+    final newXp = current.totalXp + actualXp;
+    final oldLevel = current.level;
+    final newLevel = LevelHelper.calculateLevel(newXp);
+
+    if (newLevel > oldLevel) {
+      _pendingLevelUp = newLevel;
+      updateUser(current.copyWith(
+        totalXp: newXp,
+        level: newLevel,
+        crystals: current.crystals + 50,
+      ));
+    } else {
+      updateUser(current.copyWith(
         totalXp: newXp,
         level: newLevel,
       ));
@@ -126,8 +161,8 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   }
 
   Future<bool> buyShopItem(ShopItemModel item) async {
-    final user = state.value;
-    if (user == null || user.crystals < item.priceCrystals) {
+    final user = state.value ?? defaultGuestUser;
+    if (user.crystals < item.priceCrystals) {
       return false;
     }
 
@@ -140,6 +175,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     int newStreakFreezes = user.streakFreezes;
     String? newFrame = user.equippedFrame;
     String? newBanner = user.equippedBanner;
+    DateTime? newXpBoosterExpiresAt = user.xpBoosterExpiresAt;
 
     if (item.type == ShopItemType.streakFreeze) {
       newStreakFreezes++;
@@ -149,12 +185,17 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
       newBanner = item.id;
     }
 
+    if (item.id == 'xp_booster') {
+      newXpBoosterExpiresAt = DateTime.now().add(const Duration(hours: 24));
+    }
+
     final updatedUser = user.copyWith(
       crystals: newCrystals,
       inventory: newInventory,
       streakFreezes: newStreakFreezes,
       equippedFrame: newFrame,
       equippedBanner: newBanner,
+      xpBoosterExpiresAt: newXpBoosterExpiresAt,
     );
 
     await updateUser(updatedUser);
@@ -162,8 +203,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   }
 
   Future<void> equipFrame(String? frameId) async {
-    final user = state.value;
-    if (user == null) return;
+    final user = state.value ?? defaultGuestUser;
 
     final updated = frameId == null
         ? user.copyWith(clearEquippedFrame: true)
@@ -173,8 +213,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   }
 
   Future<void> equipBanner(String? bannerId) async {
-    final user = state.value;
-    if (user == null) return;
+    final user = state.value ?? defaultGuestUser;
 
     final updated = bannerId == null
         ? user.copyWith(clearEquippedBanner: true)
@@ -184,8 +223,8 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
   }
 
   Future<bool> useStreakFreeze() async {
-    final user = state.value;
-    if (user == null || user.streakFreezes <= 0) return false;
+    final user = state.value ?? defaultGuestUser;
+    if (user.streakFreezes <= 0) return false;
 
     final updated = user.copyWith(streakFreezes: user.streakFreezes - 1);
     await updateUser(updated);
