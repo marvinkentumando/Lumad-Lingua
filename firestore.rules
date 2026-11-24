@@ -24,21 +24,21 @@ service cloud.firestore {
       }
     }
 
-    // Learning Units (Public read for authenticated learners)
+    // Learning Units (Public read)
     match /learning_units/{unitId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if false;
     }
 
     // Lessons (Public read)
     match /lessons/{lessonId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if isAuthenticated();
     }
 
     // Learning Activities (Public read)
     match /learning_activities/{activityId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if false;
     }
 
@@ -48,9 +48,9 @@ service cloud.firestore {
       allow write: if isOwner(userId);
     }
 
-    // Vocabulary / Dictionary (Public read)
+    // Vocabulary / Dictionary (Public read for all learners & guests)
     match /vocabulary/{wordId} {
-      allow read: if isAuthenticated();
+      allow read: if true;
       allow write: if false;
     }
 

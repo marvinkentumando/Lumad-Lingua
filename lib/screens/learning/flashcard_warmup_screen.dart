@@ -69,7 +69,7 @@ class _FlashcardWarmupScreenState extends State<FlashcardWarmupScreen> {
   }
 
   void _startActivities() {
-    context.pushReplacement('/lesson/${widget.lesson.id}');
+    context.pushReplacement('/lesson/${widget.lesson.id}/drills');
   }
 
   void _showCompletionDialog() {

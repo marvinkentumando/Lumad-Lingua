@@ -24,6 +24,7 @@ class UnitDetailsScreen extends ConsumerWidget {
       body: LumadBackground(
         child: SafeArea(
           child: lessonsAsync.when(
+            skipLoadingOnRefresh: true,
             data: (lessons) => ListView(
               padding: const EdgeInsets.all(AppSpacing.md),
               children: [

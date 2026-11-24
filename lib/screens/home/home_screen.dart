@@ -11,7 +11,6 @@ import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/lumad_background.dart';
 import '../../widgets/gamification/daily_quests_widget.dart';
-import '../../widgets/gamification/lottie_streak_flame_widget.dart';
 import '../../widgets/dictionary/word_of_the_day_card.dart';
 import '../../providers/lesson_provider.dart';
 import '../../models/lesson_model.dart';
@@ -106,20 +105,9 @@ class HomeScreen extends ConsumerWidget {
                                   overflow: TextOverflow.ellipsis,
                                 ),
                                 const SizedBox(height: 6),
-                                Row(
-                                  children: [
-                                    Text(
-                                      'Level ${user?.level ?? 1} Learner',
-                                      style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
-                                    ),
-                                    const SizedBox(width: 10),
-                                    GestureDetector(
-                                      onTap: () => context.push('/streak'),
-                                      child: LottieStreakFlameWidget(
-                                        streakDays: user?.streakDays ?? 0,
-                                      ),
-                                    ),
-                                  ],
+                                Text(
+                                  'Level ${user?.level ?? 1} Learner',
+                                  style: AppTypography.caption.copyWith(color: AppColors.creamBorder),
                                 ),
                               ],
                             ),
@@ -278,6 +266,7 @@ class _ContinueLearningCard extends ConsumerWidget {
     final unitsAsync = ref.watch(unitsProvider);
 
     return unitsAsync.when(
+      skipLoadingOnRefresh: true,
       data: (units) {
         if (units.isEmpty) {
           return const SizedBox.shrink();
@@ -286,6 +275,7 @@ class _ContinueLearningCard extends ConsumerWidget {
         final lessonsAsync = ref.watch(unitLessonsProvider(activeUnit.id));
 
         return lessonsAsync.when(
+          skipLoadingOnRefresh: true,
           data: (lessons) {
             if (lessons.isEmpty) {
               return const SizedBox.shrink();

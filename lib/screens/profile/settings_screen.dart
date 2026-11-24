@@ -76,6 +76,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final isElderMode = ref.watch(elderModeProvider);
     final currentLang = ref.watch(localizationProvider);
     final currentPattern = ref.watch(backgroundPatternProvider);
+    final culturalSkin = ref.watch(culturalThemeProvider);
     final user = ref.watch(authStateProvider).value;
     final hasCustomThemePass = user?.inventory.contains('custom_theme_pass') ?? false;
     final isCustomAccentActive = ref.watch(customThemeAccentProvider);
@@ -194,6 +195,48 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     onTap: () {
                       ref.read(localizationProvider.notifier).setLanguage('tl');
                       ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('UI Language set to Tagalog (Filipino)')));
+                    },
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Cultural Textile Theme Skins',
+              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              child: Column(
+                children: [
+                  ListTile(
+                    title: Text('Lumad Ancestral Forest 🌲', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    subtitle: Text('Traditional Mindanao Higaonon & Manobo forest greens', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                    trailing: culturalSkin == CulturalThemeSkin.lumadForest ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () {
+                      ref.read(culturalThemeProvider.notifier).setThemeSkin(CulturalThemeSkin.lumadForest);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Lumad Ancestral Forest theme applied! 🌲')));
+                    },
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('T\'boli T\'nalak Weave 🩸', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    subtitle: Text('Sacred crimson red and earth brown dreamweaver motifs', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                    trailing: culturalSkin == CulturalThemeSkin.tnalakWeave ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () {
+                      ref.read(culturalThemeProvider.notifier).setThemeSkin(CulturalThemeSkin.tnalakWeave);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('T\'boli T\'nalak Weave theme applied! 🩸')));
+                    },
+                  ),
+                  const Divider(color: AppColors.forest700),
+                  ListTile(
+                    title: Text('Ilocano Inabel Motif 🌊', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                    subtitle: Text('Northern indigo blue and deep teal geometric weaves', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                    trailing: culturalSkin == CulturalThemeSkin.inabelMotif ? const Icon(Icons.check_circle, color: AppColors.gold500) : null,
+                    onTap: () {
+                      ref.read(culturalThemeProvider.notifier).setThemeSkin(CulturalThemeSkin.inabelMotif);
+                      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Ilocano Inabel Motif theme applied! 🌊')));
                     },
                   ),
                 ],

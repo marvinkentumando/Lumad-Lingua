@@ -780,7 +780,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     if (confirm == true) {
                       await ref.read(authStateProvider.notifier).logout();
                       if (context.mounted) {
-                        context.go('/home');
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          const SnackBar(content: Text('Successfully signed out. 👋')),
+                        );
+                        context.go('/login');
                       }
                     }
                   }

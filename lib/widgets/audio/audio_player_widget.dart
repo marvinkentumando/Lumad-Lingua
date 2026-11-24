@@ -40,7 +40,7 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   void _toggleSpeed() {
     final nextIndex = (_speeds.indexOf(_playbackSpeed) + 1) % _speeds.length;
     final nextSpeed = _speeds[nextIndex];
-    setState(() => _playbackSpeed = nextSpeed);
+    if (mounted) setState(() => _playbackSpeed = nextSpeed);
     _player.setSpeed(nextSpeed);
 
     if (mounted) {
@@ -58,11 +58,13 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
     final resolvedUrl = AudioHelper.resolveSupabaseAudioUrl(widget.audioUrl);
 
     if (resolvedUrl == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Reference audio is currently unavailable for this item.'),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Reference audio is currently unavailable for this item.'),
+          ),
+        );
+      }
       return;
     }
 
@@ -72,16 +74,18 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
         _isLoaded = true;
       }
       await _player.setSpeed(_playbackSpeed);
-      setState(() => _isPlaying = true);
+      if (mounted) setState(() => _isPlaying = true);
       await _player.seek(Duration.zero);
       await _player.play();
-      setState(() => _isPlaying = false);
     } catch (e) {
       if (mounted) {
-        setState(() => _isPlaying = false);
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(content: Text('Audio playback error: $e')),
         );
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _isPlaying = false);
       }
     }
   }

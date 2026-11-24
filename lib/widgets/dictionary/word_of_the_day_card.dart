@@ -15,6 +15,7 @@ class WordOfTheDayCard extends ConsumerWidget {
     ref.watch(bookmarksProvider);
 
     return wordAsync.when(
+      skipLoadingOnRefresh: true,
       data: (word) {
         if (word == null) return const SizedBox.shrink();
 

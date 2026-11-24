@@ -254,7 +254,7 @@ class _LessonStudyScreenState extends ConsumerState<LessonStudyScreen> {
                     if (lesson.flashcards.isNotEmpty) {
                       context.push('/lesson-warmup', extra: lesson);
                     } else {
-                      context.push('/lesson/${lesson.id}');
+                      context.push('/lesson/${lesson.id}/drills');
                     }
                   },
                 ),

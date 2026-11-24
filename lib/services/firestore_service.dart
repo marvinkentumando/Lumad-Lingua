@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import '../models/user_model.dart';
 import '../models/learning_unit_model.dart';
@@ -8,6 +9,7 @@ import '../models/achievement_model.dart';
 import '../models/vocabulary_model.dart';
 import '../data/mock_vocabulary.dart';
 import '../data/mock_achievements.dart';
+import 'offline_sync_service.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore;
@@ -170,17 +172,18 @@ class FirestoreService {
         return units.map((u) => u.copyWith(isUnlocked: u.unitNumber == 1)).toList();
       }
 
-      List<LearningUnitModel> evaluated = [];
-      for (int i = 0; i < units.length; i++) {
-        final unit = units[i];
-        bool unlocked = unit.unitNumber == 1;
-        if (!unlocked && i > 0) {
-          final prevUnit = units[i - 1];
-          final prevLessons = await getLessonsForUnitInternal(prevUnit.id, userId: userId);
-          unlocked = prevLessons.isNotEmpty && prevLessons.every((l) => l.status == LessonStatus.completed);
+      final evaluated = await Future.wait(units.asMap().entries.map((entry) async {
+        final i = entry.key;
+        final unit = entry.value;
+        if (unit.unitNumber == 1) {
+          return unit.copyWith(isUnlocked: true);
         }
-        evaluated.add(unit.copyWith(isUnlocked: unlocked));
-      }
+        final prevUnit = units[i - 1];
+        final prevLessons = await getLessonsForUnitInternal(prevUnit.id, userId: userId);
+        final unlocked = prevLessons.isNotEmpty && prevLessons.every((l) => l.status == LessonStatus.completed);
+        return unit.copyWith(isUnlocked: unlocked);
+      }));
+
       return evaluated;
     });
   }
@@ -229,7 +232,38 @@ class FirestoreService {
 
       await _progressCol.doc(userId).set(updatedProgress.toJson(), SetOptions(merge: true));
     } catch (e) {
-      // Ignore offline errors
+      // Queue offline if network fails
+      await OfflineSyncService().queueAction('complete_lesson', {
+        'userId': userId,
+        'lessonId': lessonId,
+        'xpEarned': 50,
+      });
+    }
+  }
+
+  Future<void> addXp(String userId, int xp) async {
+    try {
+      final userDoc = await _usersCol.doc(userId).get();
+      if (userDoc.exists && userDoc.data() != null) {
+        final currentXp = (userDoc.data()!['xp'] as num?)?.toInt() ?? 0;
+        await _usersCol.doc(userId).update({'xp': currentXp + xp});
+      }
+    } catch (e) {
+      await OfflineSyncService().queueAction('update_xp', {
+        'userId': userId,
+        'xp': xp,
+      });
+    }
+  }
+
+  Future<void> updateStreak(String userId, int streakDays) async {
+    try {
+      await _usersCol.doc(userId).update({'streakDays': streakDays});
+    } catch (e) {
+      await OfflineSyncService().queueAction('update_streak', {
+        'userId': userId,
+        'streakDays': streakDays,
+      });
     }
   }
 
@@ -285,8 +319,16 @@ class FirestoreService {
   Future<List<VocabularyModel>> getVocabulary() async {
     try {
       final snapshot = await _vocabularyCol.get();
-      return snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
+      if (snapshot.docs.isNotEmpty) {
+        return snapshot.docs.map((d) {
+          final data = Map<String, dynamic>.from(d.data());
+          data['id'] = d.id;
+          return VocabularyModel.fromJson(data);
+        }).toList();
+      }
+      return mockVocabularyList;
     } catch (e) {
+      debugPrint('Firestore getVocabulary error: $e');
       return mockVocabularyList;
     }
   }
@@ -294,19 +336,36 @@ class FirestoreService {
   Future<List<VocabularyModel>> searchVocabulary(String query) async {
     try {
       final snapshot = await _vocabularyCol.get();
-      var list = snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
+      List<VocabularyModel> list = [];
+      if (snapshot.docs.isNotEmpty) {
+        list = snapshot.docs.map((d) {
+          final data = Map<String, dynamic>.from(d.data());
+          data['id'] = d.id;
+          return VocabularyModel.fromJson(data);
+        }).toList();
+      } else {
+        list = mockVocabularyList;
+      }
       if (query.isEmpty) return list;
       final q = query.toLowerCase();
       return list.where((w) => w.headword.toLowerCase().contains(q) || w.translation.toLowerCase().contains(q)).toList();
     } catch (e) {
-      return mockVocabularyList.where((w) => w.headword.toLowerCase().contains(query.toLowerCase()) || w.translation.toLowerCase().contains(query.toLowerCase())).toList();
+      debugPrint('Firestore searchVocabulary error: $e');
+      var list = mockVocabularyList;
+      if (query.isEmpty) return list;
+      final q = query.toLowerCase();
+      return list.where((w) => w.headword.toLowerCase().contains(q) || w.translation.toLowerCase().contains(q)).toList();
     }
   }
 
   Stream<List<VocabularyModel>> watchLessonsVocabulary() {
     try {
       return _vocabularyCol.snapshots().map((snapshot) {
-        return snapshot.docs.map((d) => VocabularyModel.fromJson(d.data())).toList();
+        return snapshot.docs.map((d) {
+          final data = Map<String, dynamic>.from(d.data());
+          data['id'] = d.id;
+          return VocabularyModel.fromJson(data);
+        }).toList();
       });
     } catch (_) {
       return Stream.value(mockVocabularyList);
@@ -317,8 +376,11 @@ class FirestoreService {
     try {
       final doc = await _vocabularyCol.doc(id).get();
       if (!doc.exists || doc.data() == null) return null;
-      return VocabularyModel.fromJson(doc.data()!);
+      final data = Map<String, dynamic>.from(doc.data()!);
+      data['id'] = doc.id;
+      return VocabularyModel.fromJson(data);
     } catch (e) {
+      debugPrint('Firestore getWordById error: $e');
       return null;
     }
   }

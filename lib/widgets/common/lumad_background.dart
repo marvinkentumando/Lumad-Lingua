@@ -13,9 +13,18 @@ class LumadBackground extends ConsumerWidget {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final isCustomActive = ref.watch(customThemeAccentProvider);
     final pattern = ref.watch(backgroundPatternProvider);
+    final culturalSkin = ref.watch(culturalThemeProvider);
 
     List<Color> gradientColors;
-    if (pattern == 'royal_crimson') {
+    if (culturalSkin == CulturalThemeSkin.tnalakWeave) {
+      gradientColors = isDark
+          ? [const Color(0xFF4A0E17), const Color(0xFF2A0D0E)]
+          : [const Color(0xFFFBE9E7), const Color(0xFFD7CCC8)];
+    } else if (culturalSkin == CulturalThemeSkin.inabelMotif) {
+      gradientColors = isDark
+          ? [const Color(0xFF0D1B2A), const Color(0xFF001F29)]
+          : [const Color(0xFFE8F4F8), const Color(0xFFC5E1A5)];
+    } else if (pattern == 'royal_crimson') {
       gradientColors = isDark
           ? [const Color(0xFF4A0E17), const Color(0xFF1A0205)]
           : [const Color(0xFFFFD1DC), const Color(0xFFE8929E)];
@@ -30,9 +39,9 @@ class LumadBackground extends ConsumerWidget {
     }
 
     CustomPainter? painter;
-    if (pattern == 'woven_waves') {
+    if (pattern == 'woven_waves' || culturalSkin == CulturalThemeSkin.tnalakWeave) {
       painter = MansakaPatternPainter(isDark: isDark);
-    } else if (pattern == 'tribal_geom') {
+    } else if (pattern == 'tribal_geom' || culturalSkin == CulturalThemeSkin.inabelMotif) {
       painter = TribalChevronPainter(isDark: isDark);
     }
 

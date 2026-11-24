@@ -11,12 +11,12 @@ final lessonRepositoryProvider = Provider<LessonRepository>((ref) {
 
 final unitsProvider = StreamProvider<List<LearningUnitModel>>((ref) {
   final repo = ref.watch(lessonRepositoryProvider);
-  final user = ref.watch(authStateProvider).value;
-  return repo.watchUnits(userId: user?.id);
+  final userId = ref.watch(authStateProvider.select((user) => user.value?.id));
+  return repo.watchUnits(userId: userId);
 });
 
 final unitLessonsProvider = StreamProvider.family<List<LessonModel>, String>((ref, unitId) {
   final repo = ref.watch(lessonRepositoryProvider);
-  final user = ref.watch(authStateProvider).value;
-  return repo.watchLessonsForUnit(unitId, userId: user?.id);
+  final userId = ref.watch(authStateProvider.select((user) => user.value?.id));
+  return repo.watchLessonsForUnit(unitId, userId: userId);
 });

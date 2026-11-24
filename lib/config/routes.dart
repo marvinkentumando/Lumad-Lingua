@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/vocabulary_model.dart';
+import '../models/lesson_model.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/login_screen.dart';
@@ -12,6 +13,7 @@ import '../screens/learning/unit_details_screen.dart';
 import '../screens/learning/lesson_study_screen.dart';
 import '../screens/learning/lesson_screen.dart';
 import '../screens/learning/lesson_result_screen.dart';
+import '../screens/learning/flashcard_warmup_screen.dart';
 import '../screens/dictionary/dictionary_screen.dart';
 import '../screens/dictionary/word_details_screen.dart';
 import '../screens/pronunciation/pronunciation_screen.dart';
@@ -75,6 +77,16 @@ final appRouter = GoRouter(
       builder: (context, state) => LessonScreen(
         lessonId: state.pathParameters['id']!,
       ),
+    ),
+    GoRoute(
+      path: '/lesson-warmup',
+      builder: (context, state) {
+        final lesson = state.extra as LessonModel?;
+        if (lesson == null) {
+          return const LearningPathScreen();
+        }
+        return FlashcardWarmupScreen(lesson: lesson);
+      },
     ),
     GoRoute(
       path: '/lesson-result',

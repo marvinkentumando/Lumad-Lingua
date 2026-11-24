@@ -176,11 +176,15 @@ class _BrandButtonState extends ConsumerState<BrandButton> {
                           Icon(widget.icon, size: 20, color: fgColor),
                           const SizedBox(width: 8),
                         ],
-                        Text(
-                          widget.text,
-                          style: AppTypography.labelBold.copyWith(
-                            color: fgColor,
-                            fontSize: widget.type == BrandButtonType.small ? 13 : 16,
+                        Flexible(
+                          child: Text(
+                            widget.text,
+                            style: AppTypography.labelBold.copyWith(
+                              color: fgColor,
+                              fontSize: widget.type == BrandButtonType.small ? 13 : 16,
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                       ],

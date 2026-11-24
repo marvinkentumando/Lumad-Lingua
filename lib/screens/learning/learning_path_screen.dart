@@ -27,6 +27,7 @@ class LearningPathScreen extends ConsumerWidget {
       appBar: const LumadTopNavbar(),
       body: LumadBackground(
         child: unitsAsync.when(
+          skipLoadingOnRefresh: true,
           data: (units) => units.isEmpty
               ? Center(
                   child: Padding(
@@ -170,6 +171,7 @@ class _UnitPathSectionState extends ConsumerState<_UnitPathSection> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         lessonsAsync.when(
+          skipLoadingOnRefresh: true,
           data: (lessons) {
             final completedCount = lessons.where((l) => l.status == LessonStatus.completed).length;
             final progressRatio = lessons.isNotEmpty ? (completedCount / lessons.length) : 0.0;

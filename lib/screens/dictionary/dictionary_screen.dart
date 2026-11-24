@@ -234,6 +234,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
 
               // Dynamic Search Results Section ONLY
               searchResultsAsync.when(
+                skipLoadingOnRefresh: true,
                 data: (words) {
                   List<VocabularyModel> filteredWords;
                   if (_selectedCategory == 'Saved') {
@@ -363,9 +364,9 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                                           setState(() => _playingVocabId = null);
                                         }
                                       } else {
-                                        if (vocab.audioUrl != null && vocab.audioUrl!.isNotEmpty) {
+                                        if (vocab.resolvedAudioUrl != null && vocab.resolvedAudioUrl!.isNotEmpty) {
                                           setState(() => _playingVocabId = vocab.id);
-                                          await AudioHelper.playAudio(vocab.audioUrl!);
+                                          await AudioHelper.playAudio(vocab.resolvedAudioUrl!);
                                           Future.delayed(const Duration(milliseconds: 2200), () {
                                             if (mounted && _playingVocabId == vocab.id) {
                                               setState(() => _playingVocabId = null);

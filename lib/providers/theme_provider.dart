@@ -1,6 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 
+enum CulturalThemeSkin {
+  lumadForest, // Ancestral Green & Gold (Mindanao Higaonon/Manobo)
+  tnalakWeave, // Crimson Red & Earth Brown (T'boli Dreamweaver)
+  inabelMotif, // Indigo Blue & Bright Gold (Ilocano Inabel Weave)
+}
+
 class ThemeModeNotifier extends Notifier<ThemeMode> {
   @override
   ThemeMode build() => ThemeMode.light;
@@ -33,6 +39,15 @@ class BackgroundPatternNotifier extends Notifier<String> {
   }
 }
 
+class CulturalThemeNotifier extends Notifier<CulturalThemeSkin> {
+  @override
+  CulturalThemeSkin build() => CulturalThemeSkin.lumadForest;
+
+  void setThemeSkin(CulturalThemeSkin skin) {
+    state = skin;
+  }
+}
+
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(() {
   return ThemeModeNotifier();
 });
@@ -47,4 +62,8 @@ final elderModeProvider = NotifierProvider<ElderModeNotifier, bool>(() {
 
 final backgroundPatternProvider = NotifierProvider<BackgroundPatternNotifier, String>(() {
   return BackgroundPatternNotifier();
+});
+
+final culturalThemeProvider = NotifierProvider<CulturalThemeNotifier, CulturalThemeSkin>(() {
+  return CulturalThemeNotifier();
 });
