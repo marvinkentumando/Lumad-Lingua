@@ -6,8 +6,12 @@ final List<VocabularyModel> mockVocabularyList = [
     headword: 'Madyaw na masurom',
     translation: 'Good morning',
     partOfSpeech: 'Phrase',
-    exampleSentence: 'Madyaw na masurom sang kanami pag-eskwela.',
-    exampleTranslation: 'Good morning to our school.',
+    examples: [
+      VocabularyExample(
+        mansaka: 'Madyaw na masurom sang kanami pag-eskwela.',
+        english: 'Good morning to our school.',
+      ),
+    ],
     category: 'Greetings',
     relatedWords: ['Madyaw', 'Masurom', 'Gabila'],
   ),
@@ -16,8 +20,12 @@ final List<VocabularyModel> mockVocabularyList = [
     headword: 'Madyaw na gabila',
     translation: 'Good afternoon',
     partOfSpeech: 'Phrase',
-    exampleSentence: 'Madyaw na gabila sang kanimo, amigo.',
-    exampleTranslation: 'Good afternoon to you, my friend.',
+    examples: [
+      VocabularyExample(
+        mansaka: 'Madyaw na gabila sang kanimo, amigo.',
+        english: 'Good afternoon to you, my friend.',
+      ),
+    ],
     category: 'Greetings',
     relatedWords: ['Madyaw', 'Gabila'],
   ),
@@ -26,8 +34,12 @@ final List<VocabularyModel> mockVocabularyList = [
     headword: 'Madyaw na gabi',
     translation: 'Good evening',
     partOfSpeech: 'Phrase',
-    exampleSentence: 'Madyaw na gabi sang panimalay.',
-    exampleTranslation: 'Good evening to the household.',
+    examples: [
+      VocabularyExample(
+        mansaka: 'Madyaw na gabi sang panimalay.',
+        english: 'Good evening to the household.',
+      ),
+    ],
     category: 'Greetings',
     relatedWords: ['Madyaw', 'Gabi'],
   ),
@@ -36,8 +48,12 @@ final List<VocabularyModel> mockVocabularyList = [
     headword: 'Madyaw na aras dose',
     translation: 'Good noon',
     partOfSpeech: 'Phrase',
-    exampleSentence: 'Madyaw na aras dose sang kamayo hurot.',
-    exampleTranslation: 'Good noon to all of you.',
+    examples: [
+      VocabularyExample(
+        mansaka: 'Madyaw na aras dose sang kamayo hurot.',
+        english: 'Good noon to all of you.',
+      ),
+    ],
     category: 'Greetings',
     relatedWords: ['Madyaw', 'Aras dose'],
   ),
@@ -46,8 +62,12 @@ final List<VocabularyModel> mockVocabularyList = [
     headword: 'Madyaw',
     translation: 'Good / Fine',
     partOfSpeech: 'Adjective',
-    exampleSentence: 'Madyaw ya kanami pagsugod.',
-    exampleTranslation: 'Our start is good.',
+    examples: [
+      VocabularyExample(
+        mansaka: 'Madyaw ya kanami pagsugod.',
+        english: 'Our start is good.',
+      ),
+    ],
     category: 'General',
     relatedWords: ['Madyaw na masurom'],
   ),
@@ -56,8 +76,12 @@ final List<VocabularyModel> mockVocabularyList = [
     headword: 'Banwa',
     translation: 'Community / Village',
     partOfSpeech: 'Noun',
-    exampleSentence: 'Madyaw sang kanami banwa.',
-    exampleTranslation: 'Peace in our community.',
+    examples: [
+      VocabularyExample(
+        mansaka: 'Madyaw sang kanami banwa.',
+        english: 'Peace in our community.',
+      ),
+    ],
     category: 'Society',
     relatedWords: ['Sakop'],
   ),

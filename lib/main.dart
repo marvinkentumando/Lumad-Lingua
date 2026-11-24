@@ -10,40 +10,44 @@ import 'providers/theme_provider.dart';
 import 'services/notification_service.dart';
 import 'services/offline_sync_service.dart';
 
-void main() async {
-  runZonedGuarded(() async {
-    WidgetsFlutterBinding.ensureInitialized();
-    try {
-      await Firebase.initializeApp();
-    } catch (e) {
-      debugPrint('Firebase initialization warning: $e');
-    }
-    try {
-      await Supabase.initialize(
-        url: 'https://ovdwgowtnlujnbcyldkk.supabase.co',
-        publishableKey: 'sb_publishable_rMQ9kc8SVsba4_p-aPrOPg_3XDgAbR8',
-      );
-    } catch (e) {
-      debugPrint('Supabase initialization warning: $e');
-    }
-    try {
-      await NotificationService().initialize();
-    } catch (e) {
-      debugPrint('NotificationService initialization warning: $e');
-    }
-    try {
-      OfflineSyncService().initializeAutoSync();
-    } catch (e) {
-      debugPrint('OfflineSyncService initialization warning: $e');
-    }
-    runApp(
-      const ProviderScope(
-        child: LumadLinguaApp(),
-      ),
+void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // Run app immediately to render UI frame and prevent Android startup ANR / SIGQUIT crashes
+  runApp(
+    const ProviderScope(
+      child: LumadLinguaApp(),
+    ),
+  );
+
+  // Initialize backend services asynchronously in the background
+  _initServicesAsync();
+}
+
+Future<void> _initServicesAsync() async {
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase initialization warning: $e');
+  }
+  try {
+    await Supabase.initialize(
+      url: 'https://ovdwgowtnlujnbcyldkk.supabase.co',
+      publishableKey: 'sb_publishable_rMQ9kc8SVsba4_p-aPrOPg_3XDgAbR8',
     );
-  }, (error, stack) {
-    debugPrint('Uncaught app error: $error');
-  });
+  } catch (e) {
+    debugPrint('Supabase initialization warning: $e');
+  }
+  try {
+    await NotificationService().initialize();
+  } catch (e) {
+    debugPrint('NotificationService initialization warning: $e');
+  }
+  try {
+    OfflineSyncService().initializeAutoSync();
+  } catch (e) {
+    debugPrint('OfflineSyncService initialization warning: $e');
+  }
 }
 
 class LumadLinguaApp extends ConsumerWidget {

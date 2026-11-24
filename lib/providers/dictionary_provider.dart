@@ -20,15 +20,27 @@ final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(() {
   return SearchQueryNotifier();
 });
 
+final dictionaryListProvider = FutureProvider<List<VocabularyModel>>((ref) async {
+  final repo = ref.watch(dictionaryRepositoryProvider);
+  return repo.searchVocabulary('');
+});
+
 final dictionarySearchResultsProvider = FutureProvider<List<VocabularyModel>>((ref) async {
   final query = ref.watch(searchQueryProvider);
-  final repo = ref.watch(dictionaryRepositoryProvider);
-  return repo.searchVocabulary(query);
+  final allWords = await ref.watch(dictionaryListProvider.future);
+
+  if (query.trim().isEmpty) return allWords;
+  final q = query.trim().toLowerCase();
+  return allWords.where((w) {
+    return w.headword.toLowerCase().contains(q) ||
+        w.translation.toLowerCase().contains(q) ||
+        w.category.toLowerCase().contains(q) ||
+        w.partOfSpeech.toLowerCase().contains(q);
+  }).toList();
 });
 
 final wordOfTheDayProvider = FutureProvider<VocabularyModel?>((ref) async {
-  final repo = ref.watch(dictionaryRepositoryProvider);
-  final allWords = await repo.searchVocabulary('');
+  final allWords = await ref.watch(dictionaryListProvider.future);
   if (allWords.isEmpty) return null;
 
   final now = DateTime.now();

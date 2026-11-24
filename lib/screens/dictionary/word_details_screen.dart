@@ -117,34 +117,43 @@ class WordDetailsScreen extends ConsumerWidget {
               ),
               const SizedBox(height: AppSpacing.lg),
 
-              // Example Usage (Editorial Flush Layout without Boxy Card)
+              // Example Usages (Editorial Flush Layout for all examples)
               Text(
-                'Example Usage',
+                vocabulary.examples.length > 1 ? 'Example Usages (${vocabulary.examples.length})' : 'Example Usage',
                 style: AppTypography.h3.copyWith(color: AppColors.textColor(context)),
               ),
               const SizedBox(height: AppSpacing.sm),
-              Container(
-                padding: const EdgeInsets.only(left: AppSpacing.md),
-                decoration: const BoxDecoration(
-                  border: Border(
-                    left: BorderSide(color: AppColors.gold500, width: 4.0),
+              ...vocabulary.examples.asMap().entries.map((entry) {
+                final index = entry.key;
+                final ex = entry.value;
+                return Padding(
+                  padding: EdgeInsets.only(bottom: index < vocabulary.examples.length - 1 ? AppSpacing.md : 0),
+                  child: Container(
+                    padding: const EdgeInsets.only(left: AppSpacing.md),
+                    decoration: const BoxDecoration(
+                      border: Border(
+                        left: BorderSide(color: AppColors.gold500, width: 4.0),
+                      ),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          '"${ex.mansaka}"',
+                          style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context), fontStyle: FontStyle.italic, fontSize: 16),
+                        ),
+                        if (ex.english.isNotEmpty) ...[
+                          const SizedBox(height: 4),
+                          Text(
+                            ex.english,
+                            style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
+                          ),
+                        ],
+                      ],
+                    ),
                   ),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      '"${vocabulary.exampleSentence}"',
-                      style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context), fontStyle: FontStyle.italic, fontSize: 16),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      vocabulary.exampleTranslation,
-                      style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
-                    ),
-                  ],
-                ),
-              ),
+                );
+              }),
             ],
           ),
         ),

@@ -29,7 +29,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   String? _playingVocabId;
   List<String> _recentSearches = ['Madyaw', 'Salamat', 'Good morning', 'Water', 'Family'];
 
-  final List<String> _categories = ['All', 'Saved', 'Noun', 'Verb', 'Greeting', 'Phrase', 'General'];
+  final List<String> _categories = ['All', 'Saved', 'Noun', 'Verb', 'Greeting', 'Phrase', 'General', 'Society'];
 
   @override
   void initState() {
