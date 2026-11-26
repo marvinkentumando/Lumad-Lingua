@@ -16,6 +16,5 @@ void main() {
 
     // Advance fake async timer to complete splash screen timer
     await tester.pump(const Duration(seconds: 4));
-    await tester.pumpAndSettle();
   });
 }

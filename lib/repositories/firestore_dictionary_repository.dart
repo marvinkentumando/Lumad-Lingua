@@ -14,6 +14,11 @@ class FirestoreDictionaryRepository implements DictionaryRepository {
   }
 
   @override
+  Future<List<VocabularyModel>> getVocabulary({bool forceRefresh = false}) async {
+    return await _firestoreService.getVocabulary(forceRefresh: forceRefresh);
+  }
+
+  @override
   Future<VocabularyModel?> getWordById(String id) async {
     return await _firestoreService.getWordById(id);
   }

@@ -10,6 +10,7 @@ import '../models/vocabulary_model.dart';
 import '../data/mock_vocabulary.dart';
 import '../data/mock_achievements.dart';
 import 'offline_sync_service.dart';
+import 'local_cache_service.dart';
 
 class FirestoreService {
   final FirebaseFirestore _firestore;
@@ -316,36 +317,40 @@ class FirestoreService {
   }
 
   // --- Vocabulary ---
-  Future<List<VocabularyModel>> getVocabulary() async {
+  Future<List<VocabularyModel>> getVocabulary({bool forceRefresh = false}) async {
     try {
-      final snapshot = await _vocabularyCol.get();
+      if (!forceRefresh) {
+        final cached = LocalCacheService().getCachedJsonList('vocabulary');
+        if (cached != null && cached.isNotEmpty) {
+          return cached.map((json) => VocabularyModel.fromJson(json)).toList();
+        }
+      }
+
+      final snapshot = await _vocabularyCol.get().timeout(const Duration(seconds: 4));
       if (snapshot.docs.isNotEmpty) {
-        return snapshot.docs.map((d) {
+        final list = snapshot.docs.map((d) {
           final data = Map<String, dynamic>.from(d.data());
           data['id'] = d.id;
           return VocabularyModel.fromJson(data);
         }).toList();
+
+        await LocalCacheService().cacheJsonList('vocabulary', list.map((w) => w.toJson()).toList());
+        return list;
       }
       return mockVocabularyList;
     } catch (e) {
       debugPrint('Firestore getVocabulary error: $e');
+      final cached = LocalCacheService().getCachedJsonList('vocabulary');
+      if (cached != null && cached.isNotEmpty) {
+        return cached.map((json) => VocabularyModel.fromJson(json)).toList();
+      }
       return mockVocabularyList;
     }
   }
 
   Future<List<VocabularyModel>> searchVocabulary(String query) async {
     try {
-      final snapshot = await _vocabularyCol.get();
-      List<VocabularyModel> list = [];
-      if (snapshot.docs.isNotEmpty) {
-        list = snapshot.docs.map((d) {
-          final data = Map<String, dynamic>.from(d.data());
-          data['id'] = d.id;
-          return VocabularyModel.fromJson(data);
-        }).toList();
-      } else {
-        list = mockVocabularyList;
-      }
+      final list = await getVocabulary();
       if (query.isEmpty) return list;
       final q = query.toLowerCase();
       return list.where((w) => w.headword.toLowerCase().contains(q) || w.translation.toLowerCase().contains(q)).toList();

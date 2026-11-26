@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import '../../config/theme/app_colors.dart';
 
 class LumadLogoEmblem extends StatelessWidget {
@@ -14,18 +13,23 @@ class LumadLogoEmblem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return SizedBox(
-      width: size,
-      height: size,
-      child: Center(
-        child: Text(
-          '"',
-          style: GoogleFonts.fredoka(
-            fontSize: size * 0.85,
-            fontWeight: FontWeight.w700,
-            color: AppColors.gold500,
-            height: 1.0,
-          ),
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(borderRadius),
+      child: SizedBox(
+        width: size,
+        height: size,
+        child: Image.asset(
+          'assets/images/logo_2.png',
+          width: size,
+          height: size,
+          fit: BoxFit.contain,
+          errorBuilder: (context, error, stackTrace) {
+            return Container(
+              color: AppColors.forest700,
+              alignment: Alignment.center,
+              child: Icon(Icons.menu_book, color: AppColors.gold500, size: size * 0.5),
+            );
+          },
         ),
       ),
     );

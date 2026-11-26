@@ -3,6 +3,7 @@ import '../data/mock_vocabulary.dart';
 
 abstract class DictionaryRepository {
   Future<List<VocabularyModel>> searchVocabulary(String query);
+  Future<List<VocabularyModel>> getVocabulary({bool forceRefresh = false});
   Future<VocabularyModel?> getWordById(String id);
 }
 
@@ -19,6 +20,11 @@ class MockDictionaryRepository implements DictionaryRepository {
           word.translation.toLowerCase().contains(q) ||
           word.category.toLowerCase().contains(q);
     }).toList();
+  }
+
+  @override
+  Future<List<VocabularyModel>> getVocabulary({bool forceRefresh = false}) async {
+    return searchVocabulary('');
   }
 
   @override

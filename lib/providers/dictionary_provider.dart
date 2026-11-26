@@ -22,7 +22,7 @@ final searchQueryProvider = NotifierProvider<SearchQueryNotifier, String>(() {
 
 final dictionaryListProvider = FutureProvider<List<VocabularyModel>>((ref) async {
   final repo = ref.watch(dictionaryRepositoryProvider);
-  return repo.searchVocabulary('');
+  return repo.getVocabulary();
 });
 
 final dictionarySearchResultsProvider = FutureProvider<List<VocabularyModel>>((ref) async {

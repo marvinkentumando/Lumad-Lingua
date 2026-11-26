@@ -102,12 +102,12 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-              const ScreenHeader(
-                title: 'Mansaka Dictionary',
-                centerTitle: true,
-              ),
-              const SizedBox(height: AppSpacing.xs),
-              TextField(
+                const ScreenHeader(
+                  title: 'Mansaka Dictionary',
+                  centerTitle: true,
+                ),
+                const SizedBox(height: AppSpacing.xs),
+                TextField(
                 controller: _searchController,
                 onChanged: (val) {
                   ref.read(searchQueryProvider.notifier).updateQuery(val);

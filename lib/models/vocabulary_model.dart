@@ -86,15 +86,28 @@ class VocabularyModel {
       }
     }
 
+    // Resolve audioUrl from flat fields OR audioRecordings array
+    String? resolvedAudioUrl = json['audioUrl'] as String? ?? json['audio_url'] as String? ?? json['audioPath'] as String?;
+    final audioRecordings = json['audioRecordings'] as List<dynamic>?;
+    if ((resolvedAudioUrl == null || resolvedAudioUrl.isEmpty) && audioRecordings != null && audioRecordings.isNotEmpty) {
+      final primary = audioRecordings.firstWhere(
+        (rec) => rec is Map<String, dynamic> && (rec['isPrimary'] == true || rec['is_primary'] == true),
+        orElse: () => audioRecordings.first,
+      );
+      if (primary is Map<String, dynamic>) {
+        resolvedAudioUrl = primary['path'] as String? ?? primary['url'] as String? ?? primary['audioUrl'] as String?;
+      }
+    }
+
     return VocabularyModel(
       id: json['id'] as String? ?? json['wordId'] as String? ?? '',
-      headword: json['mansakaWord'] as String? ?? json['headword'] as String? ?? json['word'] as String? ?? json['term'] as String? ?? '',
-      translation: json['englishTranslation'] as String? ?? json['translation'] as String? ?? json['english'] as String? ?? json['meaning'] as String? ?? '',
+      headword: json['mansakaWord'] as String? ?? json['headword'] as String? ?? json['word'] as String? ?? json['term'] as String? ?? json['mansaka'] as String? ?? json['title'] as String? ?? '',
+      translation: json['englishTranslation'] as String? ?? json['translation'] as String? ?? json['english'] as String? ?? json['meaning'] as String? ?? json['definition'] as String? ?? '',
       partOfSpeech: json['partOfSpeech'] as String? ?? json['part_of_speech'] as String? ?? json['pos'] as String? ?? 'Noun',
       examples: parsedExamples,
-      audioUrl: json['audioUrl'] as String? ?? json['audio_url'] as String? ?? json['audioPath'] as String?,
+      audioUrl: resolvedAudioUrl,
       category: json['category'] as String? ?? json['topic'] as String? ?? json['domain'] as String? ?? 'General',
-      relatedWords: (json['relatedWords'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
+      relatedWords: (json['relatedWords'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       pronunciation: json['pronunciation'] as String? ?? json['phonetic'] as String? ?? json['ipa'] as String?,
       notes: json['notes'] as String? ?? json['note'] as String? ?? json['culturalNote'] as String?,
     );
