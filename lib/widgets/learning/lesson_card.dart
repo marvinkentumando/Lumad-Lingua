@@ -80,24 +80,7 @@ class LessonCard extends StatelessWidget {
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-            decoration: BoxDecoration(
-              color: AppColors.gold100,
-              borderRadius: BorderRadius.circular(AppRadius.chip),
-              border: Border.all(color: AppColors.gold300),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.bolt, size: 14, color: AppColors.gold800),
-                const SizedBox(width: 4),
-                Text(
-                  '+${lesson.xpReward} XP',
-                  style: AppTypography.xpValue,
-                ),
-              ],
-            ),
-          ),
+
         ],
       ),
     );
