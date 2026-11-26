@@ -7,6 +7,8 @@ import '../../models/vocabulary_model.dart';
 import '../../providers/dictionary_provider.dart';
 import '../../providers/bookmarks_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_filter_chip.dart';
@@ -94,6 +96,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   Widget build(BuildContext context) {
     final searchResultsAsync = ref.watch(dictionarySearchResultsProvider);
     final savedBookmarks = ref.watch(bookmarksProvider);
+    final langCode = ref.watch(localizationProvider);
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
@@ -102,8 +105,8 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
           child: ListView(
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
-                const ScreenHeader(
-                  title: 'Mansaka Dictionary',
+                ScreenHeader(
+                  title: RegionalStrings.get(langCode, 'dictionary'),
                   centerTitle: true,
                 ),
                 const SizedBox(height: AppSpacing.xs),
@@ -119,7 +122,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                 onSubmitted: (val) => _saveSearchTerm(val),
                 style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context)),
                 decoration: InputDecoration(
-                  hintText: 'Search Mansaka or English words...',
+                  hintText: RegionalStrings.get(langCode, 'searchHint'),
                   hintStyle: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                   prefixIcon: const Icon(Icons.search, color: AppColors.forest500),
                   suffixIcon: _searchController.text.isNotEmpty
