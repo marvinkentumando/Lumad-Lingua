@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/validators.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_logo_emblem.dart';
@@ -67,6 +69,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final langCode = ref.watch(localizationProvider);
 
     return Scaffold(
       body: LumadBackground(
@@ -85,13 +88,13 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                     const LumadLogoEmblem(size: 68, borderRadius: 18),
                     const SizedBox(height: AppSpacing.md),
                     Text(
-                      'Welcome Back!',
+                      RegionalStrings.get(langCode, 'welcome'),
                       style: AppTypography.h1ExtraBold.copyWith(color: AppColors.textColor(context), fontSize: 28),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Sign in to preserve Mansaka heritage & sync your progress',
+                      RegionalStrings.get(langCode, 'loginSubtitle'),
                       style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                       textAlign: TextAlign.center,
                     ),
@@ -103,7 +106,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'Email Address',
+                            RegionalStrings.get(langCode, 'emailAddress'),
                             style: AppTypography.labelBold.copyWith(color: Colors.white),
                           ),
                           const SizedBox(height: AppSpacing.xs),
@@ -115,7 +118,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             autofillHints: const [AutofillHints.email],
                             style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
                             decoration: InputDecoration(
-                              hintText: 'Enter your email',
+                              hintText: RegionalStrings.get(langCode, 'emailHint'),
                               hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
                               prefixIcon: const Icon(Icons.email_outlined, color: AppColors.forest500),
                               filled: true,
@@ -136,7 +139,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                           ),
                           const SizedBox(height: AppSpacing.md),
                           Text(
-                            'Password',
+                            RegionalStrings.get(langCode, 'password'),
                             style: AppTypography.labelBold.copyWith(color: Colors.white),
                           ),
                           const SizedBox(height: AppSpacing.xs),
@@ -149,7 +152,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             onFieldSubmitted: (_) => _handleLogin(),
                             style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
                             decoration: InputDecoration(
-                              hintText: 'Enter your password',
+                              hintText: RegionalStrings.get(langCode, 'passwordHint'),
                               hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
                               prefixIcon: const Icon(Icons.lock_outline, color: AppColors.forest500),
                               suffixIcon: IconButton(
@@ -180,14 +183,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                             child: TextButton(
                               onPressed: () => context.push('/forgot-password'),
                               child: Text(
-                                'Forgot Password?',
+                                RegionalStrings.get(langCode, 'forgotPassword'),
                                 style: AppTypography.labelBold.copyWith(color: AppColors.gold500),
                               ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.sm),
                           BrandButton(
-                            text: 'Sign In',
+                            text: RegionalStrings.get(langCode, 'signIn'),
                             type: BrandButtonType.gold,
                             isLoading: authState.isLoading,
                             onPressed: _handleLogin,
@@ -211,13 +214,14 @@ class _LoginScreenState extends ConsumerState<LoginScreen> with SingleTickerProv
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         Text(
-                          "Don't have an account? ",
+                          RegionalStrings.get(langCode, 'noAccount'),
                           style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                         ),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => context.push('/register'),
                           child: Text(
-                            'Create Account',
+                            RegionalStrings.get(langCode, 'signUp'),
                             style: AppTypography.labelBold.copyWith(
                               color: AppColors.gold500,
                             ),

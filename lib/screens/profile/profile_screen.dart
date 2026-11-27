@@ -7,6 +7,8 @@ import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/progress_provider.dart';
 import '../../providers/classroom_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
@@ -53,68 +55,71 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(AppRadius.modal)),
       ),
-      builder: (bottomSheetContext) => StatefulBuilder(
-        builder: (bottomSheetContext, setModalState) => Padding(
-          padding: EdgeInsets.only(
-            left: AppSpacing.md,
-            right: AppSpacing.md,
-            top: AppSpacing.md,
-            bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom + AppSpacing.md,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('Join Educator Classroom', style: AppTypography.h2.copyWith(color: AppColors.creamText)),
-              const SizedBox(height: 4),
-              Text('Enter your educator\'s class join code (e.g. MANSAKA-482A):', style: AppTypography.body.copyWith(color: AppColors.creamText2)),
-              const SizedBox(height: AppSpacing.md),
-              TextField(
-                controller: _joinCodeController,
-                textCapitalization: TextCapitalization.characters,
-                style: AppTypography.mono.copyWith(color: AppColors.creamText, fontWeight: FontWeight.bold),
-                decoration: InputDecoration(
-                  hintText: 'CLASS-CODE',
-                  hintStyle: AppTypography.mono.copyWith(color: AppColors.creamText3),
+      builder: (bottomSheetContext) {
+        final langCode = ref.watch(localizationProvider);
+        return StatefulBuilder(
+          builder: (bottomSheetContext, setModalState) => Padding(
+            padding: EdgeInsets.only(
+              left: AppSpacing.md,
+              right: AppSpacing.md,
+              top: AppSpacing.md,
+              bottom: MediaQuery.of(bottomSheetContext).viewInsets.bottom + AppSpacing.md,
+            ),
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(RegionalStrings.get(langCode, 'joinClassroom'), style: AppTypography.h2.copyWith(color: AppColors.creamText)),
+                const SizedBox(height: 4),
+                Text(RegionalStrings.get(langCode, 'enterClassCode'), style: AppTypography.body.copyWith(color: AppColors.creamText2)),
+                const SizedBox(height: AppSpacing.md),
+                TextField(
+                  controller: _joinCodeController,
+                  textCapitalization: TextCapitalization.characters,
+                  style: AppTypography.mono.copyWith(color: AppColors.creamText, fontWeight: FontWeight.bold),
+                  decoration: InputDecoration(
+                    hintText: 'CLASS-CODE',
+                    hintStyle: AppTypography.mono.copyWith(color: AppColors.creamText3),
+                  ),
                 ),
-              ),
-              if (_errorMessage != null) ...[
-                const SizedBox(height: 8),
-                Text(_errorMessage!, style: const TextStyle(color: AppColors.semanticRed, fontSize: 12, fontWeight: FontWeight.bold)),
-              ],
-              const SizedBox(height: AppSpacing.lg),
-              BrandButton(
-                text: 'Submit Join Code',
-                type: BrandButtonType.gold,
-                isLoading: _isJoining,
-                onPressed: () async {
-                  final code = _joinCodeController.text.trim();
-                  if (code.isEmpty) {
-                    setModalState(() => _errorMessage = 'Please enter a valid join code.');
-                    return;
-                  }
-                  setModalState(() => _isJoining = true);
-                  try {
-                    final service = ref.read(classroomServiceProvider);
-                    final result = await service.joinClassroomByCode(code);
-                    if (bottomSheetContext.mounted && context.mounted) {
-                      Navigator.of(bottomSheetContext).pop();
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        SnackBar(content: Text('Successfully joined "${result['name'] ?? 'Classroom'}"! 🎉')),
-                      );
+                if (_errorMessage != null) ...[
+                  const SizedBox(height: 8),
+                  Text(_errorMessage!, style: const TextStyle(color: AppColors.semanticRed, fontSize: 12, fontWeight: FontWeight.bold)),
+                ],
+                const SizedBox(height: AppSpacing.lg),
+                BrandButton(
+                  text: RegionalStrings.get(langCode, 'submitCode'),
+                  type: BrandButtonType.gold,
+                  isLoading: _isJoining,
+                  onPressed: () async {
+                    final code = _joinCodeController.text.trim();
+                    if (code.isEmpty) {
+                      setModalState(() => _errorMessage = RegionalStrings.get(langCode, 'enterValidCode'));
+                      return;
                     }
-                  } catch (e) {
-                    setModalState(() {
-                      _isJoining = false;
-                      _errorMessage = e.toString().replaceFirst('Exception: ', '');
-                    });
-                  }
-                },
-              ),
-            ],
+                    setModalState(() => _isJoining = true);
+                    try {
+                      final service = ref.read(classroomServiceProvider);
+                      final result = await service.joinClassroomByCode(code);
+                      if (bottomSheetContext.mounted && context.mounted) {
+                        Navigator.of(bottomSheetContext).pop();
+                        ScaffoldMessenger.of(context).showSnackBar(
+                          SnackBar(content: Text('Successfully joined "${result['name'] ?? 'Classroom'}"! 🎉')),
+                        );
+                      }
+                    } catch (e) {
+                      setModalState(() {
+                        _isJoining = false;
+                        _errorMessage = e.toString().replaceFirst('Exception: ', '');
+                      });
+                    }
+                  },
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 
@@ -418,13 +423,13 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
                     const SizedBox(height: AppSpacing.sm),
                     Text(
                       user?.name ?? 'Lumad Learner',
-                      style: AppTypography.h2.copyWith(color: AppColors.creamText),
+                      style: AppTypography.h2.copyWith(color: AppColors.textColor(context)),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 2),
                     Text(
                       user?.email ?? 'learner@lumadlingua.com',
-                      style: AppTypography.mono.copyWith(color: AppColors.creamText2),
+                      style: AppTypography.mono.copyWith(color: AppColors.subtitleColor(context)),
                     ),
                     const SizedBox(height: AppSpacing.md),
                     // Statistical Readout Row (Streak, Total XP, & Streak Freezes)

@@ -27,12 +27,14 @@ class ClassroomDashboardScreen extends ConsumerWidget {
     final confirm = await showDialog<bool>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Leave Classroom', style: AppTypography.h3),
-        content: Text('Are you sure you want to leave "${classroomData['name'] ?? 'Classroom'}"?', style: AppTypography.body),
+        backgroundColor: AppColors.cardColor(context),
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(AppRadius.modal)),
+        title: Text('Leave Classroom', style: AppTypography.h3.copyWith(color: AppColors.textColor(context))),
+        content: Text('Are you sure you want to leave "${classroomData['name'] ?? 'Classroom'}"?', style: AppTypography.body.copyWith(color: AppColors.textColor(context))),
         actions: [
           TextButton(
             onPressed: () => Navigator.of(context).pop(false),
-            child: const Text('Cancel'),
+            child: Text('Cancel', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context))),
           ),
           TextButton(
             onPressed: () => Navigator.of(context).pop(true),
@@ -394,8 +396,13 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                           children: [
                             // Advanced Class Analytics Card
                             BrandCard(
-                              backgroundColor: AppColors.forest800,
-                              border: Border.all(color: AppColors.gold500, width: 1.5),
+                              backgroundColor: AppColors.cardColor(context),
+                              border: Border.all(
+                                color: Theme.of(context).brightness == Brightness.dark
+                                    ? AppColors.gold500
+                                    : AppColors.creamBorder,
+                                width: 1.5,
+                              ),
                               child: Column(
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 children: [
@@ -403,7 +410,13 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                     children: [
                                       const Icon(Icons.analytics, color: AppColors.gold500, size: 20),
                                       const SizedBox(width: 8),
-                                      Text('Class Community Analytics', style: AppTypography.h3.copyWith(color: Colors.white, fontSize: 18)),
+                                      Text(
+                                        'Class Community Analytics',
+                                        style: AppTypography.h3.copyWith(
+                                          color: AppColors.headerColor(context),
+                                          fontSize: 18,
+                                        ),
+                                      ),
                                     ],
                                   ),
                                   const SizedBox(height: AppSpacing.md),
@@ -413,15 +426,28 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                         child: Container(
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
-                                            color: AppColors.forest900,
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? AppColors.forest900
+                                                : AppColors.creamTint,
                                             borderRadius: BorderRadius.circular(AppRadius.card),
                                           ),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text('Total Class XP', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                                              Text(
+                                                'Total Class XP',
+                                                style: AppTypography.caption.copyWith(
+                                                  color: AppColors.subtitleColor(context),
+                                                ),
+                                              ),
                                               const SizedBox(height: 4),
-                                              Text('$totalClassXp XP', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 18)),
+                                              Text(
+                                                '$totalClassXp XP',
+                                                style: AppTypography.labelBold.copyWith(
+                                                  color: AppColors.gold800,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -431,15 +457,28 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                         child: Container(
                                           padding: const EdgeInsets.all(10),
                                           decoration: BoxDecoration(
-                                            color: AppColors.forest900,
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? AppColors.forest900
+                                                : AppColors.creamTint,
                                             borderRadius: BorderRadius.circular(AppRadius.card),
                                           ),
                                           child: Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
-                                              Text('Avg Streak', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                                              Text(
+                                                'Avg Streak',
+                                                style: AppTypography.caption.copyWith(
+                                                  color: AppColors.subtitleColor(context),
+                                                ),
+                                              ),
                                               const SizedBox(height: 4),
-                                              Text('${avgStreak.toStringAsFixed(1)} Days', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 18)),
+                                              Text(
+                                                '${avgStreak.toStringAsFixed(1)} Days',
+                                                style: AppTypography.labelBold.copyWith(
+                                                  color: AppColors.gold800,
+                                                  fontSize: 18,
+                                                ),
+                                              ),
                                             ],
                                           ),
                                         ),
@@ -453,8 +492,18 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                       Row(
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          Text('Milestone Goal ($targetXp XP)', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                                          Text('${(milestoneProgress * 100).toInt()}%', style: AppTypography.labelBold.copyWith(color: AppColors.gold400)),
+                                          Text(
+                                            'Milestone Goal ($targetXp XP)',
+                                            style: AppTypography.caption.copyWith(
+                                              color: AppColors.subtitleColor(context),
+                                            ),
+                                          ),
+                                          Text(
+                                            '${(milestoneProgress * 100).toInt()}%',
+                                            style: AppTypography.labelBold.copyWith(
+                                              color: AppColors.gold800,
+                                            ),
+                                          ),
                                         ],
                                       ),
                                       const SizedBox(height: 6),
@@ -463,7 +512,9 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                         child: LinearProgressIndicator(
                                           value: milestoneProgress,
                                           minHeight: 10,
-                                          backgroundColor: AppColors.forest900,
+                                          backgroundColor: Theme.of(context).brightness == Brightness.dark
+                                              ? AppColors.forest900
+                                              : AppColors.creamBorder,
                                           valueColor: const AlwaysStoppedAnimation<Color>(AppColors.gold500),
                                         ),
                                       ),
@@ -520,21 +571,31 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                   final rank = index + 4;
 
                                   return AppCard(
+                                    backgroundColor: AppColors.cardColor(context),
+                                    border: Border.all(
+                                      color: Theme.of(context).brightness == Brightness.dark
+                                          ? AppColors.forest700
+                                          : AppColors.creamBorder,
+                                    ),
                                     onTap: () => _showStudentDetailsDialog(context, student, rank),
                                     child: Row(
                                       children: [
                                         Container(
                                           width: 36,
                                           height: 36,
-                                          decoration: const BoxDecoration(
-                                            color: AppColors.forest700,
+                                          decoration: BoxDecoration(
+                                            color: Theme.of(context).brightness == Brightness.dark
+                                                ? AppColors.forest700
+                                                : AppColors.gold200,
                                             shape: BoxShape.circle,
                                           ),
                                           child: Center(
                                             child: Text(
                                               '#$rank',
                                               style: AppTypography.mono.copyWith(
-                                                color: Colors.white,
+                                                color: Theme.of(context).brightness == Brightness.dark
+                                                    ? Colors.white
+                                                    : AppColors.forest900,
                                                 fontWeight: FontWeight.bold,
                                               ),
                                             ),
@@ -547,7 +608,10 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                             children: [
                                               Text(
                                                 name,
-                                                style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 16),
+                                                style: AppTypography.lessonTitle.copyWith(
+                                                  color: AppColors.textColor(context),
+                                                  fontSize: 16,
+                                                ),
                                               ),
                                               const SizedBox(height: 4),
                                               Row(
@@ -560,7 +624,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                                             ],
                                           ),
                                         ),
-                                        const Icon(Icons.chevron_right_rounded, color: AppColors.creamText3),
+                                        Icon(Icons.chevron_right_rounded, color: AppColors.subtitleColor(context)),
                                       ],
                                     ),
                                   );

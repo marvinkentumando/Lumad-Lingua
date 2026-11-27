@@ -4,6 +4,8 @@ import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../utils/validators.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/lumad_logo_emblem.dart';
@@ -100,11 +102,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final langCode = ref.watch(localizationProvider);
     final passwordStrength = _calculatePasswordStrength(_passwordController.text);
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Create Account', style: AppTypography.h2.copyWith(color: Colors.white)),
+        title: Text(RegionalStrings.get(langCode, 'register'), style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
         elevation: 0,
       ),
@@ -123,13 +126,13 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                     const LumadLogoEmblem(size: 56, borderRadius: 14),
                     const SizedBox(height: AppSpacing.sm),
                     Text(
-                      'Join Lumad Lingua',
+                      RegionalStrings.get(langCode, 'joinApp'),
                       style: AppTypography.h1ExtraBold.copyWith(color: AppColors.textColor(context), fontSize: 26),
                       textAlign: TextAlign.center,
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Start your journey in preserving Mansaka language & heritage',
+                      RegionalStrings.get(langCode, 'registerSubtitle'),
                       style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)),
                       textAlign: TextAlign.center,
                     ),
@@ -140,7 +143,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Display Name', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                          Text(RegionalStrings.get(langCode, 'displayName'), style: AppTypography.labelBold.copyWith(color: Colors.white)),
                           const SizedBox(height: AppSpacing.xs),
                           TextFormField(
                             controller: _nameController,
@@ -149,7 +152,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             autofillHints: const [AutofillHints.name],
                             style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
                             decoration: InputDecoration(
-                              hintText: 'Enter your display name',
+                              hintText: RegionalStrings.get(langCode, 'displayNameHint'),
                               hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
                               prefixIcon: const Icon(Icons.person_outline, color: AppColors.forest500),
                               filled: true,
@@ -169,7 +172,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          Text('Email Address', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                          Text(RegionalStrings.get(langCode, 'emailAddress'), style: AppTypography.labelBold.copyWith(color: Colors.white)),
                           const SizedBox(height: AppSpacing.xs),
                           TextFormField(
                             controller: _emailController,
@@ -179,7 +182,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             autofillHints: const [AutofillHints.email],
                             style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
                             decoration: InputDecoration(
-                              hintText: 'Enter your email',
+                              hintText: RegionalStrings.get(langCode, 'emailHint'),
                               hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
                               prefixIcon: const Icon(Icons.email_outlined, color: AppColors.forest500),
                               filled: true,
@@ -199,7 +202,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             ),
                           ),
                           const SizedBox(height: AppSpacing.md),
-                          Text('Password', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                          Text(RegionalStrings.get(langCode, 'password'), style: AppTypography.labelBold.copyWith(color: Colors.white)),
                           const SizedBox(height: AppSpacing.xs),
                           TextFormField(
                             controller: _passwordController,
@@ -209,7 +212,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             autofillHints: const [AutofillHints.newPassword],
                             style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
                             decoration: InputDecoration(
-                              hintText: 'Create a password',
+                              hintText: RegionalStrings.get(langCode, 'passwordCreate'),
                               hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
                               prefixIcon: const Icon(Icons.lock_outline, color: AppColors.forest500),
                               suffixIcon: IconButton(
@@ -260,7 +263,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             ),
                           ],
                           const SizedBox(height: AppSpacing.md),
-                          Text('Confirm Password', style: AppTypography.labelBold.copyWith(color: Colors.white)),
+                          Text(RegionalStrings.get(langCode, 'confirmPassword'), style: AppTypography.labelBold.copyWith(color: Colors.white)),
                           const SizedBox(height: AppSpacing.xs),
                           TextFormField(
                             controller: _confirmPasswordController,
@@ -271,7 +274,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                             onFieldSubmitted: (_) => _handleRegister(),
                             style: AppTypography.bodyLarge.copyWith(color: AppColors.forest900),
                             decoration: InputDecoration(
-                              hintText: 'Re-enter your password',
+                              hintText: RegionalStrings.get(langCode, 'confirmPasswordHint'),
                               hintStyle: AppTypography.body.copyWith(color: AppColors.creamText3),
                               prefixIcon: const Icon(Icons.lock_outline, color: AppColors.forest500),
                               suffixIcon: IconButton(
@@ -296,7 +299,7 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                           ),
                           const SizedBox(height: AppSpacing.lg),
                           BrandButton(
-                            text: 'Create Account',
+                            text: RegionalStrings.get(langCode, 'registerButton'),
                             type: BrandButtonType.gold,
                             isLoading: authState.isLoading,
                             onPressed: _handleRegister,
@@ -309,11 +312,12 @@ class _RegisterScreenState extends ConsumerState<RegisterScreen> with SingleTick
                     Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Text('Already have an account? ', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context))),
+                        Text(RegionalStrings.get(langCode, 'alreadyHaveAccount'), style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context))),
+                        const SizedBox(width: 4),
                         GestureDetector(
                           onTap: () => context.pop(),
                           child: Text(
-                            'Sign In',
+                            RegionalStrings.get(langCode, 'signIn'),
                             style: AppTypography.labelBold.copyWith(
                               color: AppColors.gold500,
                             ),

@@ -7,6 +7,8 @@ import '../../utils/constants.dart';
 import '../../models/activity_model.dart';
 import '../../providers/activity_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/theme_provider.dart';
+import '../../utils/audio_helper.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/app_button.dart';
@@ -68,10 +70,13 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
       correct = true;
     }
 
+    final soundEffectsEnabled = ref.read(soundEffectsProvider);
     if (correct) {
       HapticFeedback.lightImpact();
+      AudioHelper.playSfx(AudioHelper.sfxCorrect, enabled: soundEffectsEnabled);
     } else {
       HapticFeedback.heavyImpact();
+      AudioHelper.playSfx(AudioHelper.sfxError, enabled: soundEffectsEnabled);
     }
 
     setState(() {

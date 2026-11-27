@@ -181,7 +181,7 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
                 isWinner
                     ? 'Congratulations! You dominated the Arena and preserved the Mansaka heritage!'
                     : 'Good effort! Review vocabulary and challenge your rival again.',
-                style: AppTypography.body,
+                style: AppTypography.body.copyWith(color: AppColors.textColor(context)),
               ),
               const SizedBox(height: AppSpacing.md),
               Container(
@@ -196,15 +196,15 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Your Score:', style: AppTypography.labelBold),
-                        Text('$myScore pts', style: AppTypography.labelBold.copyWith(color: AppColors.forestGreen)),
+                        Text('Your Score:', style: AppTypography.labelBold.copyWith(color: AppColors.textColor(context))),
+                        Text('$myScore pts', style: AppTypography.labelBold.copyWith(color: AppColors.semanticGreen)),
                       ],
                     ),
                     const SizedBox(height: 4),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text('Rival Score:', style: AppTypography.labelBold),
+                        Text('Rival Score:', style: AppTypography.labelBold.copyWith(color: AppColors.textColor(context))),
                         Text('$rivalScore pts', style: AppTypography.labelBold.copyWith(color: Colors.grey)),
                       ],
                     ),

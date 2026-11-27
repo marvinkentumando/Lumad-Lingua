@@ -36,6 +36,7 @@ class BackgroundPatternNotifier extends Notifier<String> {
 
   void setPattern(String pattern) {
     state = pattern;
+    ref.read(culturalThemeProvider.notifier).setThemeSkin(CulturalThemeSkin.lumadForest);
   }
 }
 
@@ -46,6 +47,24 @@ class CulturalThemeNotifier extends Notifier<CulturalThemeSkin> {
   void setThemeSkin(CulturalThemeSkin skin) {
     state = skin;
   }
+}
+
+class SoundEffectsNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+  void toggle(bool val) => state = val;
+}
+
+class HapticFeedbackNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+  void toggle(bool val) => state = val;
+}
+
+class OfflineDictionaryNotifier extends Notifier<bool> {
+  @override
+  bool build() => true;
+  void toggle(bool val) => state = val;
 }
 
 final themeModeProvider = NotifierProvider<ThemeModeNotifier, ThemeMode>(() {
@@ -66,4 +85,16 @@ final backgroundPatternProvider = NotifierProvider<BackgroundPatternNotifier, St
 
 final culturalThemeProvider = NotifierProvider<CulturalThemeNotifier, CulturalThemeSkin>(() {
   return CulturalThemeNotifier();
+});
+
+final soundEffectsProvider = NotifierProvider<SoundEffectsNotifier, bool>(() {
+  return SoundEffectsNotifier();
+});
+
+final hapticFeedbackProvider = NotifierProvider<HapticFeedbackNotifier, bool>(() {
+  return HapticFeedbackNotifier();
+});
+
+final offlineDictionaryProvider = NotifierProvider<OfflineDictionaryNotifier, bool>(() {
+  return OfflineDictionaryNotifier();
 });

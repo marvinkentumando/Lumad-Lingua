@@ -16,33 +16,38 @@ class LumadBackground extends ConsumerWidget {
     final culturalSkin = ref.watch(culturalThemeProvider);
 
     List<Color> gradientColors;
+    CustomPainter? painter;
+
     if (culturalSkin == CulturalThemeSkin.tnalakWeave) {
       gradientColors = isDark
           ? [const Color(0xFF4A0E17), const Color(0xFF2A0D0E)]
           : [const Color(0xFFFBE9E7), const Color(0xFFD7CCC8)];
+      painter = MansakaPatternPainter(isDark: isDark);
     } else if (culturalSkin == CulturalThemeSkin.inabelMotif) {
       gradientColors = isDark
           ? [const Color(0xFF0D1B2A), const Color(0xFF001F29)]
           : [const Color(0xFFE8F4F8), const Color(0xFFC5E1A5)];
-    } else if (pattern == 'royal_crimson') {
-      gradientColors = isDark
-          ? [const Color(0xFF4A0E17), const Color(0xFF1A0205)]
-          : [const Color(0xFFFFD1DC), const Color(0xFFE8929E)];
-    } else if (isCustomActive) {
-      gradientColors = isDark
-          ? [const Color(0xFF2A080C), const Color(0xFF0F0204)]
-          : [const Color(0xFFFFF0F3), const Color(0xFFF7D9DE)];
-    } else {
-      gradientColors = isDark
-          ? [AppColors.forest900, const Color(0xFF051408)]
-          : [const Color(0xFFFEF8ED), const Color(0xFFF1E2C8)];
-    }
-
-    CustomPainter? painter;
-    if (pattern == 'woven_waves' || culturalSkin == CulturalThemeSkin.tnalakWeave) {
-      painter = MansakaPatternPainter(isDark: isDark);
-    } else if (pattern == 'tribal_geom' || culturalSkin == CulturalThemeSkin.inabelMotif) {
       painter = TribalChevronPainter(isDark: isDark);
+    } else {
+      if (pattern == 'royal_crimson') {
+        gradientColors = isDark
+            ? [const Color(0xFF4A0E17), const Color(0xFF1A0205)]
+            : [const Color(0xFFFFD1DC), const Color(0xFFE8929E)];
+      } else if (isCustomActive) {
+        gradientColors = isDark
+            ? [const Color(0xFF2A080C), const Color(0xFF0F0204)]
+            : [const Color(0xFFFFF0F3), const Color(0xFFF7D9DE)];
+      } else {
+        gradientColors = isDark
+            ? [AppColors.forest900, const Color(0xFF051408)]
+            : [const Color(0xFFFEF8ED), const Color(0xFFF1E2C8)];
+      }
+
+      if (pattern == 'woven_waves') {
+        painter = MansakaPatternPainter(isDark: isDark);
+      } else if (pattern == 'tribal_geom') {
+        painter = TribalChevronPainter(isDark: isDark);
+      }
     }
 
     return SizedBox.expand(

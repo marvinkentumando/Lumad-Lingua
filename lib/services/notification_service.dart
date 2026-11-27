@@ -49,7 +49,7 @@ class NotificationService {
       }
     } catch (e) {
       if (kDebugMode) {
-        print('NotificationService native initialization error/fallback: $e');
+        debugPrint('NotificationService native initialization error/fallback: $e');
       }
     }
   }
@@ -112,6 +112,16 @@ class NotificationService {
         iOS: iosDetails,
       );
 
+      // Schedule offline periodic daily reminder
+      await _notificationsPlugin.periodicallyShow(
+        101,
+        'Madyaw na allaw! 📚',
+        'Time for your daily Mansaka language practice! Keep your streak alive! 🔥',
+        RepeatInterval.daily,
+        notificationDetails,
+        androidScheduleMode: AndroidScheduleMode.exactAllowWhileIdle,
+      );
+
       if (showConfirmation) {
         final period = hour >= 12 ? 'PM' : 'AM';
         final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
@@ -119,9 +129,9 @@ class NotificationService {
         final timeStr = '$h:$m $period';
 
         await _notificationsPlugin.show(
-          101,
-          'Madyaw na allaw! 📚',
-          'Daily practice reminder active for $timeStr. Maintain your streak and preserve Lumad heritage today! 🔥',
+          102,
+          'Reminder Active! ⏰',
+          'Daily practice reminder set for $timeStr. Maintain your streak and preserve Lumad heritage today! 🔥',
           notificationDetails,
         );
       }
@@ -135,9 +145,10 @@ class NotificationService {
   Future<void> cancelDailyReminder() async {
     try {
       await _notificationsPlugin.cancel(101);
+      await _notificationsPlugin.cancel(102);
     } catch (_) {}
     if (kDebugMode) {
-      print('Daily practice reminder cancelled.');
+      debugPrint('Daily practice reminder cancelled.');
     }
   }
 }

@@ -6,6 +6,7 @@ import '../../config/theme/app_radius.dart';
 import '../../config/theme/app_spacing.dart';
 import '../../config/theme/app_typography.dart';
 import '../../providers/theme_provider.dart';
+import '../../utils/audio_helper.dart';
 
 enum BrandButtonType { primary, secondary, gold, success, danger, small, text }
 
@@ -37,6 +38,7 @@ class _BrandButtonState extends ConsumerState<BrandButton> {
     if (_isDebouncing || widget.isLoading || widget.onPressed == null) return;
 
     HapticFeedback.lightImpact();
+    AudioHelper.playSfx(AudioHelper.sfxClick, enabled: ref.read(soundEffectsProvider));
 
     setState(() => _isDebouncing = true);
     widget.onPressed!();

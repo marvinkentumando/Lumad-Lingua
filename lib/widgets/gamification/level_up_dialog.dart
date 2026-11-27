@@ -3,11 +3,13 @@ import 'package:confetti/confetti.dart';
 import 'package:flutter_animate/flutter_animate.dart';
 import '../../utils/constants.dart';
 import '../../utils/level_helper.dart';
+import '../../utils/audio_helper.dart';
 import '../common/brand_button.dart';
 
 void showLevelUpDialog(BuildContext context, {required int newLevel}) {
   final levelTitle = LevelHelper.getLevelTitle(newLevel);
   final confettiController = ConfettiController(duration: const Duration(seconds: 3))..play();
+  AudioHelper.playSfx(AudioHelper.sfxSuccess);
 
   showDialog(
     context: context,

@@ -34,12 +34,17 @@ class AppButton extends StatelessWidget {
         break;
     }
 
-    return BrandButton(
-      text: text,
-      onPressed: onPressed,
-      type: type,
-      isLoading: isLoading,
-      icon: icon,
+    return Semantics(
+      button: true,
+      enabled: onPressed != null && !isLoading,
+      label: text,
+      child: BrandButton(
+        text: text,
+        onPressed: onPressed,
+        type: type,
+        isLoading: isLoading,
+        icon: icon,
+      ),
     );
   }
 }

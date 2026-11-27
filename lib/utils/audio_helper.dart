@@ -5,6 +5,12 @@ class AudioHelper {
   static const String _bucketName = 'audio';
   static final AudioPlayer _player = AudioPlayer();
 
+  // Sound Effect Asset Constants
+  static const String sfxClick = 'assets/audio/click.MP3';
+  static const String sfxCorrect = 'assets/audio/correct.MP3';
+  static const String sfxError = 'assets/audio/error.MP3';
+  static const String sfxSuccess = 'assets/audio/success_1.MP3'; // Level up & quest completion
+
   /// Resolves relative audio paths into public Supabase Storage URLs.
   static String? resolveSupabaseAudioUrl(String? audioPath) {
     if (audioPath == null || audioPath.trim().isEmpty) {
@@ -44,6 +50,21 @@ class AudioHelper {
           await _player.play();
         }
       }
+    } catch (_) {}
+  }
+
+  /// Plays a sound effect asset if sound effects are enabled.
+  static Future<void> playSfx(String assetPath, {bool enabled = true}) async {
+    if (!enabled) return;
+    try {
+      final sfxPlayer = AudioPlayer();
+      await sfxPlayer.setAsset(assetPath);
+      await sfxPlayer.play();
+      sfxPlayer.positionStream.listen((pos) {
+        if (sfxPlayer.duration != null && pos >= sfxPlayer.duration!) {
+          sfxPlayer.dispose();
+        }
+      });
     } catch (_) {}
   }
 

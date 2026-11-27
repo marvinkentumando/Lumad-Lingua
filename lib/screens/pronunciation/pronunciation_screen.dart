@@ -10,6 +10,8 @@ import '../../models/daily_quest_model.dart';
 import '../../providers/daily_quests_provider.dart';
 import '../../providers/pronunciation_provider.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../services/local_ml_service.dart';
 import '../../services/admin_config_service.dart';
 import '../../widgets/common/brand_button.dart';
@@ -230,65 +232,41 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
           title: Text('Pronunciation Reward! 🎉', style: AppTypography.h3),
           content: Column(
             mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              Text(
-                'Accuracy Score: ${finalScore.toStringAsFixed(1)}%',
-                style: AppTypography.displayNumber.copyWith(color: AppColors.forest500, fontSize: 24),
-              ),
-              const SizedBox(height: 8),
               Row(
-                children: [
-                  const Icon(Icons.bolt, color: AppColors.gold500, size: 20),
-                  const SizedBox(width: 4),
-                  Text('+$earnedXp XP', style: AppTypography.labelBold.copyWith(color: AppColors.forest900)),
-                  const SizedBox(width: 16),
-                  const Icon(Icons.diamond, color: AppColors.gold500, size: 20),
-                  const SizedBox(width: 4),
-                  Text('+$earnedCrystals Crystals', style: AppTypography.labelBold.copyWith(color: AppColors.forest900)),
-                ],
-              ),
-              const SizedBox(height: 12),
-              Text(
-                finalScore >= 85
-                    ? 'Fantastic job! Your pronunciation and pacing sound natural and clear.'
-                    : 'Good effort! Try focusing slightly more on vowel length and tone.',
-                style: AppTypography.body,
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: List.generate(
+                  finalScore >= 85 ? 3 : (finalScore >= 65 ? 2 : 1),
+                  (index) => const Icon(Icons.star, color: AppColors.gold500, size: 36),
+                ),
               ),
               const SizedBox(height: AppSpacing.md),
-              Text('Phoneme & Word Breakdown:', style: AppTypography.labelBold),
-              const SizedBox(height: 6),
-              ...phraseObj.mansaka.split(' ').map((word) {
-                final wordScore = (finalScore + (word.length * 1.5)).clamp(65.0, 99.5);
-                return Padding(
-                  padding: const EdgeInsets.only(bottom: 4.0),
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(word, style: AppTypography.bodyLarge),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                        decoration: BoxDecoration(
-                          color: wordScore >= 85 ? AppColors.semanticGreen.withValues(alpha: 0.2) : AppColors.gold500.withValues(alpha: 0.2),
-                          borderRadius: BorderRadius.circular(AppRadius.chip),
-                        ),
-                        child: Text(
-                          '${wordScore.toStringAsFixed(1)}%',
-                          style: AppTypography.labelBold.copyWith(
-                            color: wordScore >= 85 ? AppColors.successDark : AppColors.gold800,
-                            fontSize: 11,
-                          ),
-                        ),
-                      ),
-                    ],
-                  ),
-                );
-              }),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const Icon(Icons.bolt, color: AppColors.gold500, size: 22),
+                  const SizedBox(width: 4),
+                  Text('+$earnedXp XP', style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 16)),
+                  const SizedBox(width: 20),
+                  const Icon(Icons.diamond, color: AppColors.gold500, size: 22),
+                  const SizedBox(width: 4),
+                  Text('+$earnedCrystals Crystals', style: AppTypography.labelBold.copyWith(color: AppColors.forest900, fontSize: 16)),
+                ],
+              ),
+              const SizedBox(height: AppSpacing.md),
+              Text(
+                finalScore >= 85
+                    ? 'Fantastic job! Your pronunciation sounds wonderful and clear! 🌟'
+                    : 'Good effort! Practice saying it out loud again to get all 3 stars!',
+                style: AppTypography.bodyLarge,
+                textAlign: TextAlign.center,
+              ),
             ],
           ),
           actions: [
             BrandButton(
-              text: 'Awesome',
+              text: 'Awesome!',
               type: BrandButtonType.gold,
               onPressed: () => Navigator.of(context).pop(),
             ),
@@ -301,12 +279,13 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
   @override
   Widget build(BuildContext context) {
     final state = ref.watch(pronunciationProvider);
+    final langCode = ref.watch(localizationProvider);
     final phraseObj = _phrases[_currentPhraseIndex];
 
     return Scaffold(
-      backgroundColor: AppColors.creamBg,
+      backgroundColor: Colors.transparent,
       appBar: AppBar(
-        title: Text('Pronunciation Lab', style: AppTypography.h2.copyWith(color: Colors.white)),
+        title: Text(RegionalStrings.get(langCode, 'pronunciationLab'), style: AppTypography.h2.copyWith(color: Colors.white)),
         backgroundColor: AppColors.forest700,
         actions: [
           IconButton(
@@ -360,12 +339,12 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                 const SizedBox(height: 8),
                 Text(
                   phraseObj.mansaka,
-                  style: AppTypography.flashcard.copyWith(color: AppColors.creamText, fontSize: 32),
+                  style: AppTypography.flashcard.copyWith(color: AppColors.textColor(context), fontSize: 32),
                   textAlign: TextAlign.center,
                 ),
                 Text(
                   'Meaning: "${phraseObj.meaning}"',
-                  style: AppTypography.bodyLarge.copyWith(color: AppColors.creamText2),
+                  style: AppTypography.bodyLarge.copyWith(color: AppColors.subtitleColor(context)),
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
@@ -390,7 +369,7 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                   state.isRecording
                       ? 'Recording... Tap to stop'
                       : (state.hasRecording ? 'Recording Saved' : 'Tap microphone to start recording'),
-                  style: AppTypography.labelBold.copyWith(color: AppColors.creamText),
+                  style: AppTypography.labelBold.copyWith(color: AppColors.textColor(context)),
                 ),
                 if (state.hasRecording) ...[
                   const SizedBox(height: AppSpacing.md),

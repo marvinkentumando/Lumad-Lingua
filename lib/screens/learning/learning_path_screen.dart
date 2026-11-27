@@ -9,6 +9,8 @@ import '../../models/lesson_model.dart';
 import '../../providers/lesson_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../widgets/common/loading_widget.dart';
 import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/brand_button.dart';
@@ -22,6 +24,7 @@ class LearningPathScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final unitsAsync = ref.watch(unitsProvider);
+    final langCode = ref.watch(localizationProvider);
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
@@ -37,9 +40,9 @@ class LearningPathScreen extends ConsumerWidget {
                       children: [
                         const Icon(Icons.school_outlined, size: 64, color: AppColors.gold500),
                         const SizedBox(height: AppSpacing.md),
-                        Text('No units available', style: AppTypography.h3.copyWith(color: AppColors.textColor(context))),
+                        Text(RegionalStrings.get(langCode, 'noUnits'), style: AppTypography.h3.copyWith(color: AppColors.textColor(context))),
                         const SizedBox(height: 4),
-                        Text('Curriculum units will appear here once added in Firebase.', style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)), textAlign: TextAlign.center),
+                        Text(RegionalStrings.get(langCode, 'noUnitsSubtitle'), style: AppTypography.body.copyWith(color: AppColors.subtitleColor(context)), textAlign: TextAlign.center),
                       ],
                     ),
                   ),
@@ -47,15 +50,15 @@ class LearningPathScreen extends ConsumerWidget {
               : ListView(
                   padding: const EdgeInsets.all(AppSpacing.md),
                   children: [
-                    const ScreenHeader(
-                      title: 'Learn Mansaka',
+                    ScreenHeader(
+                      title: RegionalStrings.get(langCode, 'learningPathTitle'),
                       centerTitle: true,
                     ),
                     const SizedBox(height: AppSpacing.md),
                     ...units.map((unit) => _UnitPathSection(unit: unit)),
                   ],
                 ),
-          loading: () => const LoadingWidget(message: 'Loading learning path...'),
+          loading: () => LoadingWidget(message: RegionalStrings.get(langCode, 'loadingLearningPath')),
           error: (err, stack) => AppErrorWidget(
             message: 'Failed to load curriculum: $err',
             onRetry: () => ref.invalidate(unitsProvider),
@@ -306,43 +309,62 @@ class _UnitPathSectionState extends ConsumerState<_UnitPathSection> {
                           const SizedBox(height: AppSpacing.md),
 
                           // Unit Reward Chest Node at the end of lessons
-                          Transform.translate(
-                            offset: const Offset(0, 0),
-                            child: Column(
-                              children: [
-                                GestureDetector(
-                                  onTap: () => _showUnitRewardDialog(context, ref, lessons),
-                                  child: Container(
-                                    padding: const EdgeInsets.all(16),
-                                    decoration: BoxDecoration(
-                                      color: allCompleted ? AppColors.gold500 : AppColors.creamBorder,
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: allCompleted ? AppColors.gold700 : AppColors.creamShadow,
-                                        width: 3.5,
-                                      ),
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: allCompleted ? AppColors.gold700 : AppColors.creamShadow,
-                                          offset: const Offset(0, 4),
-                                          blurRadius: 0,
+                          Builder(
+                            builder: (context) {
+                              final user = ref.watch(authStateProvider).value;
+                              final chestKey = 'unit_${widget.unit.id}_chest_claimed';
+                              final isClaimed = user?.inventory.contains(chestKey) ?? false;
+
+                              return Transform.translate(
+                                offset: const Offset(0, 0),
+                                child: Column(
+                                  children: [
+                                    GestureDetector(
+                                      onTap: () => _showUnitRewardDialog(context, ref, lessons),
+                                      child: Container(
+                                        padding: const EdgeInsets.all(16),
+                                        decoration: BoxDecoration(
+                                          color: isClaimed
+                                              ? (isCustomActive ? const Color(0xFFA91D3A) : AppColors.forest500)
+                                              : (allCompleted ? AppColors.gold500 : AppColors.creamBorder),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: isClaimed
+                                                ? (isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700)
+                                                : (allCompleted ? AppColors.gold700 : AppColors.creamShadow),
+                                            width: 3.5,
+                                          ),
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: isClaimed
+                                                  ? (isCustomActive ? const Color(0xFF5C0E1E) : AppColors.forest700)
+                                                  : (allCompleted ? AppColors.gold700 : AppColors.creamShadow),
+                                              offset: const Offset(0, 4),
+                                              blurRadius: 0,
+                                            ),
+                                          ],
                                         ),
-                                      ],
+                                        child: Icon(
+                                          Icons.card_giftcard,
+                                          color: isClaimed
+                                              ? AppColors.gold500
+                                              : (allCompleted ? AppColors.forest900 : AppColors.creamText3),
+                                          size: 32,
+                                        ),
+                                      ),
                                     ),
-                                    child: Icon(
-                                      Icons.card_giftcard,
-                                      color: allCompleted ? AppColors.forest900 : AppColors.creamText3,
-                                      size: 32,
+                                    const SizedBox(height: 4),
+                                    Text(
+                                      isClaimed ? 'Claimed ✓' : 'Unit ${widget.unit.unitNumber} Chest',
+                                      style: AppTypography.labelBold.copyWith(
+                                        color: isClaimed ? AppColors.forest700 : AppColors.gold800,
+                                        fontSize: 11,
+                                      ),
                                     ),
-                                  ),
+                                  ],
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  'Unit ${widget.unit.unitNumber} Chest',
-                                  style: AppTypography.labelBold.copyWith(color: AppColors.gold800, fontSize: 11),
-                                ),
-                              ],
-                            ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -467,7 +489,7 @@ class _LessonNode extends StatelessWidget {
                       child: Center(
                         child: Icon(
                           isLocked ? Icons.lock : iconData,
-                          color: isLocked ? AppColors.creamText3 : (isCompleted ? Colors.white : AppColors.forest900),
+                          color: isLocked ? AppColors.creamText3 : (isCompleted ? AppColors.gold500 : AppColors.forest900),
                           size: 26,
                         ),
                       ),

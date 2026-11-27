@@ -16,7 +16,6 @@ import '../../widgets/common/error_widget.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
 import '../../widgets/common/screen_header.dart';
 import '../../widgets/common/lumad_background.dart';
-import '../../utils/audio_helper.dart';
 
 class DictionaryScreen extends ConsumerStatefulWidget {
   const DictionaryScreen({super.key});
@@ -28,7 +27,8 @@ class DictionaryScreen extends ConsumerStatefulWidget {
 class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   late TextEditingController _searchController;
   late ScrollController _scrollController;
-  String? _playingVocabId;
+  late FocusNode _searchFocusNode;
+  bool _isSearchFocused = false;
   List<String> _recentSearches = ['Madyaw', 'Salamat', 'Good morning', 'Water', 'Family'];
 
   @override
@@ -36,6 +36,11 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
     super.initState();
     _searchController = TextEditingController();
     _scrollController = ScrollController()..addListener(_onScroll);
+    _searchFocusNode = FocusNode()..addListener(() {
+      setState(() {
+        _isSearchFocused = _searchFocusNode.hasFocus;
+      });
+    });
     _loadRecentSearches();
   }
 
@@ -43,6 +48,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   void dispose() {
     _searchController.dispose();
     _scrollController.dispose();
+    _searchFocusNode.dispose();
     super.dispose();
   }
 
@@ -105,8 +111,9 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
     final savedBookmarks = ref.watch(bookmarksProvider);
     final langCode = ref.watch(localizationProvider);
 
-    final partsOfSpeech = partsOfSpeechAsync.value ?? ['Noun', 'Verb', 'Phrase', 'Prefix', 'Suffix', 'Locative'];
-    final categories = ['All', 'Saved', ...partsOfSpeech];
+    final rawParts = partsOfSpeechAsync.value ?? ['Noun', 'Verb', 'Phrase', 'Prefix', 'Suffix', 'Locative'];
+    final kidFriendlyParts = rawParts.where((p) => !['Prefix', 'Suffix', 'Locative'].contains(p)).toList();
+    final categories = ['All', 'Saved', ...kidFriendlyParts];
     final selectedCategory = filterState.selectedCategory;
 
     return Scaffold(
@@ -122,12 +129,16 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                   centerTitle: true,
                 ),
                 const SizedBox(height: AppSpacing.xs),
-                TextField(
+              TextField(
                 controller: _searchController,
+                focusNode: _searchFocusNode,
                 onChanged: (val) {
                   ref.read(dictionaryFilterProvider.notifier).updateQuery(val);
                 },
-                onSubmitted: (val) => _saveSearchTerm(val),
+                onSubmitted: (val) {
+                  _saveSearchTerm(val);
+                  _searchFocusNode.unfocus();
+                },
                 style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context)),
                 decoration: InputDecoration(
                   hintText: RegionalStrings.get(langCode, 'searchHint'),
@@ -143,79 +154,125 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                         )
                       : null,
                   filled: true,
-                  fillColor: AppColors.creamSurface,
+                  fillColor: AppColors.cardColor(context),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.button),
-                    borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                    borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.forest700 : AppColors.creamBorder, width: 1.0),
                   ),
                   enabledBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.button),
-                    borderSide: const BorderSide(color: AppColors.creamBorder, width: 1.0),
+                    borderSide: BorderSide(color: Theme.of(context).brightness == Brightness.dark ? AppColors.forest700 : AppColors.creamBorder, width: 1.0),
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(AppRadius.button),
-                    borderSide: const BorderSide(color: AppColors.forest500, width: 2.0),
+                    borderSide: const BorderSide(color: AppColors.gold500, width: 2.0),
                   ),
                 ),
               ),
               const SizedBox(height: AppSpacing.xs),
 
-              // Recent Searches & Quick Lookups Chips
-              if (_recentSearches.isNotEmpty) ...[
-                Row(
-                  children: [
-                    const Icon(Icons.history, size: 14, color: AppColors.gold500),
-                    const SizedBox(width: 4),
-                    Text(
-                      'Recent Lookups:',
-                      style: AppTypography.caption.copyWith(color: AppColors.gold400, fontSize: 11, fontWeight: FontWeight.bold),
+              // Recent Lookups Dropdown Panel when search bar is focused
+              if (_isSearchFocused && _recentSearches.isNotEmpty) ...[
+                const SizedBox(height: 6),
+                Container(
+                  decoration: BoxDecoration(
+                    color: AppColors.cardColor(context),
+                    borderRadius: BorderRadius.circular(AppRadius.card),
+                    border: Border.all(
+                      color: Theme.of(context).brightness == Brightness.dark
+                          ? AppColors.gold500.withValues(alpha: 0.6)
+                          : AppColors.creamBorder,
+                      width: 1.5,
                     ),
-                  ],
-                ),
-                const SizedBox(height: 4),
-                SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: Row(
-                    children: _recentSearches.map((term) {
-                      final isCurrent = _searchController.text.trim().toLowerCase() == term.toLowerCase();
-
-                      return Padding(
-                        padding: const EdgeInsets.only(right: 6.0),
-                        child: GestureDetector(
-                          onTap: () => _applySearchChip(term),
-                          child: Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                            decoration: BoxDecoration(
-                              color: isCurrent ? AppColors.gold500 : AppColors.forest800,
-                              borderRadius: BorderRadius.circular(AppRadius.chip),
-                              border: Border.all(
-                                color: isCurrent ? AppColors.gold700 : AppColors.gold500.withValues(alpha: 0.5),
-                                width: 1.0,
-                              ),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.15),
+                        blurRadius: 8,
+                        offset: const Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Padding(
+                        padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Row(
                               children: [
-                                Icon(
-                                  Icons.search,
-                                  size: 12,
-                                  color: isCurrent ? AppColors.forest900 : AppColors.gold400,
-                                ),
-                                const SizedBox(width: 4),
+                                Icon(Icons.history, size: 14, color: Theme.of(context).brightness == Brightness.dark ? AppColors.gold500 : AppColors.forest500),
+                                const SizedBox(width: 6),
                                 Text(
-                                  term,
-                                  style: AppTypography.caption.copyWith(
-                                    color: isCurrent ? AppColors.forest900 : Colors.white,
-                                    fontWeight: isCurrent ? FontWeight.bold : FontWeight.normal,
-                                    fontSize: 11,
+                                  'Recent Lookups',
+                                  style: AppTypography.labelBold.copyWith(
+                                    color: Theme.of(context).brightness == Brightness.dark ? AppColors.gold400 : AppColors.forest700,
+                                    fontSize: 12,
                                   ),
                                 ),
                               ],
                             ),
-                          ),
+                            TextButton(
+                              onPressed: () async {
+                                setState(() => _recentSearches.clear());
+                                try {
+                                  final user = ref.read(authStateProvider).value;
+                                  final userId = user?.id ?? 'guest';
+                                  final prefs = await SharedPreferences.getInstance();
+                                  await prefs.remove('lumad_recent_searches_$userId');
+                                } catch (_) {}
+                              },
+                              style: TextButton.styleFrom(
+                                padding: EdgeInsets.zero,
+                                minimumSize: const Size(40, 24),
+                                tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                              ),
+                              child: Text(
+                                'Clear',
+                                style: AppTypography.caption.copyWith(
+                                  color: Theme.of(context).brightness == Brightness.dark ? AppColors.creamText3 : AppColors.forest500.withValues(alpha: 0.7),
+                                  fontSize: 11,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
-                      );
-                    }).toList(),
+                      ),
+                      Divider(
+                        color: Theme.of(context).brightness == Brightness.dark ? AppColors.gold500.withValues(alpha: 0.4) : AppColors.creamBorder,
+                        height: 1,
+                        thickness: 0.5,
+                      ),
+                      ..._recentSearches.map((term) {
+                        return InkWell(
+                          onTap: () {
+                            _applySearchChip(term);
+                            _searchFocusNode.unfocus();
+                          },
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+                            child: Row(
+                              children: [
+                                Icon(Icons.search, size: 16, color: Theme.of(context).brightness == Brightness.dark ? AppColors.gold400 : AppColors.forest500),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: Text(
+                                    term,
+                                    style: AppTypography.bodyLarge.copyWith(
+                                      color: AppColors.textColor(context),
+                                      fontSize: 14,
+                                    ),
+                                  ),
+                                ),
+                                Icon(Icons.north_west, size: 14, color: AppColors.subtitleColor(context)),
+                              ],
+                            ),
+                          ),
+                        );
+                      }),
+                    ],
                   ),
                 ),
                 const SizedBox(height: AppSpacing.sm),
@@ -320,7 +377,6 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
       children: [
         ...filteredWords.map((vocab) {
           final isBookmarked = ref.read(bookmarksProvider.notifier).isBookmarked(vocab);
-          final isPlaying = _playingVocabId == vocab.id;
 
           return Padding(
             padding: const EdgeInsets.only(bottom: AppSpacing.sm),
@@ -350,7 +406,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                     ),
                   ),
                   const SizedBox(width: AppSpacing.sm),
-                  // Right: Action buttons (Bookmark, Play/Pause audio, Chevron)
+                  // Right: Action buttons (Bookmark, Chevron)
                   Row(
                     mainAxisSize: MainAxisSize.min,
                     children: [
@@ -376,42 +432,6 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                             isBookmarked ? Icons.bookmark : Icons.bookmark_border,
                             color: isBookmarked ? AppColors.gold500 : AppColors.creamText3,
                             size: 22,
-                          ),
-                        ),
-                      ),
-                      GestureDetector(
-                        onTap: () async {
-                          final messenger = ScaffoldMessenger.of(context);
-                          if (isPlaying) {
-                            await AudioHelper.stopAudio();
-                            if (mounted) {
-                              setState(() => _playingVocabId = null);
-                            }
-                          } else {
-                            if (vocab.resolvedAudioUrl != null && vocab.resolvedAudioUrl!.isNotEmpty) {
-                              setState(() => _playingVocabId = vocab.id);
-                              await AudioHelper.playAudio(vocab.resolvedAudioUrl!);
-                              Future.delayed(const Duration(milliseconds: 2200), () {
-                                if (mounted && _playingVocabId == vocab.id) {
-                                  setState(() => _playingVocabId = null);
-                                }
-                              });
-                            } else {
-                              if (context.mounted) {
-                                messenger.clearSnackBars();
-                                messenger.showSnackBar(
-                                  const SnackBar(content: Text('Playing reference pronunciation audio...')),
-                                );
-                              }
-                            }
-                          }
-                        },
-                        child: Padding(
-                          padding: const EdgeInsets.all(6.0),
-                          child: Icon(
-                            isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                            color: AppColors.gold500,
-                            size: 26,
                           ),
                         ),
                       ),

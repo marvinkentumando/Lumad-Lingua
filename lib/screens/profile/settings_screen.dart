@@ -18,9 +18,6 @@ class SettingsScreen extends ConsumerStatefulWidget {
 }
 
 class _SettingsScreenState extends ConsumerState<SettingsScreen> {
-  bool _soundEffects = true;
-  bool _hapticFeedback = true;
-  bool _offlineDictionary = true;
   bool _dailyReminder = NotificationService().isDailyReminderEnabled;
   int _reminderHour = NotificationService().reminderHour;
   int _reminderMinute = NotificationService().reminderMinute;
@@ -79,6 +76,9 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
     final currentLang = ref.watch(localizationProvider);
     final currentPattern = ref.watch(backgroundPatternProvider);
     final culturalSkin = ref.watch(culturalThemeProvider);
+    final soundEffects = ref.watch(soundEffectsProvider);
+    final hapticFeedback = ref.watch(hapticFeedbackProvider);
+    final offlineDictionary = ref.watch(offlineDictionaryProvider);
     final user = ref.watch(authStateProvider).value;
     final hasCustomThemePass = user?.inventory.contains('custom_theme_pass') ?? false;
     final isCustomAccentActive = ref.watch(customThemeAccentProvider);
@@ -94,7 +94,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
           children: [
             Text(
               'Preferences',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -103,17 +103,17 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   SwitchListTile(
                     title: Text('Sound Effects', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
                     subtitle: Text('Play audio feedback on lesson actions', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                    value: _soundEffects,
+                    value: soundEffects,
                     activeThumbColor: AppColors.gold500,
-                    onChanged: (val) => setState(() => _soundEffects = val),
+                    onChanged: (val) => ref.read(soundEffectsProvider.notifier).toggle(val),
                   ),
                   const Divider(color: AppColors.forest700),
                   SwitchListTile(
                     title: Text('Haptic Feedback', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
                     subtitle: Text('Vibrate on correct/incorrect answers', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                    value: _hapticFeedback,
+                    value: hapticFeedback,
                     activeThumbColor: AppColors.gold500,
-                    onChanged: (val) => setState(() => _hapticFeedback = val),
+                    onChanged: (val) => ref.read(hapticFeedbackProvider.notifier).toggle(val),
                   ),
                   const Divider(color: AppColors.forest700),
                   SwitchListTile(
@@ -129,10 +129,10 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                   SwitchListTile(
                     title: Text('Offline Dictionary Mode', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
                     subtitle: Text('Cache full Mansaka dictionary and audio for offline study', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
-                    value: _offlineDictionary,
+                    value: offlineDictionary,
                     activeThumbColor: AppColors.gold500,
                     onChanged: (val) {
-                      setState(() => _offlineDictionary = val);
+                      ref.read(offlineDictionaryProvider.notifier).toggle(val);
                       ScaffoldMessenger.of(context).showSnackBar(
                         SnackBar(content: Text(val ? 'Offline dictionary mode enabled! 📦' : 'Offline dictionary mode disabled.')),
                       );
@@ -145,7 +145,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Accessibility & Elder Support',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -167,7 +167,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Regional UI Language (Lingua Franca)',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -206,7 +206,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Cultural Textile Theme Skins',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -248,7 +248,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Tribal Background Pattern',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -308,7 +308,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Notifications',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -356,7 +356,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'Data & Storage',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(
@@ -381,7 +381,7 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
             const SizedBox(height: AppSpacing.lg),
             Text(
               'About Lumad Lingua',
-              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+              style: AppTypography.labelBold.copyWith(color: AppColors.subtitleColor(context), fontSize: 13),
             ),
             const SizedBox(height: AppSpacing.xs),
             AppCard(

@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:confetti/confetti.dart';
 import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
+import '../../providers/localization_provider.dart';
+import '../../utils/app_localizations.dart';
 import '../../models/shop_item_model.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
@@ -21,6 +24,20 @@ class ShopScreen extends ConsumerStatefulWidget {
 
 class _ShopScreenState extends ConsumerState<ShopScreen> {
   String _selectedCategory = 'All';
+  late ConfettiController _confettiController;
+
+  @override
+  void initState() {
+    super.initState();
+    _confettiController = ConfettiController(duration: const Duration(seconds: 3));
+  }
+
+  @override
+  void dispose() {
+    _confettiController.dispose();
+    super.dispose();
+  }
+
   final List<String> _categories = [
     'All',
     'Streak Protection 🧊',
@@ -197,6 +214,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
               if (mounted) {
                 if (success) {
+                  _confettiController.play();
                   HapticFeedback.heavyImpact();
                   ScaffoldMessenger.of(context).showSnackBar(
                     SnackBar(content: Text('Successfully acquired "${item.name}"! 🎉')),
@@ -217,10 +235,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
   @override
   Widget build(BuildContext context) {
     final authState = ref.watch(authStateProvider);
+    final langCode = ref.watch(localizationProvider);
     final user = authState.value;
     final crystals = user?.crystals ?? 150;
     final inventory = user?.inventory ?? [];
-    final streakFreezes = user?.streakFreezes ?? 0;
     final equippedFrame = user?.equippedFrame;
     final equippedBanner = user?.equippedBanner;
 
@@ -236,9 +254,12 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
-      body: LumadBackground(
-        child: SafeArea(
-          child: CustomScrollView(
+      body: Stack(
+        alignment: Alignment.topCenter,
+        children: [
+          LumadBackground(
+            child: SafeArea(
+              child: CustomScrollView(
             slivers: [
               SliverToBoxAdapter(
                 child: Padding(
@@ -246,8 +267,8 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const ScreenHeader(
-                        title: 'Crystal Shop',
+                      ScreenHeader(
+                        title: RegionalStrings.get(langCode, 'shopTitle'),
                         subtitle: 'Spend crystals on streak freezes, frames, banners & themes',
                       ),
                       const SizedBox(height: AppSpacing.sm),
@@ -272,23 +293,10 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                           ],
                         ),
                         child: Row(
-                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
                           children: [
-                            Row(
-                              children: [
-                                const Icon(Icons.diamond, color: AppColors.forest900, size: 28),
-                                const SizedBox(width: 8),
-                                Text('$crystals Crystals Available', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
-                              ],
-                            ),
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                              decoration: BoxDecoration(
-                                color: AppColors.forest900,
-                                borderRadius: BorderRadius.circular(12),
-                              ),
-                              child: Text('🧊 $streakFreezes Freezes', style: AppTypography.labelBold.copyWith(color: AppColors.gold400, fontSize: 11)),
-                            ),
+                            const Icon(Icons.diamond, color: AppColors.forest900, size: 28),
+                            const SizedBox(width: 8),
+                            Text('$crystals Crystals Available', style: AppTypography.h3.copyWith(color: AppColors.forest900)),
                           ],
                         ),
                       ),
@@ -322,7 +330,7 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                 sliver: SliverGrid(
                   gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
                     crossAxisCount: 2,
-                    childAspectRatio: 0.68,
+                    childAspectRatio: 0.75,
                     crossAxisSpacing: AppSpacing.md,
                     mainAxisSpacing: AppSpacing.md,
                   ),
@@ -385,19 +393,15 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
                               ),
                             ),
                             const SizedBox(height: 8),
-                            Text(
-                              item.name,
-                              style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 13),
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                            ),
-                            const SizedBox(height: 2),
                             Expanded(
-                              child: Text(
-                                item.description,
-                                style: AppTypography.caption.copyWith(color: AppColors.creamBorder, fontSize: 11),
-                                maxLines: 2,
-                                overflow: TextOverflow.ellipsis,
+                              child: Center(
+                                child: Text(
+                                  item.name,
+                                  style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 13),
+                                  maxLines: 2,
+                                  overflow: TextOverflow.ellipsis,
+                                  textAlign: TextAlign.center,
+                                ),
                               ),
                             ),
                             const SizedBox(height: 6),
@@ -477,6 +481,14 @@ class _ShopScreenState extends ConsumerState<ShopScreen> {
             ],
           ),
         ),
+      ),
+          ConfettiWidget(
+            confettiController: _confettiController,
+            blastDirectionality: BlastDirectionality.explosive,
+            shouldLoop: false,
+            colors: const [AppColors.gold500, AppColors.forest500, Colors.white, AppColors.semanticGreen],
+          ),
+        ],
       ),
     );
   }
