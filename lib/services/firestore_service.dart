@@ -328,7 +328,7 @@ class FirestoreService {
         }
       }
 
-      final snapshot = await _vocabularyCol.get().timeout(const Duration(seconds: 4));
+      final snapshot = await _vocabularyCol.get();
       if (snapshot.docs.isNotEmpty) {
         final list = snapshot.docs.map((d) {
           final data = Map<String, dynamic>.from(d.data());

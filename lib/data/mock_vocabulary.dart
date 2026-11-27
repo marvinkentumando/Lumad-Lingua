@@ -12,8 +12,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'When did I eat the chicken?',
       ),
     ],
-    category: 'General',
-    relatedWords: ['-a', 'a- -Ø'],
     notes: 'Svelmoe & Svelmoe (1990), p. 1 · Check source · Compare entry boundary',
   ),
   const VocabularyModel(
@@ -27,8 +25,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Eat the chicken.',
       ),
     ],
-    category: 'General',
-    relatedWords: ['a-'],
     notes: 'Svelmoe & Svelmoe (1990), p. 1 · Visually transcribed',
   ),
   const VocabularyModel(
@@ -42,8 +38,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'I will get you a chicken.',
       ),
     ],
-    category: 'General',
-    relatedWords: ['a-', '-a'],
     notes: 'Svelmoe & Svelmoe (1990), p. 1 · Check source',
   ),
   const VocabularyModel(
@@ -57,8 +51,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'No! I will not go.',
       ),
     ],
-    category: 'General',
-    relatedWords: [],
     notes: 'Svelmoe & Svelmoe (1990), p. 1 · Visually transcribed',
   ),
   const VocabularyModel(
@@ -76,8 +68,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'You said my sickle was here. Where is it?',
       ),
     ],
-    category: 'General',
-    relatedWords: ['aadto'],
     notes: 'Svelmoe & Svelmoe (1990), p. 1 · Visually transcribed',
   ),
   const VocabularyModel(
@@ -91,8 +81,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'My mother was there with you (pl) yesterday.',
       ),
     ],
-    category: 'General',
-    relatedWords: ['aadi'],
     notes: 'Svelmoe & Svelmoe (1990), p. 1 · Visually transcribed',
   ),
   const VocabularyModel(
@@ -106,8 +94,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Good morning to our school.',
       ),
     ],
-    category: 'Greetings',
-    relatedWords: ['Madyaw', 'Masurom', 'Gabila'],
   ),
   const VocabularyModel(
     id: 'vocab_2',
@@ -120,8 +106,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Good afternoon to you, my friend.',
       ),
     ],
-    category: 'Greetings',
-    relatedWords: ['Madyaw', 'Gabila'],
   ),
   const VocabularyModel(
     id: 'vocab_3',
@@ -134,8 +118,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Good evening to the household.',
       ),
     ],
-    category: 'Greetings',
-    relatedWords: ['Madyaw', 'Gabi'],
   ),
   const VocabularyModel(
     id: 'vocab_4',
@@ -148,8 +130,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Good day to all of you.',
       ),
     ],
-    category: 'Greetings',
-    relatedWords: ['Madyaw', 'Allaw'],
   ),
   const VocabularyModel(
     id: 'vocab_5',
@@ -162,8 +142,6 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Thank you for your help.',
       ),
     ],
-    category: 'Greetings',
-    relatedWords: ['Madyaw'],
   ),
   const VocabularyModel(
     id: 'vocab_6',
@@ -176,7 +154,5 @@ final List<VocabularyModel> mockVocabularyList = [
         english: 'Peace in our community.',
       ),
     ],
-    category: 'Society',
-    relatedWords: ['Sakop'],
   ),
 ];

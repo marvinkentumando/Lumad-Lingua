@@ -5,6 +5,8 @@ import '../../providers/theme_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/localization_provider.dart';
 import '../../services/notification_service.dart';
+import '../../services/database_service.dart';
+import '../../providers/dictionary_provider.dart';
 import '../../widgets/common/app_card.dart';
 import '../../widgets/common/lumad_background.dart';
 
@@ -348,6 +350,31 @@ class _SettingsScreenState extends ConsumerState<SettingsScreen> {
                     ),
                   ],
                 ],
+              ),
+            ),
+
+            const SizedBox(height: AppSpacing.lg),
+            Text(
+              'Data & Storage',
+              style: AppTypography.labelBold.copyWith(color: AppColors.creamText2, fontSize: 13),
+            ),
+            const SizedBox(height: AppSpacing.xs),
+            AppCard(
+              child: ListTile(
+                title: Text('Clear Dictionary Cache & Sync 🔄', style: AppTypography.bodyLarge.copyWith(color: Colors.white, fontWeight: FontWeight.bold)),
+                subtitle: Text('Clear local SQLite cache and fetch latest updates from Firebase', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),
+                onTap: () async {
+                  final messenger = ScaffoldMessenger.of(context);
+                  await DatabaseService().clear();
+                  ref.invalidate(dictionaryPaginationProvider);
+                  ref.invalidate(partsOfSpeechProvider);
+                  if (context.mounted) {
+                    messenger.clearSnackBars();
+                    messenger.showSnackBar(
+                      const SnackBar(content: Text('Dictionary cache cleared! Latest data will be synced. 🔄')),
+                    );
+                  }
+                },
               ),
             ),
 

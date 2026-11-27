@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../utils/constants.dart';
+import '../../utils/audio_helper.dart';
 import '../../widgets/common/app_button.dart';
 import '../../widgets/common/brand_card.dart';
 
@@ -37,6 +38,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       'mansaka': 'Madyaw na masurom',
       'pronunciation': 'Mad-yaw na ma-su-rom',
       'translation': 'Good morning',
+      'audioUrl': 'greetings/madyaw_na_masurom.mp3',
     },
     {
       'title': 'Earn Rewards & Streaks',
@@ -54,20 +56,69 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
     }
   }
 
+  Future<void> _playFlashcardAudio(String? audioPath) async {
+    if (audioPath != null) {
+      await AudioHelper.playAudio(audioPath);
+    } else {
+      await AudioHelper.playAudio('greetings/madyaw_na_masurom.mp3');
+    }
+    if (mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Playing reference audio: "Madyaw na masurom"'),
+          duration: Duration(seconds: 2),
+          backgroundColor: AppColors.forestGreen,
+        ),
+      );
+    }
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
+    final isLastPage = _currentPage == _pages.length - 1;
+
     return Scaffold(
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(AppSpacing.lg),
           child: Column(
             children: [
-              Align(
-                alignment: Alignment.topRight,
-                child: TextButton(
-                  onPressed: _completeOnboarding,
-                  child: const Text('Skip', style: TextStyle(color: AppColors.forestGreen, fontWeight: FontWeight.bold)),
-                ),
+              // Top navigation header (Back & Skip)
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _currentPage > 0
+                      ? Semantics(
+                          button: true,
+                          label: 'Previous onboarding step',
+                          child: TextButton.icon(
+                            onPressed: () {
+                              _pageController.previousPage(
+                                duration: const Duration(milliseconds: 300),
+                                curve: Curves.easeInOut,
+                              );
+                            },
+                            icon: const Icon(Icons.arrow_back_ios_rounded, size: 16, color: AppColors.forestGreen),
+                            label: const Text('Back', style: TextStyle(color: AppColors.forestGreen, fontWeight: FontWeight.bold)),
+                          ),
+                        )
+                      : const SizedBox.shrink(),
+                  if (!isLastPage)
+                    Semantics(
+                      button: true,
+                      label: 'Skip onboarding',
+                      child: TextButton(
+                        onPressed: _completeOnboarding,
+                        child: const Text('Skip', style: TextStyle(color: AppColors.forestGreen, fontWeight: FontWeight.bold)),
+                      ),
+                    ),
+                ],
               ),
               Expanded(
                 child: PageView.builder(
@@ -82,50 +133,87 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
                         if (!isFlashcard) ...[
-                          Container(
-                            padding: const EdgeInsets.all(32),
-                            decoration: const BoxDecoration(
-                              color: AppColors.lightGreenBackground,
-                              shape: BoxShape.circle,
-                            ),
-                            child: Icon(
-                              _getIcon(item['icon']!),
-                              size: 80,
-                              color: AppColors.forestGreen,
-                            ),
-                          ),
-                          const SizedBox(height: AppSpacing.xl),
-                        ] else ...[
-                          BrandCard(
-                            backgroundColor: AppColors.gold100,
-                            border: Border.all(color: AppColors.gold500, width: 2),
-                            child: Column(
-                              children: [
-                                Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
+                          if (index == 0) ...[
+                            Container(
+                              height: 140,
+                              width: double.infinity,
+                              decoration: BoxDecoration(
+                                color: AppColors.lightGreenBackground,
+                                borderRadius: BorderRadius.circular(AppRadius.card),
+                                border: Border.all(color: AppColors.forestGreen.withValues(alpha: 0.3)),
+                              ),
+                              child: ClipRRect(
+                                borderRadius: BorderRadius.circular(AppRadius.card),
+                                child: Stack(
+                                  alignment: Alignment.center,
                                   children: [
-                                    const Icon(Icons.volume_up_rounded, color: AppColors.gold800, size: 28),
-                                    const SizedBox(width: 8),
-                                    Text('Mansaka Flashcard', style: AppTypography.labelBold.copyWith(color: AppColors.gold800)),
+                                    Positioned.fill(
+                                      child: Opacity(
+                                        opacity: 0.3,
+                                        child: Image.asset(
+                                          'assets/images/lumad_waves.gif',
+                                          fit: BoxFit.cover,
+                                        ),
+                                      ),
+                                    ),
+                                    const Icon(
+                                      Icons.school,
+                                      size: 64,
+                                      color: AppColors.forestGreen,
+                                    ),
                                   ],
                                 ),
-                                const SizedBox(height: AppSpacing.md),
-                                Text(
-                                  item['mansaka']!,
-                                  style: AppTypography.flashcard.copyWith(color: AppColors.forest900, fontSize: 26),
-                                  textAlign: TextAlign.center,
-                                ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '[ ${item['pronunciation']} ]',
-                                  style: AppTypography.phoneticGuide.copyWith(color: AppColors.forest700),
-                                ),
-                                const SizedBox(height: AppSpacing.sm),
-                                Text(
-                                  '"${item['translation']}"',
-                                  style: AppTypography.h3.copyWith(color: AppColors.forest800),
-                                ),
-                              ],
+                              ),
+                            ),
+                          ] else ...[
+                            Container(
+                              padding: const EdgeInsets.all(32),
+                              decoration: const BoxDecoration(
+                                color: AppColors.lightGreenBackground,
+                                shape: BoxShape.circle,
+                              ),
+                              child: Icon(
+                                _getIcon(item['icon']!),
+                                size: 80,
+                                color: AppColors.forestGreen,
+                              ),
+                            ),
+                          ],
+                          const SizedBox(height: AppSpacing.xl),
+                        ] else ...[
+                          GestureDetector(
+                            onTap: () => _playFlashcardAudio(item['audioUrl']),
+                            child: BrandCard(
+                              backgroundColor: AppColors.gold100,
+                              border: Border.all(color: AppColors.gold500, width: 2),
+                              child: Column(
+                                children: [
+                                  Row(
+                                    mainAxisAlignment: MainAxisAlignment.center,
+                                    children: [
+                                      const Icon(Icons.volume_up_rounded, color: AppColors.gold800, size: 28),
+                                      const SizedBox(width: 8),
+                                      Text('Tap to Listen', style: AppTypography.labelBold.copyWith(color: AppColors.gold800)),
+                                    ],
+                                  ),
+                                  const SizedBox(height: AppSpacing.md),
+                                  Text(
+                                    item['mansaka']!,
+                                    style: AppTypography.flashcard.copyWith(color: AppColors.forest900, fontSize: 26),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                  const SizedBox(height: 4),
+                                  Text(
+                                    '[ ${item['pronunciation']} ]',
+                                    style: AppTypography.phoneticGuide.copyWith(color: AppColors.forest700),
+                                  ),
+                                  const SizedBox(height: AppSpacing.sm),
+                                  Text(
+                                    '"${item['translation']}"',
+                                    style: AppTypography.h3.copyWith(color: AppColors.forest800),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
                           const SizedBox(height: AppSpacing.lg),
@@ -170,7 +258,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
               ),
               const SizedBox(height: AppSpacing.xl),
               AppButton(
-                text: _currentPage == _pages.length - 1 ? 'Get Started' : 'Next',
+                text: isLastPage ? 'Get Started' : 'Next',
                 onPressed: () {
                   if (_currentPage < _pages.length - 1) {
                     _pageController.nextPage(

@@ -27,23 +27,29 @@ class DictionaryScreen extends ConsumerStatefulWidget {
 
 class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
   late TextEditingController _searchController;
-  String _selectedCategory = 'All';
+  late ScrollController _scrollController;
   String? _playingVocabId;
   List<String> _recentSearches = ['Madyaw', 'Salamat', 'Good morning', 'Water', 'Family'];
-
-  final List<String> _categories = ['All', 'Saved', 'Noun', 'Verb', 'Greeting', 'Phrase', 'General', 'Society'];
 
   @override
   void initState() {
     super.initState();
     _searchController = TextEditingController();
+    _scrollController = ScrollController()..addListener(_onScroll);
     _loadRecentSearches();
   }
 
   @override
   void dispose() {
     _searchController.dispose();
+    _scrollController.dispose();
     super.dispose();
+  }
+
+  void _onScroll() {
+    if (_scrollController.position.pixels >= _scrollController.position.maxScrollExtent - 200) {
+      ref.read(dictionaryPaginationProvider.notifier).loadMore();
+    }
   }
 
   Future<void> _loadRecentSearches() async {
@@ -87,22 +93,28 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
 
   void _applySearchChip(String term) {
     _searchController.text = term;
-    ref.read(searchQueryProvider.notifier).updateQuery(term);
+    ref.read(dictionaryFilterProvider.notifier).updateQuery(term);
     _saveSearchTerm(term);
-    setState(() {});
   }
 
   @override
   Widget build(BuildContext context) {
-    final searchResultsAsync = ref.watch(dictionarySearchResultsProvider);
+    final filterState = ref.watch(dictionaryFilterProvider);
+    final paginationAsync = ref.watch(dictionaryPaginationProvider);
+    final partsOfSpeechAsync = ref.watch(partsOfSpeechProvider);
     final savedBookmarks = ref.watch(bookmarksProvider);
     final langCode = ref.watch(localizationProvider);
+
+    final partsOfSpeech = partsOfSpeechAsync.value ?? ['Noun', 'Verb', 'Phrase', 'Prefix', 'Suffix', 'Locative'];
+    final categories = ['All', 'Saved', ...partsOfSpeech];
+    final selectedCategory = filterState.selectedCategory;
 
     return Scaffold(
       appBar: const LumadTopNavbar(),
       body: LumadBackground(
         child: SafeArea(
           child: ListView(
+            controller: _scrollController,
             padding: const EdgeInsets.all(AppSpacing.md),
             children: [
                 ScreenHeader(
@@ -113,11 +125,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                 TextField(
                 controller: _searchController,
                 onChanged: (val) {
-                  ref.read(searchQueryProvider.notifier).updateQuery(val);
-                  if (val.trim().length >= 3) {
-                    _saveSearchTerm(val);
-                  }
-                  setState(() {});
+                  ref.read(dictionaryFilterProvider.notifier).updateQuery(val);
                 },
                 onSubmitted: (val) => _saveSearchTerm(val),
                 style: AppTypography.bodyLarge.copyWith(color: AppColors.textColor(context)),
@@ -130,8 +138,7 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                           icon: Icon(Icons.clear, color: AppColors.subtitleColor(context)),
                           onPressed: () {
                             _searchController.clear();
-                            ref.read(searchQueryProvider.notifier).updateQuery('');
-                            setState(() {});
+                            ref.read(dictionaryFilterProvider.notifier).updateQuery('');
                           },
                         )
                       : null,
@@ -214,19 +221,19 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
                 const SizedBox(height: AppSpacing.sm),
               ],
 
-              // Category Filter Pills
+              // Category (Part of Speech) Filter Pills
               SingleChildScrollView(
                 scrollDirection: Axis.horizontal,
                 child: Row(
-                  children: _categories.map((cat) {
-                    final isSelected = _selectedCategory == cat;
+                  children: categories.map((cat) {
+                    final isSelected = selectedCategory == cat;
                     return Padding(
                       padding: const EdgeInsets.only(right: 8.0),
                       child: BrandFilterChip(
                         label: cat,
                         isSelected: isSelected,
                         onSelected: (_) {
-                          setState(() => _selectedCategory = cat);
+                          ref.read(dictionaryFilterProvider.notifier).updateCategory(cat);
                         },
                       ),
                     );
@@ -235,191 +242,199 @@ class _DictionaryScreenState extends ConsumerState<DictionaryScreen> {
               ),
               const SizedBox(height: AppSpacing.md),
 
-              // Dynamic Search Results Section ONLY
-              searchResultsAsync.when(
-                skipLoadingOnRefresh: true,
-                data: (words) {
-                  List<VocabularyModel> filteredWords;
-                  if (_selectedCategory == 'Saved') {
-                    final savedList = savedBookmarks.values.toList();
-                    final query = _searchController.text.trim().toLowerCase();
-                    if (query.isEmpty) {
-                      filteredWords = savedList;
-                    } else {
-                      filteredWords = savedList.where((w) {
-                        return w.headword.toLowerCase().contains(query) ||
-                            w.translation.toLowerCase().contains(query);
-                      }).toList();
-                    }
-                  } else {
-                    filteredWords = _selectedCategory == 'All'
-                        ? words
-                        : words.where((w) {
-                            final catLower = _selectedCategory.toLowerCase();
-                            final posMatch = w.partOfSpeech.toLowerCase().contains(catLower);
-                            final catMatch = w.category.toLowerCase().contains(catLower);
-                            return posMatch || catMatch;
-                          }).toList();
-                  }
-
-                  if (filteredWords.isEmpty) {
-                    return Padding(
-                      padding: const EdgeInsets.all(AppSpacing.lg),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Icon(
-                            _selectedCategory == 'Saved' ? Icons.bookmark_border : Icons.search_off,
-                            size: 64,
-                            color: AppColors.creamText3,
-                          ),
-                          const SizedBox(height: AppSpacing.md),
-                          Text(
-                            _selectedCategory == 'Saved'
-                                ? 'No saved study bookmarks yet.\nTap the bookmark icon on any word to save it!'
-                                : 'No dictionary entries match your search.',
-                            style: AppTypography.h3.copyWith(color: AppColors.subtitleColor(context)),
-                            textAlign: TextAlign.center,
-                          ),
-                          const SizedBox(height: AppSpacing.lg),
-                          BrandButton(
-                            text: _selectedCategory == 'Saved'
-                                ? 'Explore All Dictionary Words 📖'
-                                : 'Clear Search & Filters 🔄',
-                            type: BrandButtonType.gold,
-                            onPressed: () {
-                              _searchController.clear();
-                              ref.read(searchQueryProvider.notifier).updateQuery('');
-                              setState(() => _selectedCategory = 'All');
-                            },
-                          ),
-                        ],
+              // Dynamic Search Results Section with Pagination
+              selectedCategory == 'Saved'
+                  ? _buildWordList(
+                      selectedCategory == 'Saved'
+                          ? (filterState.searchQuery.isEmpty
+                              ? savedBookmarks.values.toList()
+                              : savedBookmarks.values.where((w) {
+                                  final q = filterState.searchQuery.toLowerCase();
+                                  return w.headword.toLowerCase().contains(q) || w.translation.toLowerCase().contains(q);
+                                }).toList())
+                          : [],
+                      selectedCategory,
+                      false,
+                    )
+                  : paginationAsync.when(
+                      skipLoadingOnRefresh: true,
+                      data: (pagedState) => _buildWordList(
+                        pagedState.words,
+                        selectedCategory,
+                        pagedState.isLoadingMore,
                       ),
-                    );
-                  }
-
-                  return Column(
-                    children: filteredWords.map((vocab) {
-                      final isBookmarked = ref.read(bookmarksProvider.notifier).isBookmarked(vocab);
-                      final isPlaying = _playingVocabId == vocab.id;
-
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: AppSpacing.sm),
-                        child: BrandCard(
-                          padding: const EdgeInsets.all(AppSpacing.md),
-                          onTap: () {
-                            context.push('/dictionary/details', extra: vocab);
-                          },
-                          child: Row(
-                            crossAxisAlignment: CrossAxisAlignment.center,
-                            children: [
-                              // Left: Headword and translation
-                              Expanded(
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    Text(
-                                      vocab.headword,
-                                      style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 18),
-                                    ),
-                                    const SizedBox(height: 4),
-                                    Text(
-                                      vocab.translation,
-                                      style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                              const SizedBox(width: AppSpacing.sm),
-                              // Right: Action buttons (Bookmark, Play/Pause audio, Chevron)
-                              Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  GestureDetector(
-                                    onTap: () async {
-                                      final nowSaved = await ref.read(bookmarksProvider.notifier).toggleBookmark(vocab);
-                                      if (context.mounted) {
-                                        ScaffoldMessenger.of(context).clearSnackBars();
-                                        ScaffoldMessenger.of(context).showSnackBar(
-                                          SnackBar(
-                                            content: Text(nowSaved
-                                                ? 'Saved "${vocab.headword}" to study bookmarks!'
-                                                : 'Removed "${vocab.headword}" from bookmarks.'),
-                                            duration: const Duration(seconds: 1),
-                                          ),
-                                        );
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: Icon(
-                                        isBookmarked ? Icons.bookmark : Icons.bookmark_border,
-                                        color: isBookmarked ? AppColors.gold500 : AppColors.creamText3,
-                                        size: 22,
-                                      ),
-                                    ),
-                                  ),
-                                  GestureDetector(
-                                    onTap: () async {
-                                      if (isPlaying) {
-                                        await AudioHelper.stopAudio();
-                                        if (mounted) {
-                                          setState(() => _playingVocabId = null);
-                                        }
-                                      } else {
-                                        if (vocab.resolvedAudioUrl != null && vocab.resolvedAudioUrl!.isNotEmpty) {
-                                          setState(() => _playingVocabId = vocab.id);
-                                          await AudioHelper.playAudio(vocab.resolvedAudioUrl!);
-                                          Future.delayed(const Duration(milliseconds: 2200), () {
-                                            if (mounted && _playingVocabId == vocab.id) {
-                                              setState(() => _playingVocabId = null);
-                                            }
-                                          });
-                                        } else {
-                                          ScaffoldMessenger.of(context).clearSnackBars();
-                                          ScaffoldMessenger.of(context).showSnackBar(
-                                            const SnackBar(content: Text('Playing reference pronunciation audio...')),
-                                          );
-                                        }
-                                      }
-                                    },
-                                    child: Padding(
-                                      padding: const EdgeInsets.all(6.0),
-                                      child: Icon(
-                                        isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
-                                        color: AppColors.gold500,
-                                        size: 26,
-                                      ),
-                                    ),
-                                  ),
-                                  const SizedBox(width: 2),
-                                  const Icon(
-                                    Icons.chevron_right,
-                                    color: AppColors.creamText3,
-                                    size: 20,
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  );
-                },
-                loading: () => const Padding(
-                  padding: EdgeInsets.symmetric(vertical: 32.0),
-                  child: Center(child: CircularProgressIndicator(color: AppColors.gold500)),
-                ),
-                error: (err, stack) => AppErrorWidget(
-                  message: 'Failed to search dictionary: $err',
-                  onRetry: () => ref.invalidate(dictionarySearchResultsProvider),
-                ),
-              ),
+                      loading: () => const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 32.0),
+                        child: Center(child: CircularProgressIndicator(color: AppColors.gold500)),
+                      ),
+                      error: (err, stack) => AppErrorWidget(
+                        message: 'Failed to search dictionary: $err',
+                        onRetry: () => ref.invalidate(dictionaryPaginationProvider),
+                      ),
+                    ),
             ],
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildWordList(List<VocabularyModel> filteredWords, String selectedCategory, bool isLoadingMore) {
+    if (filteredWords.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.all(AppSpacing.lg),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(
+              selectedCategory == 'Saved' ? Icons.bookmark_border : Icons.search_off,
+              size: 64,
+              color: AppColors.creamText3,
+            ),
+            const SizedBox(height: AppSpacing.md),
+            Text(
+              selectedCategory == 'Saved'
+                  ? 'No saved study bookmarks yet.\nTap the bookmark icon on any word to save it!'
+                  : 'No dictionary entries match your search.',
+              style: AppTypography.h3.copyWith(color: AppColors.subtitleColor(context)),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: AppSpacing.lg),
+            BrandButton(
+              text: selectedCategory == 'Saved'
+                  ? 'Explore All Dictionary Words 📖'
+                  : 'Clear Search & Filters 🔄',
+              type: BrandButtonType.gold,
+              onPressed: () {
+                _searchController.clear();
+                ref.read(dictionaryFilterProvider.notifier).updateQuery('');
+                ref.read(dictionaryFilterProvider.notifier).updateCategory('All');
+              },
+            ),
+          ],
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        ...filteredWords.map((vocab) {
+          final isBookmarked = ref.read(bookmarksProvider.notifier).isBookmarked(vocab);
+          final isPlaying = _playingVocabId == vocab.id;
+
+          return Padding(
+            padding: const EdgeInsets.only(bottom: AppSpacing.sm),
+            child: BrandCard(
+              padding: const EdgeInsets.all(AppSpacing.md),
+              onTap: () {
+                context.push('/dictionary/details', extra: vocab);
+              },
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // Left: Headword and translation
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          vocab.headword,
+                          style: AppTypography.lessonTitle.copyWith(color: Colors.white, fontSize: 18),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          vocab.translation,
+                          style: AppTypography.bodyLarge.copyWith(color: AppColors.creamBorder),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: AppSpacing.sm),
+                  // Right: Action buttons (Bookmark, Play/Pause audio, Chevron)
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      GestureDetector(
+                        onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          final nowSaved = await ref.read(bookmarksProvider.notifier).toggleBookmark(vocab);
+                          if (context.mounted) {
+                            messenger.clearSnackBars();
+                            messenger.showSnackBar(
+                              SnackBar(
+                                content: Text(nowSaved
+                                    ? 'Saved "${vocab.headword}" to study bookmarks!'
+                                    : 'Removed "${vocab.headword}" from bookmarks.'),
+                                duration: const Duration(seconds: 1),
+                              ),
+                            );
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Icon(
+                            isBookmarked ? Icons.bookmark : Icons.bookmark_border,
+                            color: isBookmarked ? AppColors.gold500 : AppColors.creamText3,
+                            size: 22,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () async {
+                          final messenger = ScaffoldMessenger.of(context);
+                          if (isPlaying) {
+                            await AudioHelper.stopAudio();
+                            if (mounted) {
+                              setState(() => _playingVocabId = null);
+                            }
+                          } else {
+                            if (vocab.resolvedAudioUrl != null && vocab.resolvedAudioUrl!.isNotEmpty) {
+                              setState(() => _playingVocabId = vocab.id);
+                              await AudioHelper.playAudio(vocab.resolvedAudioUrl!);
+                              Future.delayed(const Duration(milliseconds: 2200), () {
+                                if (mounted && _playingVocabId == vocab.id) {
+                                  setState(() => _playingVocabId = null);
+                                }
+                              });
+                            } else {
+                              if (context.mounted) {
+                                messenger.clearSnackBars();
+                                messenger.showSnackBar(
+                                  const SnackBar(content: Text('Playing reference pronunciation audio...')),
+                                );
+                              }
+                            }
+                          }
+                        },
+                        child: Padding(
+                          padding: const EdgeInsets.all(6.0),
+                          child: Icon(
+                            isPlaying ? Icons.pause_circle_filled_rounded : Icons.play_circle_fill_rounded,
+                            color: AppColors.gold500,
+                            size: 26,
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 2),
+                      const Icon(
+                        Icons.chevron_right,
+                        color: AppColors.creamText3,
+                        size: 20,
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+        if (selectedCategory != 'Saved' && isLoadingMore) ...[
+          const Padding(
+            padding: EdgeInsets.all(AppSpacing.md),
+            child: Center(child: CircularProgressIndicator(color: AppColors.gold500)),
+          ),
+        ],
+      ],
     );
   }
 }

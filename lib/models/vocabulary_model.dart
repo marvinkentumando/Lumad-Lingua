@@ -27,8 +27,6 @@ class VocabularyModel {
   final String partOfSpeech;
   final List<VocabularyExample> examples;
   final String? audioUrl;
-  final String category;
-  final List<String> relatedWords;
   final String? pronunciation;
   final String? notes;
 
@@ -39,8 +37,6 @@ class VocabularyModel {
     required this.partOfSpeech,
     required this.examples,
     this.audioUrl,
-    required this.category,
-    this.relatedWords = const [],
     this.pronunciation,
     this.notes,
   });
@@ -106,8 +102,6 @@ class VocabularyModel {
       partOfSpeech: json['partOfSpeech'] as String? ?? json['part_of_speech'] as String? ?? json['pos'] as String? ?? 'Noun',
       examples: parsedExamples,
       audioUrl: resolvedAudioUrl,
-      category: json['category'] as String? ?? json['topic'] as String? ?? json['domain'] as String? ?? 'General',
-      relatedWords: (json['relatedWords'] as List<dynamic>?)?.map((e) => e.toString()).toList() ?? [],
       pronunciation: json['pronunciation'] as String? ?? json['phonetic'] as String? ?? json['ipa'] as String?,
       notes: json['notes'] as String? ?? json['note'] as String? ?? json['culturalNote'] as String?,
     );
@@ -127,8 +121,6 @@ class VocabularyModel {
       'exampleTranslation': exampleTranslation,
       'exampleSentenceEnglish': exampleTranslation,
       'audioUrl': audioUrl,
-      'category': category,
-      'relatedWords': relatedWords,
       'pronunciation': pronunciation,
       'notes': notes,
     };
