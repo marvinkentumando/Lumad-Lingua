@@ -33,7 +33,7 @@ service cloud.firestore {
     // Lessons (Public read)
     match /lessons/{lessonId} {
       allow read: if true;
-      allow write: if isAuthenticated();
+      allow write: if false;
     }
 
     // Learning Activities (Public read)
@@ -77,7 +77,7 @@ service cloud.firestore {
     // Lingua Duels Arena Sessions
     match /duel_sessions/{sessionId} {
       allow read, create, update: if isAuthenticated();
-      allow delete: if false;
+      allow delete: if isAuthenticated();
     }
   }
 }

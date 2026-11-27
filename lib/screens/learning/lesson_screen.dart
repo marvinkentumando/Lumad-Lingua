@@ -265,6 +265,7 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
               context.go(
                 '/lesson-result',
                 extra: {
+                  'lessonId': session.lessonId,
                   'earnedXp': session.earnedXp,
                   'stars': session.stars,
                   'score': session.score,

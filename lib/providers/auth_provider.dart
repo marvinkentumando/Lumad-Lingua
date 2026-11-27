@@ -61,7 +61,7 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
 
     if (daysDifference <= 1) {
       // Streak intact or practiced today/yesterday
-      return user.copyWith(lastActiveDate: today);
+      return user;
     } else {
       // Missed 1 or more days! Check Streak Freeze protection
       if (user.streakFreezes > 0) {
@@ -71,11 +71,14 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
           lastActiveDate: today,
         );
       } else {
-        // Streak lost -> reset to 1
-        return user.copyWith(
-          streakDays: 1,
-          lastActiveDate: today,
-        );
+        // Reset streak if inactive for more than 2 days
+        if (daysDifference > 2) {
+          return user.copyWith(
+            streakDays: 0,
+            lastActiveDate: today,
+          );
+        }
+        return user;
       }
     }
   }

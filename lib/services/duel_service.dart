@@ -59,34 +59,45 @@ class DuelService {
   /// Fetches dynamic questions from Firebase (learning_activities / vocabulary) with fallback to sample
   Future<List<DuelQuestion>> _fetchFirebaseQuestions() async {
     try {
-      final activitiesSnapshot = await _firestore.collection('learning_activities').limit(5).get();
+      final activitiesSnapshot = await _firestore.collection('learning_activities').limit(10).get();
       if (activitiesSnapshot.docs.isNotEmpty) {
         List<DuelQuestion> questions = [];
         for (var doc in activitiesSnapshot.docs) {
           final data = doc.data();
-          final options = List<String>.from(data['options'] ?? ['Option A', 'Option B', 'Option C', 'Option D']);
-          final correctIdx = data['correctOptionIndex'] ?? 0;
-          questions.add(DuelQuestion(
-            id: doc.id,
-            questionText: data['questionText'] ?? 'Translate the Mansaka term:',
-            targetMansaka: options.isNotEmpty && correctIdx < options.length ? options[correctIdx] : 'Mansaka',
-            targetEnglish: data['questionText'] ?? '',
-            options: options,
-            correctOptionIndex: correctIdx,
-          ));
+          final rawOptions = data['options'] as List<dynamic>?;
+          if (rawOptions != null && rawOptions.isNotEmpty) {
+            final options = List<String>.from(rawOptions);
+            final correctIdx = (data['correctOptionIndex'] as num?)?.toInt() ?? 0;
+            questions.add(DuelQuestion(
+              id: doc.id,
+              questionText: data['questionText'] ?? 'Translate the Mansaka term:',
+              targetMansaka: options.isNotEmpty && correctIdx < options.length ? options[correctIdx] : 'Mansaka',
+              targetEnglish: data['questionText'] ?? '',
+              options: options,
+              correctOptionIndex: correctIdx.clamp(0, options.length - 1),
+            ));
+          }
         }
-        if (questions.isNotEmpty) return questions;
+        if (questions.isNotEmpty) return questions.take(5).toList();
       }
 
-      final vocabSnapshot = await _firestore.collection('vocabulary').limit(5).get();
+      final vocabSnapshot = await _firestore.collection('vocabulary').limit(15).get();
       if (vocabSnapshot.docs.isNotEmpty) {
+        final allDocs = vocabSnapshot.docs;
+        final allTranslations = allDocs.map((d) => d.data()['translation'] as String? ?? 'Translation').toSet().toList();
+
         List<DuelQuestion> questions = [];
-        for (var doc in vocabSnapshot.docs) {
+        for (var doc in allDocs) {
           final data = doc.data();
           final headword = data['headword'] ?? 'Salita';
           final translation = data['translation'] ?? 'Translation';
 
-          List<String> opts = [translation, 'Alternative 1', 'Alternative 2', 'Alternative 3'];
+          final alternatives = allTranslations.where((t) => t != translation).toList()..shuffle();
+          final alt1 = alternatives.isNotEmpty ? alternatives[0] : 'Good morning';
+          final alt2 = alternatives.length > 1 ? alternatives[1] : 'Thank you';
+          final alt3 = alternatives.length > 2 ? alternatives[2] : 'House';
+
+          List<String> opts = [translation, alt1, alt2, alt3];
           opts.shuffle();
           final correctIdx = opts.indexOf(translation);
 
@@ -99,7 +110,7 @@ class DuelService {
             correctOptionIndex: correctIdx >= 0 ? correctIdx : 0,
           ));
         }
-        if (questions.isNotEmpty) return questions;
+        if (questions.isNotEmpty) return questions.take(5).toList();
       }
     } catch (_) {}
     return _sampleDuelQuestions;
@@ -114,13 +125,12 @@ class DuelService {
       final waitingQuery = await _firestore
           .collection('duel_sessions')
           .where('status', isEqualTo: 'waiting')
-          .limit(1)
+          .limit(10)
           .get();
 
-      if (waitingQuery.docs.isNotEmpty) {
-        final doc = waitingQuery.docs.first;
+      for (var doc in waitingQuery.docs) {
         final data = doc.data();
-        if (data['player1Id'] != uid) {
+        if (data['player1Id'] != uid && data['player2Id'] == null) {
           // Join as Player 2
           await doc.reference.update({
             'player2Id': uid,
@@ -227,6 +237,11 @@ class DuelService {
     }
 
     final doc = query.docs.first;
+    final data = doc.data();
+    if (data['player1Id'] == uid) {
+      return doc.id;
+    }
+
     await doc.reference.update({
       'player2Id': uid,
       'player2Name': userName,
@@ -369,6 +384,11 @@ class DuelService {
         final isBotMatch = data['player2Id'] == 'bot_ai';
         if (isBotMatch) {
           await docRef.delete();
+          return;
+        }
+
+        // If the match was already finalized by the first completing client, preserve the existing winner
+        if (data['status'] == 'completed' && data['winnerId'] != null) {
           return;
         }
       }

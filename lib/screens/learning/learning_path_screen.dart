@@ -86,6 +86,10 @@ class _UnitPathSectionState extends ConsumerState<_UnitPathSection> {
 
   void _showUnitRewardDialog(BuildContext context, WidgetRef ref, List<LessonModel> lessons) {
     final allCompleted = lessons.isNotEmpty && lessons.every((l) => l.status == LessonStatus.completed);
+    final user = ref.read(authStateProvider).value;
+    final chestKey = 'unit_${widget.unit.id}_chest_claimed';
+    final isClaimed = user?.inventory.contains(chestKey) ?? false;
+
     HapticFeedback.heavyImpact();
     showDialog(
       context: context,
@@ -102,9 +106,11 @@ class _UnitPathSectionState extends ConsumerState<_UnitPathSection> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              allCompleted
-                  ? 'Congratulations! You have completed all lessons in "${widget.unit.title}". Claim your Ancestral Treasure Chest containing +100 Bonus XP and +50 Crystals!'
-                  : 'Complete all lessons in "${widget.unit.title}" to unlock and claim the Ancestral Treasure Chest!',
+              isClaimed
+                  ? 'You have already claimed the reward chest for "${widget.unit.title}". Great job!'
+                  : (allCompleted
+                      ? 'Congratulations! You have completed all lessons in "${widget.unit.title}". Claim your Ancestral Treasure Chest containing +100 Bonus XP and +50 Crystals!'
+                      : 'Complete all lessons in "${widget.unit.title}" to unlock and claim the Ancestral Treasure Chest!'),
               style: AppTypography.body,
             ),
             const SizedBox(height: AppSpacing.md),
@@ -139,23 +145,27 @@ class _UnitPathSectionState extends ConsumerState<_UnitPathSection> {
         ),
         actions: [
           BrandButton(
-            text: allCompleted ? 'Claim Reward' : 'Complete All Lessons First',
-            type: allCompleted ? BrandButtonType.gold : BrandButtonType.primary,
-            onPressed: () {
-              if (allCompleted) {
-                final user = ref.read(authStateProvider).value;
-                if (user != null) {
-                  final notifier = ref.read(authStateProvider.notifier);
-                  notifier.addXp(100);
-                  notifier.updateCrystals(user.crystals + 50);
+            text: isClaimed ? 'Already Claimed' : (allCompleted ? 'Claim Reward' : 'Complete All Lessons First'),
+            type: isClaimed ? BrandButtonType.secondary : (allCompleted ? BrandButtonType.gold : BrandButtonType.primary),
+            onPressed: isClaimed
+                ? null
+                : () {
+                    if (allCompleted && user != null) {
+                      final notifier = ref.read(authStateProvider.notifier);
+                      notifier.addXp(100);
+                      notifier.updateCrystals(user.crystals + 50);
+                      final newInventory = List<String>.from(user.inventory);
+                      if (!newInventory.contains(chestKey)) {
+                        newInventory.add(chestKey);
+                        notifier.updateUser(user.copyWith(inventory: newInventory));
+                      }
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text('Claimed Unit Reward Chest! +100 XP & +50 Crystals 🎉')),
-                  );
-                }
-              }
-              Navigator.of(dialogContext).pop();
-            },
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Claimed Unit Reward Chest! +100 XP & +50 Crystals 🎉')),
+                      );
+                    }
+                    Navigator.of(dialogContext).pop();
+                  },
           ),
         ],
       ),

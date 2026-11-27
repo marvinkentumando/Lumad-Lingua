@@ -45,6 +45,6 @@ final wordOfTheDayProvider = FutureProvider<VocabularyModel?>((ref) async {
 
   final now = DateTime.now();
   final dayOfYear = now.difference(DateTime(now.year, 1, 1)).inDays;
-  final index = (now.year * 365 + dayOfYear) % allWords.length;
+  final index = (now.year * 365 + dayOfYear).abs() % allWords.length;
   return allWords[index];
 });

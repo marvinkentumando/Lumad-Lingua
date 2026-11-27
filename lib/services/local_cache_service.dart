@@ -50,35 +50,6 @@ class LocalCacheService {
     }
   }
 
-  Future<void> queueOfflineAction(String actionType, Map<String, dynamic> payload) async {
-    await init();
-    final queue = getOfflineQueue();
-    queue.add({
-      'type': actionType,
-      'payload': payload,
-      'timestamp': DateTime.now().toIso8601String(),
-    });
-    final encoded = queue.map((e) => jsonEncode(e)).toList();
-    await _prefs?.setStringList('${_prefix}offline_queue', encoded);
-  }
-
-  List<Map<String, dynamic>> getOfflineQueue() {
-    if (_prefs == null) return [];
-    final list = _prefs?.getStringList('${_prefix}offline_queue') ?? [];
-    return list.map((e) {
-      try {
-        return jsonDecode(e) as Map<String, dynamic>;
-      } catch (_) {
-        return <String, dynamic>{};
-      }
-    }).where((map) => map.isNotEmpty).toList();
-  }
-
-  Future<void> clearOfflineQueue() async {
-    await init();
-    await _prefs?.remove('${_prefix}offline_queue');
-  }
-
   Future<void> clearAll() async {
     await init();
     final keys = _prefs?.getKeys() ?? {};

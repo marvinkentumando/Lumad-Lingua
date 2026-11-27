@@ -45,7 +45,7 @@ class NotificationService {
       _isInitialized = true;
 
       if (_isDailyReminderEnabled) {
-        await scheduleDailyReminder(hour: _reminderHour, minute: _reminderMinute);
+        await scheduleDailyReminder(hour: _reminderHour, minute: _reminderMinute, showConfirmation: false);
       }
     } catch (e) {
       if (kDebugMode) {
@@ -62,13 +62,17 @@ class NotificationService {
     } catch (_) {}
 
     if (enabled) {
-      await scheduleDailyReminder(hour: _reminderHour, minute: _reminderMinute);
+      await scheduleDailyReminder(hour: _reminderHour, minute: _reminderMinute, showConfirmation: true);
     } else {
       await cancelDailyReminder();
     }
   }
 
-  Future<void> scheduleDailyReminder({required int hour, required int minute}) async {
+  Future<void> scheduleDailyReminder({
+    required int hour,
+    required int minute,
+    bool showConfirmation = false,
+  }) async {
     _reminderHour = hour;
     _reminderMinute = minute;
 
@@ -108,18 +112,19 @@ class NotificationService {
         iOS: iosDetails,
       );
 
-      // Post local OS notification alert
-      final period = hour >= 12 ? 'PM' : 'AM';
-      final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
-      final m = minute.toString().padLeft(2, '0');
-      final timeStr = '$h:$m $period';
+      if (showConfirmation) {
+        final period = hour >= 12 ? 'PM' : 'AM';
+        final h = hour == 0 ? 12 : (hour > 12 ? hour - 12 : hour);
+        final m = minute.toString().padLeft(2, '0');
+        final timeStr = '$h:$m $period';
 
-      await _notificationsPlugin.show(
-        101,
-        'Madyaw na allaw! 📚',
-        'Daily practice reminder active for $timeStr. Maintain your streak and preserve Lumad heritage today! 🔥',
-        notificationDetails,
-      );
+        await _notificationsPlugin.show(
+          101,
+          'Madyaw na allaw! 📚',
+          'Daily practice reminder active for $timeStr. Maintain your streak and preserve Lumad heritage today! 🔥',
+          notificationDetails,
+        );
+      }
     } catch (e) {
       if (kDebugMode) {
         print('Native OS notification schedule fallback: $e');

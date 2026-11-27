@@ -111,8 +111,9 @@ class OfflineSyncService {
             case 'complete_lesson':
               final userId = payload['userId'] as String;
               final lessonId = payload['lessonId'] as String;
-              final xpEarned = payload['xpEarned'] as int;
-              await firestoreService.updateLessonProgress(userId, lessonId, 100);
+              final xpEarned = (payload['xpEarned'] as int?) ?? 50;
+              final starsEarned = ((payload['starsEarned'] as int?) ?? 3).clamp(1, 3);
+              await firestoreService.updateLessonProgress(userId, lessonId, starsEarned);
               await firestoreService.addXp(userId, xpEarned);
               break;
 

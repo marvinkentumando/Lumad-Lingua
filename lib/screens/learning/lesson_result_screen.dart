@@ -149,7 +149,14 @@ class _LessonResultScreenState extends ConsumerState<LessonResultScreen> {
                       text: 'Review Drills',
                       icon: Icons.replay_rounded,
                       type: BrandButtonType.secondary,
-                      onPressed: () => context.go('/learn'),
+                      onPressed: () {
+                        final lessonId = widget.resultData['lessonId'] as String?;
+                        if (lessonId != null && lessonId.isNotEmpty) {
+                          context.go('/lesson/$lessonId/drills');
+                        } else {
+                          context.go('/learn');
+                        }
+                      },
                     ),
                   ],
                 ),

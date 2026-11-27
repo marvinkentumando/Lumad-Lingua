@@ -110,16 +110,24 @@ class DailyQuestsNotifier extends Notifier<List<DailyQuestModel>> {
           }
         }
 
+        final currentStateMap = {for (var q in state) q.id: q};
+
         final updated = defaultQuests.map((q) {
+          final current = currentStateMap[q.id];
           if (savedData.containsKey(q.id)) {
-            return DailyQuestModel.fromJson(q, savedData[q.id]!);
+            final fromSaved = DailyQuestModel.fromJson(q, savedData[q.id]!);
+            final mergedCount = (fromSaved.currentCount > (current?.currentCount ?? 0))
+                ? fromSaved.currentCount
+                : (current?.currentCount ?? fromSaved.currentCount);
+            return fromSaved.copyWith(
+              currentCount: mergedCount.clamp(0, fromSaved.targetCount),
+              isClaimed: fromSaved.isClaimed || (current?.isClaimed ?? false),
+            );
           }
-          return q;
+          return current ?? q;
         }).toList();
 
         state = updated;
-      } else {
-        state = defaultQuests;
       }
     } catch (_) {}
   }

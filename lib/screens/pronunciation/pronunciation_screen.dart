@@ -24,8 +24,13 @@ import 'pronunciation_history_screen.dart';
 class PronunciationPhrase {
   final String mansaka;
   final String meaning;
+  final String? audioPath;
 
-  const PronunciationPhrase({required this.mansaka, required this.meaning});
+  const PronunciationPhrase({
+    required this.mansaka,
+    required this.meaning,
+    this.audioPath,
+  });
 }
 
 class PronunciationScreen extends ConsumerStatefulWidget {
@@ -44,11 +49,31 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
   int _currentPhraseIndex = 0;
 
   final List<PronunciationPhrase> _phrases = [
-    const PronunciationPhrase(mansaka: 'Madyaw na masurom', meaning: 'Good morning'),
-    const PronunciationPhrase(mansaka: 'Malipayon ko', meaning: 'I am happy'),
-    const PronunciationPhrase(mansaka: 'Salamat karing', meaning: 'Thank you very much'),
-    const PronunciationPhrase(mansaka: 'Amo na an', meaning: 'That is correct'),
-    const PronunciationPhrase(mansaka: 'Hain ka gikan?', meaning: 'Where did you come from?'),
+    const PronunciationPhrase(
+      mansaka: 'Madyaw na masurom',
+      meaning: 'Good morning',
+      audioPath: 'dataset/madyaw_na_masurom/madyaw_na_masurom_1__RUN-2026-0003.wav',
+    ),
+    const PronunciationPhrase(
+      mansaka: 'Madyaw na gabila',
+      meaning: 'Good afternoon',
+      audioPath: 'dataset/madyaw_na_gabila/madyaw_na_gabila_1__RUN-2026-0003.wav',
+    ),
+    const PronunciationPhrase(
+      mansaka: 'Madyaw na gabi',
+      meaning: 'Good evening / Good night',
+      audioPath: 'dataset/madyaw_na_gabi/madyaw_na_gabi_1__RUN-2026-0003.wav',
+    ),
+    const PronunciationPhrase(
+      mansaka: 'Tabi kanmo',
+      meaning: 'Excuse me (addressing someone)',
+      audioPath: 'dataset/tabi_kanmo/tabi_kanmo_1__RUN-2026-0003.wav',
+    ),
+    const PronunciationPhrase(
+      mansaka: 'Ama',
+      meaning: 'Father',
+      audioPath: 'dataset/ama/ama_1__RUN-2026-0003.wav',
+    ),
   ];
 
   @override
@@ -344,8 +369,8 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
-                const AudioPlayerWidget(
-                  audioUrl: null,
+                AudioPlayerWidget(
+                  audioUrl: phraseObj.audioPath,
                   title: 'Reference Recording (Mansaka Speaker)',
                 ),
                 const SizedBox(height: AppSpacing.xl),

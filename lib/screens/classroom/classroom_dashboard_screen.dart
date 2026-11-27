@@ -324,7 +324,7 @@ class ClassroomDashboardScreen extends ConsumerWidget {
                             const Icon(Icons.star_outline, color: AppColors.gold500, size: 32),
                             const SizedBox(height: 8),
                             Text(
-                              '${(progress.overallMasteryPercentage * 100).toInt()}%',
+                              '${progress.overallMasteryPercentage.toInt()}%',
                               style: AppTypography.displayNumber.copyWith(color: Colors.white, fontSize: 28),
                             ),
                             Text('Mastery Rate', style: AppTypography.caption.copyWith(color: AppColors.creamBorder)),

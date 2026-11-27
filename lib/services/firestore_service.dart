@@ -207,6 +207,7 @@ class FirestoreService {
 
   /// Updates learner progress in `user_progress/{userId}` WITHOUT modifying shared `lessons/{lessonId}`
   Future<void> updateLessonProgress(String userId, String lessonId, int starsEarned, {int totalLessonsCount = 12}) async {
+    final validStars = starsEarned.clamp(1, 3);
     try {
       final currentProgress = await getUserProgress(userId) ?? UserProgressModel(userId: userId);
       final updatedCompletedIds = List<String>.from(currentProgress.completedLessonIds);
@@ -216,8 +217,8 @@ class FirestoreService {
 
       final updatedStars = Map<String, int>.from(currentProgress.lessonStars);
       final existingStars = updatedStars[lessonId] ?? 0;
-      if (starsEarned > existingStars) {
-        updatedStars[lessonId] = starsEarned;
+      if (validStars > existingStars) {
+        updatedStars[lessonId] = validStars;
       }
 
       final totalCompleted = updatedCompletedIds.length;
@@ -237,6 +238,7 @@ class FirestoreService {
       await OfflineSyncService().queueAction('complete_lesson', {
         'userId': userId,
         'lessonId': lessonId,
+        'starsEarned': validStars,
         'xpEarned': 50,
       });
     }
