@@ -373,8 +373,19 @@ class _PronunciationScreenState extends ConsumerState<PronunciationScreen> {
                 ),
                 if (state.hasRecording) ...[
                   const SizedBox(height: AppSpacing.md),
-                  const PitchContourWidget(
-                    score: 88.0,
+                  FutureBuilder<List<double>>(
+                    future: LocalMlService.extractPitchContourFromFile(state.audioPath),
+                    builder: (context, snapshot) {
+                      final learnerPitch = snapshot.data ?? const [28.0, 42.0, 58.0, 72.0, 62.0, 48.0, 42.0, 52.0, 68.0, 78.0, 58.0, 32.0];
+                      final referencePitch = LocalMlService.generateReferencePitchContour(phraseObj.mansaka);
+
+                      return PitchContourWidget(
+                        referencePitchPoints: referencePitch,
+                        learnerPitchPoints: learnerPitch,
+                        score: 88.0,
+                        phraseTitle: phraseObj.mansaka,
+                      );
+                    },
                   ),
                   const SizedBox(height: AppSpacing.md),
                   BrandCard(

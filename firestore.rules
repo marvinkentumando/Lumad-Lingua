@@ -79,5 +79,17 @@ service cloud.firestore {
       allow read, create, update: if isAuthenticated();
       allow delete: if isAuthenticated();
     }
+
+    // Achievements collection (Public / Learner read)
+    match /achievements/{achievementId} {
+      allow read: if true;
+      allow write: if false;
+    }
+
+    // Sentiment Logs collection (Authenticated write only)
+    match /sentiment_logs/{logId} {
+      allow create: if isAuthenticated();
+      allow read, update, delete: if false;
+    }
   }
 }

@@ -22,8 +22,8 @@ void main() async {
 
   try {
     await Supabase.initialize(
-      url: 'https://ovdwgowtnlujnbcyldkk.supabase.co',
-      publishableKey: 'sb_publishable_rMQ9kc8SVsba4_p-aPrOPg_3XDgAbR8',
+      url: AppConfig.supabaseUrl,
+      publishableKey: AppConfig.supabasePublishableKey,
     );
   } catch (e) {
     debugPrint('Supabase initialization error: $e');

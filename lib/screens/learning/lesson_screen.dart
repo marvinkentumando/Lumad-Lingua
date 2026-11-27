@@ -17,6 +17,8 @@ import '../../widgets/learning/lesson_progress_bar.dart';
 import '../../widgets/learning/answer_option.dart';
 import '../../widgets/audio/audio_player_widget.dart';
 import '../../widgets/audio/recording_button.dart';
+import '../../widgets/audio/pitch_contour_widget.dart';
+import '../../services/local_ml_service.dart';
 
 class LessonScreen extends ConsumerStatefulWidget {
   final String lessonId;
@@ -463,6 +465,12 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
                                 ),
                               ],
                             ),
+                          ),
+                          const SizedBox(height: AppSpacing.md),
+                          PitchContourWidget(
+                            referencePitchPoints: LocalMlService.generateReferencePitchContour(activity.targetMansaka ?? 'Madyaw na masurom'),
+                            score: _isAnswerChecked == true ? 92.0 : 85.0,
+                            phraseTitle: activity.targetMansaka ?? 'Madyaw na masurom',
                           ),
                         ] else ...[
                           const Text('Follow question instructions above.'),

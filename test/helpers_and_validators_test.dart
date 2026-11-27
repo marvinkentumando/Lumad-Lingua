@@ -1,6 +1,7 @@
 import 'package:flutter_test/flutter_test.dart';
 import 'package:lumad_lingua/utils/level_helper.dart';
 import 'package:lumad_lingua/utils/validators.dart';
+import 'package:lumad_lingua/services/local_ml_service.dart';
 
 void main() {
   group('LevelHelper Unit Tests', () {
@@ -47,6 +48,26 @@ void main() {
       expect(AppValidators.validateName(''), 'Full name is required');
       expect(AppValidators.validateName('A'), 'Name must be at least 2 characters long');
       expect(AppValidators.validateName('Datu Ali'), null);
+    });
+  });
+
+  group('Pitch Contour Extraction Unit Tests', () {
+    test('generateReferencePitchContour produces non-empty valid pitch points', () {
+      final points = LocalMlService.generateReferencePitchContour('Madyaw na masurom');
+      expect(points.isNotEmpty, true);
+      expect(points.length, 16);
+      for (final p in points) {
+        expect(p >= 0.0 && p <= 100.0, true);
+      }
+    });
+
+    test('extractPitchContourFromMfcc handles empty and populated MFCC frames', () {
+      final emptyPoints = LocalMlService.extractPitchContourFromMfcc([]);
+      expect(emptyPoints.length, 16);
+
+      final dummyMfcc = List.generate(20, (i) => List.generate(13, (j) => 0.5));
+      final points = LocalMlService.extractPitchContourFromMfcc(dummyMfcc);
+      expect(points.length, 16);
     });
   });
 }
