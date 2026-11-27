@@ -1,4 +1,5 @@
 import 'package:just_audio/just_audio.dart';
+import 'audio_cache_manager.dart';
 
 class AudioHelper {
   static const String _supabaseBaseUrl = 'https://ovdwgowtnlujnbcyldkk.supabase.co';
@@ -36,7 +37,7 @@ class AudioHelper {
     return '$_supabaseBaseUrl/storage/v1/object/public/$_bucketName/$cleanPath';
   }
 
-  /// Plays audio from path or URL (supports local asset paths starting with 'assets/' and remote Supabase URLs)
+  /// Plays audio from path or URL (supports local asset paths, cached disk paths, and remote Supabase URLs)
   static Future<void> playAudio(String audioPath) async {
     try {
       final trimmed = audioPath.trim();
@@ -44,10 +45,18 @@ class AudioHelper {
         await _player.setAsset(trimmed);
         await _player.play();
       } else {
-        final url = resolveSupabaseAudioUrl(trimmed);
-        if (url != null) {
-          await _player.setUrl(url);
+        // First attempt to resolve and play from local disk cache
+        final cachedPath = await AudioCacheManager.getOrCacheAudio(trimmed);
+        if (cachedPath != null) {
+          await _player.setFilePath(cachedPath);
           await _player.play();
+        } else {
+          // Fallback to streaming via remote URL
+          final url = resolveSupabaseAudioUrl(trimmed);
+          if (url != null) {
+            await _player.setUrl(url);
+            await _player.play();
+          }
         }
       }
     } catch (_) {}

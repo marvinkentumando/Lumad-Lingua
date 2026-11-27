@@ -14,6 +14,7 @@ import '../screens/learning/lesson_study_screen.dart';
 import '../screens/learning/lesson_screen.dart';
 import '../screens/learning/lesson_result_screen.dart';
 import '../screens/learning/flashcard_warmup_screen.dart';
+import '../screens/learning/daily_flashcards_screen.dart';
 import '../screens/dictionary/dictionary_screen.dart';
 import '../screens/dictionary/word_details_screen.dart';
 import '../screens/pronunciation/pronunciation_screen.dart';
@@ -87,6 +88,10 @@ final appRouter = GoRouter(
         }
         return FlashcardWarmupScreen(lesson: lesson);
       },
+    ),
+    GoRoute(
+      path: '/daily-flashcards',
+      builder: (context, state) => const DailyFlashcardsScreen(),
     ),
     GoRoute(
       path: '/lesson-result',

@@ -112,6 +112,18 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
       _selectedOption = optionIndex;
     });
 
+    if (isCorrect && responseTimeMs < 3000) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⚡ Lightning Fast! Speed Bonus Awarded! 🔥'),
+            backgroundColor: AppColors.gold500,
+            duration: Duration(milliseconds: 1200),
+          ),
+        );
+      }
+    }
+
     final service = ref.read(duelServiceProvider);
     final user = ref.read(authStateProvider).value;
     final session = ref.read(duelSessionStreamProvider(widget.sessionId)).value;

@@ -237,6 +237,50 @@ class HomeScreen extends ConsumerWidget {
                 ),
                 const SizedBox(height: AppSpacing.lg),
 
+                // Daily 10 Flashcards Card
+                GestureDetector(
+                  onTap: () => context.push('/daily-flashcards'),
+                  child: Container(
+                    padding: const EdgeInsets.all(AppSpacing.md),
+                    decoration: BoxDecoration(
+                      color: AppColors.forest800,
+                      borderRadius: BorderRadius.circular(AppRadius.card),
+                      border: Border.all(color: AppColors.gold500, width: 1.5),
+                      boxShadow: const [
+                        BoxShadow(
+                          color: Colors.black26,
+                          offset: Offset(0, 4),
+                          blurRadius: 8,
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      children: [
+                        const Icon(Icons.style, size: 40, color: AppColors.gold500),
+                        const SizedBox(width: AppSpacing.md),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                'Daily 10 Flashcards 🃏',
+                                style: AppTypography.h3.copyWith(color: Colors.white),
+                              ),
+                              const SizedBox(height: 2),
+                              Text(
+                                'Review 10 random dictionary words & earn +50 XP +10 Crystals!',
+                                style: AppTypography.body.copyWith(color: AppColors.creamBorder),
+                              ),
+                            ],
+                          ),
+                        ),
+                        const Icon(Icons.chevron_right, color: AppColors.gold500),
+                      ],
+                    ),
+                  ),
+                ),
+                const SizedBox(height: AppSpacing.lg),
+
                 // Daily Quests & Challenges
                 const DailyQuestsWidget(),
               ],

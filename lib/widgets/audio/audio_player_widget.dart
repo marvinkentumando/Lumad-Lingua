@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:just_audio/just_audio.dart';
 import '../../utils/constants.dart';
 import '../../utils/audio_helper.dart';
+import '../../utils/audio_cache_manager.dart';
 import '../common/brand_card.dart';
 
 class AudioPlayerWidget extends StatefulWidget {
@@ -55,9 +56,8 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
   }
 
   Future<void> _playAudio() async {
-    final resolvedUrl = AudioHelper.resolveSupabaseAudioUrl(widget.audioUrl);
-
-    if (resolvedUrl == null) {
+    final rawUrl = widget.audioUrl;
+    if (rawUrl == null || rawUrl.trim().isEmpty) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -70,7 +70,15 @@ class _AudioPlayerWidgetState extends State<AudioPlayerWidget> {
 
     try {
       if (!_isLoaded) {
-        await _player.setUrl(resolvedUrl);
+        final cachedPath = await AudioCacheManager.getOrCacheAudio(rawUrl);
+        if (cachedPath != null) {
+          await _player.setFilePath(cachedPath);
+        } else {
+          final resolvedUrl = AudioHelper.resolveSupabaseAudioUrl(rawUrl);
+          if (resolvedUrl != null) {
+            await _player.setUrl(resolvedUrl);
+          }
+        }
         _isLoaded = true;
       }
       await _player.setSpeed(_playbackSpeed);

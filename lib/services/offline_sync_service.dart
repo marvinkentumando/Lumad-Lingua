@@ -4,6 +4,7 @@ import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart' as p;
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'firestore_service.dart';
+import '../utils/audio_cache_manager.dart';
 
 class OfflineSyncService {
   static final OfflineSyncService _instance = OfflineSyncService._internal();
@@ -25,7 +26,7 @@ class OfflineSyncService {
 
     return await openDatabase(
       path,
-      version: 1,
+      version: 2,
       onCreate: (db, version) async {
         await db.execute('''
           CREATE TABLE offline_actions (
@@ -35,6 +36,51 @@ class OfflineSyncService {
             timestamp INTEGER NOT NULL
           )
         ''');
+
+        await db.execute('''
+          CREATE TABLE cached_vocabulary (
+            id TEXT PRIMARY KEY,
+            mansaka TEXT NOT NULL,
+            english TEXT NOT NULL,
+            category TEXT,
+            audio_url TEXT,
+            example_mansaka TEXT,
+            example_english TEXT
+          )
+        ''');
+
+        await db.execute('''
+          CREATE TABLE local_lesson_progress (
+            lesson_id TEXT PRIMARY KEY,
+            stars INTEGER NOT NULL,
+            is_completed INTEGER NOT NULL,
+            timestamp INTEGER NOT NULL
+          )
+        ''');
+      },
+      onUpgrade: (db, oldVersion, newVersion) async {
+        if (oldVersion < 2) {
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS cached_vocabulary (
+              id TEXT PRIMARY KEY,
+              mansaka TEXT NOT NULL,
+              english TEXT NOT NULL,
+              category TEXT,
+              audio_url TEXT,
+              example_mansaka TEXT,
+              example_english TEXT
+            )
+          ''');
+
+          await db.execute('''
+            CREATE TABLE IF NOT EXISTS local_lesson_progress (
+              lesson_id TEXT PRIMARY KEY,
+              stars INTEGER NOT NULL,
+              is_completed INTEGER NOT NULL,
+              timestamp INTEGER NOT NULL
+            )
+          ''');
+        }
       },
     );
   }
@@ -82,6 +128,114 @@ class OfflineSyncService {
       debugPrint('❌ Failed to get pending offline action count: $e');
       return 0;
     }
+  }
+
+  /// Cache vocabulary words locally for offline dictionary searching and pre-cache audio assets
+  Future<void> cacheVocabulary(List<Map<String, dynamic>> words) async {
+    try {
+      final db = await database;
+      final batch = db.batch();
+      final List<String> audioUrls = [];
+
+      for (var word in words) {
+        final audioUrl = word['audioUrl'] as String?;
+        if (audioUrl != null && audioUrl.trim().isNotEmpty) {
+          audioUrls.add(audioUrl);
+        }
+
+        batch.insert(
+          'cached_vocabulary',
+          {
+            'id': word['id'] ?? word['mansaka'],
+            'mansaka': word['mansaka'],
+            'english': word['english'],
+            'category': word['category'] ?? 'General',
+            'audio_url': audioUrl,
+            'example_mansaka': word['exampleMansaka'],
+            'example_english': word['exampleEnglish'],
+          },
+          conflictAlgorithm: ConflictAlgorithm.replace,
+        );
+      }
+      await batch.commit(noResult: true);
+      debugPrint('📚 Successfully cached ${words.length} vocabulary words locally.');
+
+      // Pre-cache audio assets in the background
+      if (audioUrls.isNotEmpty) {
+        AudioCacheManager.preCacheAudioList(audioUrls);
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to cache vocabulary locally: $e');
+    }
+  }
+
+  /// Retrieve cached vocabulary offline
+  Future<List<Map<String, dynamic>>> getCachedVocabulary({String? category, String? query}) async {
+    try {
+      final db = await database;
+      String whereClause = '1=1';
+      List<Object?> whereArgs = [];
+
+      if (category != null && category != 'All') {
+        whereClause += ' AND category = ?';
+        whereArgs.add(category);
+      }
+
+      if (query != null && query.trim().isNotEmpty) {
+        whereClause += ' AND (mansaka LIKE ? OR english LIKE ?)';
+        whereArgs.add('%${query.trim()}%');
+        whereArgs.add('%${query.trim()}%');
+      }
+
+      final results = await db.query(
+        'cached_vocabulary',
+        where: whereClause,
+        whereArgs: whereArgs,
+        orderBy: 'mansaka ASC',
+      );
+      return results;
+    } catch (e) {
+      debugPrint('❌ Failed to fetch cached vocabulary: $e');
+      return [];
+    }
+  }
+
+  /// Cache local lesson progress
+  Future<void> cacheLessonProgress(String lessonId, int stars) async {
+    try {
+      final db = await database;
+      await db.insert(
+        'local_lesson_progress',
+        {
+          'lesson_id': lessonId,
+          'stars': stars,
+          'is_completed': 1,
+          'timestamp': DateTime.now().millisecondsSinceEpoch,
+        },
+        conflictAlgorithm: ConflictAlgorithm.replace,
+      );
+      debugPrint('⭐ Cached lesson progress locally for $lessonId ($stars stars).');
+    } catch (e) {
+      debugPrint('❌ Failed to cache lesson progress: $e');
+    }
+  }
+
+  /// Get local lesson progress stars
+  Future<int?> getLocalLessonStars(String lessonId) async {
+    try {
+      final db = await database;
+      final results = await db.query(
+        'local_lesson_progress',
+        where: 'lesson_id = ?',
+        whereArgs: [lessonId],
+      );
+      if (results.isNotEmpty) {
+        return results.first['stars'] as int?;
+      }
+    } catch (e) {
+      debugPrint('❌ Failed to get local lesson stars: $e');
+    }
+    return null;
   }
 
   /// Sync all pending offline actions to backend (Firestore / Supabase)
