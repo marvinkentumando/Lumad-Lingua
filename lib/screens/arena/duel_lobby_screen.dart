@@ -8,6 +8,7 @@ import '../../utils/constants.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/duel_provider.dart';
 import '../../models/duel_model.dart';
+import '../../models/route_args.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/lumad_top_navbar.dart';
@@ -75,7 +76,7 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
       final existingSessionId = await service.findExistingHumanMatch(userName: userName);
       if (existingSessionId != null && mounted) {
         setState(() => _isSearching = false);
-        context.push('/arena/battle', extra: {'sessionId': existingSessionId});
+        context.push('/arena/battle', extra: DuelBattleArgs(sessionId: existingSessionId));
         return;
       }
 
@@ -89,7 +90,7 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
           _currentWaitingSessionId = null;
           if (mounted) {
             setState(() => _isSearching = false);
-            context.push('/arena/battle', extra: {'sessionId': session.id});
+            context.push('/arena/battle', extra: DuelBattleArgs(sessionId: session.id));
           }
         }
       });
@@ -150,7 +151,7 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
             _currentWaitingSessionId = null;
             if (modalContext.mounted) {
               Navigator.of(modalContext).pop();
-              router.push('/arena/battle', extra: {'sessionId': session.id});
+              router.push('/arena/battle', extra: DuelBattleArgs(sessionId: session.id));
             }
           }
         });
@@ -278,7 +279,7 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
                     final sessionId = await service.joinRoomByCode(roomCode: code, userName: userName);
                     if (modalContext.mounted) {
                       Navigator.of(modalContext).pop();
-                      router.push('/arena/battle', extra: {'sessionId': sessionId});
+                      router.push('/arena/battle', extra: DuelBattleArgs(sessionId: sessionId));
                     }
                   } catch (e) {
                     setModalState(() => isJoining = false);
@@ -348,7 +349,7 @@ class _DuelLobbyScreenState extends ConsumerState<DuelLobbyScreen> {
                   try {
                     final botSessionId = await service.createBotMatch(userName: userName);
                     if (mounted) {
-                      context.push('/arena/battle', extra: {'sessionId': botSessionId});
+                      context.push('/arena/battle', extra: DuelBattleArgs(sessionId: botSessionId));
                     }
                   } catch (_) {}
                 },

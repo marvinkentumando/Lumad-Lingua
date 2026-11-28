@@ -69,5 +69,14 @@ void main() {
       final points = LocalMlService.extractPitchContourFromMfcc(dummyMfcc);
       expect(points.length, 16);
     });
+
+    test('calculateAutocorrelationPitch produces valid 16 pitch points from dummy PCM bytes', () {
+      final dummyBytes = List.generate(1000, (i) => (i % 256));
+      final points = LocalMlService.calculateAutocorrelationPitch(dummyBytes);
+      expect(points.length, 16);
+      for (final p in points) {
+        expect(p >= 0.0 && p <= 100.0, true);
+      }
+    });
   });
 }

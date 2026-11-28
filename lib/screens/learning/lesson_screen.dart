@@ -5,6 +5,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import 'package:go_router/go_router.dart';
 import '../../utils/constants.dart';
 import '../../models/activity_model.dart';
+import '../../models/route_args.dart';
 import '../../providers/activity_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/theme_provider.dart';
@@ -271,13 +272,13 @@ class _LessonScreenState extends ConsumerState<LessonScreen> {
             WidgetsBinding.instance.addPostFrameCallback((_) {
               context.go(
                 '/lesson-result',
-                extra: {
-                  'lessonId': session.lessonId,
-                  'earnedXp': session.earnedXp,
-                  'stars': session.stars,
-                  'score': session.score,
-                  'total': session.activities.length,
-                },
+                extra: LessonResultArgs(
+                  lessonId: session.lessonId,
+                  earnedXp: session.earnedXp,
+                  stars: session.stars,
+                  score: session.score,
+                  total: session.activities.length,
+                ),
               );
             });
             return const LoadingWidget(message: 'Calculating rewards...');

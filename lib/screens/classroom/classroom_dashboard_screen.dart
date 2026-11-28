@@ -12,16 +12,21 @@ import '../../widgets/common/brand_button.dart';
 import '../../widgets/common/brand_card.dart';
 import '../../widgets/gamification/xp_badge.dart';
 import '../../widgets/gamification/streak_indicator.dart';
+import '../../models/route_args.dart';
 
 class ClassroomDashboardScreen extends ConsumerWidget {
   final String classId;
   final Map<String, dynamic> classroomData;
+  final ClassroomDashboardArgs args;
 
-  const ClassroomDashboardScreen({
+  ClassroomDashboardScreen({
     super.key,
-    required this.classId,
-    required this.classroomData,
-  });
+    String? classId,
+    Map<String, dynamic>? classroomData,
+    ClassroomDashboardArgs? args,
+  })  : args = args ?? ClassroomDashboardArgs(classId: classId ?? '', classroomData: classroomData ?? {}),
+        classId = classId ?? args?.classId ?? '',
+        classroomData = classroomData ?? args?.classroomData ?? {};
 
   Future<void> _leaveClass(BuildContext context, WidgetRef ref) async {
     final confirm = await showDialog<bool>(

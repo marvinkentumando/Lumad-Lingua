@@ -205,34 +205,50 @@ class FirestoreService {
     }
   }
 
-  /// Updates learner progress in `user_progress/{userId}` WITHOUT modifying shared `lessons/{lessonId}`
+  /// Updates learner progress in `user_progress/{userId}` and XP in `users/{userId}` atomically via Firestore transaction
   Future<void> updateLessonProgress(String userId, String lessonId, int starsEarned, {int totalLessonsCount = 12}) async {
     final validStars = starsEarned.clamp(1, 3);
     try {
-      final currentProgress = await getUserProgress(userId) ?? UserProgressModel(userId: userId);
-      final updatedCompletedIds = List<String>.from(currentProgress.completedLessonIds);
-      if (!updatedCompletedIds.contains(lessonId)) {
-        updatedCompletedIds.add(lessonId);
-      }
+      await _firestore.runTransaction((transaction) async {
+        final progressDocRef = _progressCol.doc(userId);
+        final userDocRef = _usersCol.doc(userId);
 
-      final updatedStars = Map<String, int>.from(currentProgress.lessonStars);
-      final existingStars = updatedStars[lessonId] ?? 0;
-      if (validStars > existingStars) {
-        updatedStars[lessonId] = validStars;
-      }
+        final progressSnapshot = await transaction.get(progressDocRef);
+        final userSnapshot = await transaction.get(userDocRef);
 
-      final totalCompleted = updatedCompletedIds.length;
-      final overallMastery = ((totalCompleted / (totalLessonsCount > 0 ? totalLessonsCount : 1)) * 100).round().clamp(0, 100);
+        final currentProgress = progressSnapshot.exists && progressSnapshot.data() != null
+            ? UserProgressModel.fromJson(progressSnapshot.data()!)
+            : UserProgressModel(userId: userId);
 
-      final updatedProgress = currentProgress.copyWith(
-        userId: userId,
-        completedLessonIds: updatedCompletedIds,
-        lessonStars: updatedStars,
-        totalLessonsCompleted: totalCompleted,
-        overallMasteryPercentage: overallMastery.toDouble(),
-      );
+        final updatedCompletedIds = List<String>.from(currentProgress.completedLessonIds);
+        if (!updatedCompletedIds.contains(lessonId)) {
+          updatedCompletedIds.add(lessonId);
+        }
 
-      await _progressCol.doc(userId).set(updatedProgress.toJson(), SetOptions(merge: true));
+        final updatedStars = Map<String, int>.from(currentProgress.lessonStars);
+        final existingStars = updatedStars[lessonId] ?? 0;
+        if (validStars > existingStars) {
+          updatedStars[lessonId] = validStars;
+        }
+
+        final totalCompleted = updatedCompletedIds.length;
+        final overallMastery = ((totalCompleted / (totalLessonsCount > 0 ? totalLessonsCount : 1)) * 100).round().clamp(0, 100);
+
+        final updatedProgress = currentProgress.copyWith(
+          userId: userId,
+          completedLessonIds: updatedCompletedIds,
+          lessonStars: updatedStars,
+          totalLessonsCompleted: totalCompleted,
+          overallMasteryPercentage: overallMastery.toDouble(),
+        );
+
+        transaction.set(progressDocRef, updatedProgress.toJson(), SetOptions(merge: true));
+
+        if (userSnapshot.exists && userSnapshot.data() != null) {
+          final currentXp = (userSnapshot.data()!['totalXp'] as num?)?.toInt() ?? 0;
+          transaction.update(userDocRef, {'totalXp': currentXp + 50});
+        }
+      });
     } catch (e) {
       // Queue offline if network fails
       await OfflineSyncService().queueAction('complete_lesson', {

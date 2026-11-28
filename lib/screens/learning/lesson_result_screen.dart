@@ -5,6 +5,7 @@ import 'package:go_router/go_router.dart';
 import 'package:confetti/confetti.dart';
 import '../../utils/constants.dart';
 import '../../models/daily_quest_model.dart';
+import '../../models/route_args.dart';
 import '../../providers/daily_quests_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../widgets/common/brand_button.dart';
@@ -13,9 +14,13 @@ import '../../widgets/common/lumad_background.dart';
 import '../../widgets/gamification/level_up_dialog.dart';
 
 class LessonResultScreen extends ConsumerStatefulWidget {
-  final Map<String, dynamic> resultData;
+  final LessonResultArgs args;
 
-  const LessonResultScreen({super.key, required this.resultData});
+  LessonResultScreen({
+    super.key,
+    LessonResultArgs? args,
+    Map<String, dynamic>? resultData,
+  }) : args = args ?? LessonResultArgs.fromMap(resultData);
 
   @override
   ConsumerState<LessonResultScreen> createState() => _LessonResultScreenState();
@@ -50,8 +55,8 @@ class _LessonResultScreenState extends ConsumerState<LessonResultScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final earnedXp = widget.resultData['earnedXp'] as int? ?? 30;
-    final stars = widget.resultData['stars'] as int? ?? 3;
+    final earnedXp = widget.args.earnedXp;
+    final stars = widget.args.stars;
     final crystalsEarned = stars * 10;
 
     return Scaffold(
@@ -150,7 +155,7 @@ class _LessonResultScreenState extends ConsumerState<LessonResultScreen> {
                       icon: Icons.replay_rounded,
                       type: BrandButtonType.secondary,
                       onPressed: () {
-                        final lessonId = widget.resultData['lessonId'] as String?;
+                        final lessonId = widget.args.lessonId;
                         if (lessonId != null && lessonId.isNotEmpty) {
                           context.go('/lesson/$lessonId/drills');
                         } else {

@@ -3,8 +3,11 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lumad_lingua/utils/app_localizations.dart';
 import 'package:lumad_lingua/providers/theme_provider.dart';
 import 'package:lumad_lingua/providers/localization_provider.dart';
+import 'package:lumad_lingua/providers/connectivity_provider.dart';
 
 void main() {
+  TestWidgetsFlutterBinding.ensureInitialized();
+
   group('RegionalStrings Localization Tests', () {
     test('English translations fall back correctly', () {
       expect(RegionalStrings.get('en', 'welcome'), 'Welcome Back!');
@@ -61,6 +64,13 @@ void main() {
 
       container.read(localizationProvider.notifier).setLanguage('tl');
       expect(container.read(localizationProvider), 'tl');
+    });
+
+    test('isOfflineProvider defaults to false when connectivity stream is loading or online', () {
+      final container = ProviderContainer();
+      addTearDown(container.dispose);
+
+      expect(container.read(isOfflineProvider), false);
     });
   });
 }

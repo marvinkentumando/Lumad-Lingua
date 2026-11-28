@@ -140,11 +140,13 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
     await updateUser(updated);
   }
 
-  void addXp(int baseXp) {
+  void addXp(int baseXp, {bool isRepeatedDrill = false}) {
     final current = state.value ?? defaultGuestUser;
+    final effectiveBase = isRepeatedDrill ? (baseXp * 0.5).round() : baseXp;
     final bool isBoosterActive = current.isXpBoosterActive;
-    final actualXp = isBoosterActive ? (baseXp * 2) : baseXp;
+    final actualXp = isBoosterActive ? (effectiveBase * 2) : effectiveBase;
     final newXp = current.totalXp + actualXp;
+    final newWeeklyXp = current.weeklyXp + actualXp;
     final oldLevel = current.level;
     final newLevel = LevelHelper.calculateLevel(newXp);
 
@@ -152,12 +154,14 @@ class AuthNotifier extends AsyncNotifier<UserModel?> {
       _pendingLevelUp = newLevel;
       updateUser(current.copyWith(
         totalXp: newXp,
+        weeklyXp: newWeeklyXp,
         level: newLevel,
         crystals: current.crystals + 50,
       ));
     } else {
       updateUser(current.copyWith(
         totalXp: newXp,
+        weeklyXp: newWeeklyXp,
         level: newLevel,
       ));
     }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../../utils/constants.dart';
 import '../../providers/theme_provider.dart';
+import 'offline_banner_widget.dart';
 
 class LumadBackground extends ConsumerWidget {
   final Widget child;
@@ -50,6 +51,13 @@ class LumadBackground extends ConsumerWidget {
       }
     }
 
+    final innerChild = Column(
+      children: [
+        const OfflineBannerWidget(),
+        Expanded(child: child),
+      ],
+    );
+
     return SizedBox.expand(
       child: DecoratedBox(
         decoration: BoxDecoration(
@@ -62,9 +70,9 @@ class LumadBackground extends ConsumerWidget {
         child: painter != null
             ? CustomPaint(
                 painter: painter,
-                child: child,
+                child: innerChild,
               )
-            : child,
+            : innerChild,
       ),
     );
   }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import '../models/vocabulary_model.dart';
 import '../models/lesson_model.dart';
+import '../models/route_args.dart';
 import '../screens/splash/splash_screen.dart';
 import '../screens/onboarding/onboarding_screen.dart';
 import '../screens/auth/login_screen.dart';
@@ -96,8 +97,10 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/lesson-result',
       builder: (context, state) {
-        final result = state.extra as Map<String, dynamic>? ?? {};
-        return LessonResultScreen(resultData: result);
+        final args = state.extra is LessonResultArgs
+            ? state.extra as LessonResultArgs
+            : LessonResultArgs.fromMap(state.extra as Map<String, dynamic>?);
+        return LessonResultScreen(args: args);
       },
     ),
     GoRoute(
@@ -125,10 +128,13 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/classroom/dashboard',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>? ?? {};
+        final args = state.extra is ClassroomDashboardArgs
+            ? state.extra as ClassroomDashboardArgs
+            : ClassroomDashboardArgs.fromMap(state.extra as Map<String, dynamic>?);
         return ClassroomDashboardScreen(
-          classId: args['classId'] ?? '',
-          classroomData: args['classroomData'] ?? {},
+          classId: args.classId,
+          classroomData: args.classroomData,
+          args: args,
         );
       },
     ),
@@ -155,9 +161,12 @@ final appRouter = GoRouter(
     GoRoute(
       path: '/arena/battle',
       builder: (context, state) {
-        final args = state.extra as Map<String, dynamic>? ?? {};
+        final args = state.extra is DuelBattleArgs
+            ? state.extra as DuelBattleArgs
+            : DuelBattleArgs.fromMap(state.extra as Map<String, dynamic>?);
         return DuelBattleScreen(
-          sessionId: args['sessionId'] ?? '',
+          sessionId: args.sessionId,
+          args: args,
         );
       },
     ),

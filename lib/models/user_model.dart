@@ -3,6 +3,7 @@ class UserModel {
   final String name;
   final String email;
   final int totalXp;
+  final int weeklyXp;
   final int level;
   final int streakDays;
   final int crystals;
@@ -11,16 +12,19 @@ class UserModel {
   final String? avatarUrl;
   final List<String> inventory;
   final int streakFreezes;
+  final Map<String, String> vocabularyMastery;
   final String? equippedFrame;
   final String? equippedBanner;
   final DateTime? lastActiveDate;
   final DateTime? xpBoosterExpiresAt;
+  final DateTime? lastStreakFreezeUsed;
 
   const UserModel({
     required this.id,
     required this.name,
     required this.email,
     this.totalXp = 0,
+    this.weeklyXp = 0,
     this.level = 1,
     this.streakDays = 0,
     this.crystals = 150,
@@ -29,10 +33,12 @@ class UserModel {
     this.avatarUrl,
     this.inventory = const [],
     this.streakFreezes = 0,
+    this.vocabularyMastery = const {},
     this.equippedFrame,
     this.equippedBanner,
     this.lastActiveDate,
     this.xpBoosterExpiresAt,
+    this.lastStreakFreezeUsed,
   });
 
   /// Returns the first word/name of the user's display name for greetings (e.g., "Juan" from "Juan Dela Cruz").
@@ -52,6 +58,7 @@ class UserModel {
     String? name,
     String? email,
     int? totalXp,
+    int? weeklyXp,
     int? level,
     int? streakDays,
     int? crystals,
@@ -60,10 +67,12 @@ class UserModel {
     String? avatarUrl,
     List<String>? inventory,
     int? streakFreezes,
+    Map<String, String>? vocabularyMastery,
     String? equippedFrame,
     String? equippedBanner,
     DateTime? lastActiveDate,
     DateTime? xpBoosterExpiresAt,
+    DateTime? lastStreakFreezeUsed,
     bool clearEquippedFrame = false,
     bool clearEquippedBanner = false,
   }) {
@@ -72,6 +81,7 @@ class UserModel {
       name: name ?? this.name,
       email: email ?? this.email,
       totalXp: totalXp ?? this.totalXp,
+      weeklyXp: weeklyXp ?? this.weeklyXp,
       level: level ?? this.level,
       streakDays: streakDays ?? this.streakDays,
       crystals: crystals ?? this.crystals,
@@ -80,10 +90,12 @@ class UserModel {
       avatarUrl: avatarUrl ?? this.avatarUrl,
       inventory: inventory ?? this.inventory,
       streakFreezes: streakFreezes ?? this.streakFreezes,
+      vocabularyMastery: vocabularyMastery ?? this.vocabularyMastery,
       equippedFrame: clearEquippedFrame ? null : (equippedFrame ?? this.equippedFrame),
       equippedBanner: clearEquippedBanner ? null : (equippedBanner ?? this.equippedBanner),
       lastActiveDate: lastActiveDate ?? this.lastActiveDate,
       xpBoosterExpiresAt: xpBoosterExpiresAt ?? this.xpBoosterExpiresAt,
+      lastStreakFreezeUsed: lastStreakFreezeUsed ?? this.lastStreakFreezeUsed,
     );
   }
 
@@ -93,6 +105,7 @@ class UserModel {
       name: json['name'] as String? ?? '',
       email: json['email'] as String? ?? '',
       totalXp: json['totalXp'] as int? ?? 0,
+      weeklyXp: json['weeklyXp'] as int? ?? 0,
       level: json['level'] as int? ?? 1,
       streakDays: json['streakDays'] as int? ?? 0,
       crystals: json['crystals'] as int? ?? 150,
@@ -101,6 +114,7 @@ class UserModel {
       avatarUrl: json['avatarUrl'] as String?,
       inventory: (json['inventory'] as List<dynamic>?)?.map((e) => e as String).toList() ?? [],
       streakFreezes: json['streakFreezes'] as int? ?? 0,
+      vocabularyMastery: (json['vocabularyMastery'] as Map<String, dynamic>?)?.map((k, v) => MapEntry(k, v as String)) ?? {},
       equippedFrame: json['equippedFrame'] as String?,
       equippedBanner: json['equippedBanner'] as String?,
       lastActiveDate: json['lastActiveDate'] != null
@@ -108,6 +122,9 @@ class UserModel {
           : null,
       xpBoosterExpiresAt: json['xpBoosterExpiresAt'] != null
           ? DateTime.tryParse(json['xpBoosterExpiresAt'] as String)
+          : null,
+      lastStreakFreezeUsed: json['lastStreakFreezeUsed'] != null
+          ? DateTime.tryParse(json['lastStreakFreezeUsed'] as String)
           : null,
     );
   }
@@ -118,6 +135,7 @@ class UserModel {
       'name': name,
       'email': email,
       'totalXp': totalXp,
+      'weeklyXp': weeklyXp,
       'level': level,
       'streakDays': streakDays,
       'crystals': crystals,
@@ -126,10 +144,12 @@ class UserModel {
       'avatarUrl': avatarUrl,
       'inventory': inventory,
       'streakFreezes': streakFreezes,
+      'vocabularyMastery': vocabularyMastery,
       'equippedFrame': equippedFrame,
       'equippedBanner': equippedBanner,
       'lastActiveDate': lastActiveDate?.toIso8601String(),
       'xpBoosterExpiresAt': xpBoosterExpiresAt?.toIso8601String(),
+      'lastStreakFreezeUsed': lastStreakFreezeUsed?.toIso8601String(),
     };
   }
 }

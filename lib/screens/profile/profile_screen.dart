@@ -4,6 +4,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import '../../utils/constants.dart';
+import '../../models/route_args.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/progress_provider.dart';
 import '../../providers/classroom_provider.dart';
@@ -634,10 +635,10 @@ class _ProfileScreenState extends ConsumerState<ProfileScreen> {
 
                     return BrandCard(
                       onTap: () {
-                        context.push('/classroom/dashboard', extra: {
-                          'classId': doc.id,
-                          'classroomData': data,
-                        });
+                        context.push('/classroom/dashboard', extra: ClassroomDashboardArgs(
+                          classId: doc.id,
+                          classroomData: data,
+                        ));
                       },
                       child: Row(
                         children: [

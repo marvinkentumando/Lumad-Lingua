@@ -7,6 +7,7 @@ import 'package:flutter_animate/flutter_animate.dart';
 import '../../utils/constants.dart';
 import '../../models/duel_model.dart';
 import '../../models/daily_quest_model.dart';
+import '../../models/route_args.dart';
 import '../../providers/daily_quests_provider.dart';
 import '../../providers/auth_provider.dart';
 import '../../providers/duel_provider.dart';
@@ -16,8 +17,14 @@ import '../../widgets/common/lumad_background.dart';
 
 class DuelBattleScreen extends ConsumerStatefulWidget {
   final String sessionId;
+  final DuelBattleArgs args;
 
-  const DuelBattleScreen({super.key, required this.sessionId});
+  DuelBattleScreen({
+    super.key,
+    String? sessionId,
+    DuelBattleArgs? args,
+  })  : args = args ?? DuelBattleArgs(sessionId: sessionId ?? ''),
+        sessionId = sessionId ?? args?.sessionId ?? '';
 
   @override
   ConsumerState<DuelBattleScreen> createState() => _DuelBattleScreenState();
@@ -249,7 +256,7 @@ class _DuelBattleScreenState extends ConsumerState<DuelBattleScreen> {
                       userName: userName,
                     );
                     if (context.mounted) {
-                      context.pushReplacement('/arena/battle', extra: {'sessionId': newSessionId});
+                      context.pushReplacement('/arena/battle', extra: DuelBattleArgs(sessionId: newSessionId));
                     }
                   },
                 ),
